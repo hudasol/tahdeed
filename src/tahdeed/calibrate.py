@@ -16,9 +16,7 @@ Coarse tiers do not claim a point; they carry an empirical 90% radius.
 
 from __future__ import annotations
 
-import pickle
 from dataclasses import dataclass, field
-from pathlib import Path
 
 import numpy as np
 
@@ -176,16 +174,6 @@ class GBMRanker:
             c.p200 = float(b)
             c.p1k = float(d)
             c.p_valid = float(e)
-
-    def save(self, path: str | Path) -> None:
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "wb") as fh:
-            pickle.dump(self, fh)
-
-    @staticmethod
-    def load(path: str | Path) -> GBMRanker:
-        with open(path, "rb") as fh:
-            return pickle.load(fh)  # noqa: S301 - local file written by `tahdeed train`
 
 
 # ----------------------------------------------------------------------------- decision

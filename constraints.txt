@@ -1,0 +1,13 @@
+fastapi==0.143.0
+httpx==0.28.1
+hypothesis==6.168.5
+numpy==2.5.3
+osmium==4.3.1
+pydantic==2.13.5
+pytest==9.1.1
+pytest-cov==7.1.0
+python-multipart==0.0.32
+RapidFuzz==3.14.6
+scikit-learn==1.9.1
+starlette==1.6.0
+uvicorn==0.53.0

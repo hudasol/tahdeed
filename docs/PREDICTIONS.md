@@ -29,3 +29,16 @@ Hole sensitivity of the Round 1 model (dev split, 1,500 queries per row):
 Reading: calibration holds across the whole range (ECE ≤ 0.05) but *precision cannot*: if every
 query is for an absent address, 16% of confident answers are wrong neighbours. That is a limit of
 the data, now quantified instead of hidden.
+
+## Round 2 (after Edge review upgrades)
+
+Written while the round-2 evaluation was already running but before its output was read.
+
+| # | Prediction | Result |
+|---|---|---|
+| P2.1 | NumPy inference reproduces the scikit-learn heads to within 1e-9 | **Hit**: max abs diff 8.9e-14 (and enforced by a test) |
+| P2.2 | Headline dev metrics identical to round 1 within ±0.3 points (same model, same retrieval) | **Hit**: identical (64.5% resolved, 98.2% precision, 67.4% forced top-1); median latency under evaluation 6.0 ms |
+| P2.3 | Median latency ≤ 8 ms; p99 ≤ 25 ms; single-core ≥ 120 queries/s | **Hit**: p50 5.7 ms, p99 16.1 ms, 165 q/s (`tahdeed bench`, 1,500 queries) |
+| P2.4 | Resident memory ≤ 600 MB, load time ≤ 10 s | **Mixed**: RSS 486 MB (hit), load **18.8 s (miss)**: provenance hashing and the ambiguity tables added load cost. Tracked as E11. |
+| P2.5 | Hypothesis fuzzing (300 + 120 examples) and pathological inputs never raise and stay < 2 s | **Hit**: 64 tests pass |
+| P2.6 | Dashboard loads and resolves with all external hosts blocked except the tile server | **Hit**: only `tile.openstreetmap.org` was requested; page and result render |

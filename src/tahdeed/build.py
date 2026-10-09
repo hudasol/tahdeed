@@ -16,6 +16,19 @@ from pathlib import Path
 from .geo import CITIES, City, haversine_m, nearest_city
 from .normalize import skeleton
 
+SCHEMA_VERSION = "2"
+
+
+def _sha256(path) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 SCHEMA = """
 CREATE TABLE meta (k TEXT PRIMARY KEY, v TEXT);
 CREATE TABLE addresses (
@@ -289,7 +302,9 @@ def build(pbf: str | Path, out: str | Path, *, verbose: bool = True) -> dict[str
     )
     for k, v in {
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "schema": SCHEMA_VERSION,
         "source": str(Path(pbf).name),
+        "source_sha256": _sha256(pbf),
         "license": "ODbL 1.0 (c) OpenStreetMap contributors",
     }.items():
         con.execute("INSERT INTO meta VALUES (?,?)", (k, v))
