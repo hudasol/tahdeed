@@ -36,6 +36,7 @@ FEATURES = [
     "lm_quality", "lm_fuzzy", "lm_tokens", "lm_key_len", "lm_instances", "lm_is_area",
     "anchor_dist_m", "relation_radius", "has_anchor", "area_quality", "area_fuzzy",
     "area_tokens", "area_key_len", "area_instances", "area_n", "area_radius",
+    "street_alt", "street_ambig", "key_exact", "area_match", "city_match", "poi_ambig", "area_ambig",
 ]  # fmt: skip
 
 MIN_VALID = 0.15  # below this, even the best coarse candidate is not trusted
@@ -147,27 +148,34 @@ class Policy:
 
 @dataclass
 class GBMRanker:
-    model50: object = None
-    iso50: object = None
-    model_valid: object = None
-    iso_valid: object = None
+    """Four calibrated heads over the same candidate features.
+
+    ``p50``/``p200``/``p1k``: P(candidate within 50 m / 200 m / 1 km of the truth);
+    ``valid``: P(candidate is right at its own tier). Each head is a gradient-boosted
+    classifier followed by isotonic regression fitted on held-out districts.
+    """
+
+    heads: dict = field(default_factory=dict)  # name -> (model, isotonic)
     policy: Policy = field(default_factory=Policy)
     radii: dict[str, float] = field(default_factory=dict)
     name: str = "gbm+isotonic"
 
-    def raw_scores(self, cands: list[Candidate]):
-        X = np.array([featurize(c) for c in cands])
-        return self.model50.predict_proba(X)[:, 1], self.model_valid.predict_proba(X)[:, 1]
+    def _predict(self, head: str, X: np.ndarray) -> np.ndarray:
+        model, iso = self.heads[head]
+        raw = model.predict_proba(X)[:, 1]
+        return iso.predict(raw) if iso is not None else raw
 
     def score(self, cands: list[Candidate]) -> None:
         if not cands:
             return
-        r50, rv = self.raw_scores(cands)
-        p50 = self.iso50.predict(r50) if self.iso50 is not None else r50
-        pv = self.iso_valid.predict(rv) if self.iso_valid is not None else rv
-        for c, a, b in zip(cands, p50, pv, strict=True):
-            c.p50 = float(a) if c.tier in FINE_TIERS else 0.0
-            c.p_valid = float(b)
+        X = np.array([featurize(c) for c in cands])
+        p50, p200, p1k, pv = (self._predict(h, X) for h in ("p50", "p200", "p1k", "valid"))
+        for c, a, b, d, e in zip(cands, p50, p200, p1k, pv, strict=True):
+            fine = c.tier in FINE_TIERS
+            c.p50 = float(a) if fine else 0.0
+            c.p200 = float(b)
+            c.p1k = float(d)
+            c.p_valid = float(e)
 
     def save(self, path: str | Path) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -262,7 +270,7 @@ def _district_options(g, ctx) -> list[str]:
 
     opts: Counter = Counter()
     for ss in ctx["street_spans"][:1]:
-        ids = g.addr_by_street.get(ss.key, []) or g.addr_by_street.get(ss.sorted_key, [])
+        ids = next((g.addr_by_street[k] for k in ss.street_keys if k in g.addr_by_street), [])
         for i in ids:
             a = g.addr[i]
             d = a[5] or a[4]

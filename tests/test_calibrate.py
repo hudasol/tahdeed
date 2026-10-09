@@ -21,8 +21,13 @@ def test_empirical_radii_needs_support_and_floors():
 def test_split_is_deterministic_and_roughly_50_20_30():
     ks = [f"district-{i}" for i in range(2000)]
     assert [split_of(k) for k in ks] == [split_of(k) for k in ks]
-    fr = {s: np.mean([split_of(k) == s for k in ks]) for s in ("train", "calib", "test")}
-    assert 0.45 < fr["train"] < 0.55 and 0.15 < fr["calib"] < 0.25 and 0.25 < fr["test"] < 0.35
+    fr = {s: np.mean([split_of(k) == s for k in ks]) for s in ("train", "calib", "dev", "sealed")}
+    assert (
+        0.45 < fr["train"] < 0.55
+        and 0.15 < fr["calib"] < 0.25
+        and 0.15 < fr["dev"] < 0.25
+        and 0.05 < fr["sealed"] < 0.15
+    )
 
 
 def test_noise_queries_cover_truth_and_are_reproducible(gaz):
