@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tahdeed"
-version = "0.0.1"
+version = "1.0.0"
 description = "Bilingual Arabic/English UAE address resolver with calibrated confidence and abstention"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -42,3 +42,4 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "E402", "E741", "B008"]

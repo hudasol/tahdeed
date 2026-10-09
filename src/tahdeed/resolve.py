@@ -211,7 +211,7 @@ def _approx_span(g, start, end, key, has_type, text) -> Span | None:
             continue
         k = max(keys, key=lambda x: fuzz.ratio(key, x))
         r = fuzz.ratio(key, k)
-        if r < 70:
+        if r < 75 or not 0.75 <= len(k) / len(key) <= 1.34:
             continue
         best = max(best, r)
         _attach(g, sp, kind, k)
@@ -293,6 +293,9 @@ class Resolver:
         for sp in spans:
             if sp.streets and (sp.areas or sp.city) and not sp.has_type:
                 sp.streets = False
+            # a city name that collides with an obscure area key elsewhere ("Dubai" ~ "Al Doob")
+            if sp.city and sp.areas:
+                sp.areas = [i for i in sp.areas if g.areas[i][4] == sp.city]
 
         # landmark phrase (matched separately)
         lm_spans: list[Span] = []
