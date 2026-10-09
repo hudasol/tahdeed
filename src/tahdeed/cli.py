@@ -22,6 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--out", default="data/models/ranker.npz")
     t.add_argument("--n-train", type=int, default=30000)
     t.add_argument("--workers", type=int, default=2)
+    t.add_argument("--hole-rate", type=float, default=0.30)
 
     r = sub.add_parser("resolve", help="resolve one address")
     r.add_argument("address")
@@ -31,6 +32,18 @@ def main(argv: list[str] | None = None) -> int:
     ba.add_argument("infile")
     ba.add_argument("outfile")
     ba.add_argument("--workers", type=int, default=1)
+
+    st = sub.add_parser(
+        "studies", help="generator gap, ablations, baselines (writes docs/studies.json)"
+    )
+    st.add_argument("--n", type=int, default=2500)
+    st.add_argument("--h0", default=None, help="model trained without hole examples (ablation)")
+    st.add_argument("--out", default="docs/studies.json")
+
+    fg = sub.add_parser("figures", help="draw the doc figures from the JSON results")
+    fg.add_argument("--eval", default="docs/eval.json")
+    fg.add_argument("--studies", default="docs/studies.json")
+    fg.add_argument("--out", default="docs/figures")
 
     sub.add_parser("verify", help="check gazetteer / model provenance and integrity")
 
@@ -60,10 +73,12 @@ def main(argv: list[str] | None = None) -> int:
         from .train import train
 
         g = Gazetteer.load(a.db)
-        ranker, _ = train(g, n_train=a.n_train, n_calib=a.n_train // 3, workers=a.workers)
+        ranker, _ = train(
+            g, n_train=a.n_train, n_calib=a.n_train // 3, workers=a.workers, hole_rate=a.hole_rate
+        )
         from .model_io import export
 
-        export(ranker, a.out, g.sha256, {"n_train": a.n_train})
+        export(ranker, a.out, g.sha256, {"n_train": a.n_train, "hole_rate": a.hole_rate})
         print(f"saved {a.out}")
     elif a.cmd == "resolve":
         from .service import load_resolver
@@ -76,6 +91,20 @@ def main(argv: list[str] | None = None) -> int:
             _pretty(j)
     elif a.cmd == "batch":
         _batch(a.infile, a.outfile, a.workers)
+    elif a.cmd == "studies":
+        from .gazetteer import Gazetteer
+        from .model_io import load as load_model
+        from .studies import main as run_studies
+
+        g = Gazetteer.load(a.db if hasattr(a, "db") else "data/gazetteer.sqlite")
+        rk = load_model("data/models/ranker.npz", gazetteer_sha256=g.sha256)
+        h0 = load_model(a.h0, gazetteer_sha256=g.sha256) if a.h0 else None
+        run_studies(g, rk, h0, a.out, a.n)
+        print(f"wrote {a.out}")
+    elif a.cmd == "figures":
+        from .figures import make_all
+
+        print("figures:", ", ".join(make_all(a.eval, a.studies, a.out)))
     elif a.cmd == "verify":
         return _verify()
     elif a.cmd == "bench":
