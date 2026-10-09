@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tahdeed · UAE address resolver</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#10303a;--chalk:#edf1f2;--panel:#fbfcfc;--line:#c9d4d7;--mute:#566d74;
+--ok:#1b7f55;--mid:#b87a06;--bad:#a63a3a;--blue:#2b3fc4;}
+@media (prefers-color-scheme:dark){:root{--ink:#e4eef0;--chalk:#0c1d23;--panel:#12292f;--line:#2a444b;--mute:#93abb2;
+--ok:#4cc28a;--mid:#e0a63a;--bad:#e07a7a;--blue:#8c9bff;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--chalk);color:var(--ink);font:16px/1.5 "IBM Plex Sans","IBM Plex Sans Arabic",system-ui,sans-serif}
+.app{display:grid;grid-template-columns:minmax(320px,440px) 1fr;min-height:100vh}
+aside{padding:28px 24px;background:var(--panel);border-right:1px solid var(--line);overflow:auto;max-height:100vh}
+h1{font-size:28px;margin:0;font-weight:600;letter-spacing:-.01em}
+h1 span{font-family:"IBM Plex Sans Arabic";font-weight:500;margin-inline-start:10px;color:var(--mute)}
+.sub{color:var(--mute);margin:6px 0 20px;max-width:34ch}
+textarea{width:100%;font:inherit;padding:12px;border:1.5px solid var(--line);border-radius:6px;background:var(--chalk);color:var(--ink);resize:vertical;min-height:84px}
+textarea:focus,button:focus-visible,.ex:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button.go{margin-top:10px;padding:10px 18px;font:inherit;font-weight:600;background:var(--ink);color:var(--chalk);border:0;border-radius:6px;cursor:pointer}
+.ex{display:block;width:100%;text-align:start;background:none;border:0;border-bottom:1px dashed var(--line);padding:7px 0;font:inherit;font-size:14px;color:var(--mute);cursor:pointer}
+.ex:hover{color:var(--ink)}
+#out{margin-top:22px}
+.status{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:600;font-size:14px;border:1.5px solid currentColor}
+.resolved{color:var(--ok)}.approximate,.ambiguous{color:var(--mid)}.unresolved{color:var(--bad)}
+.std{margin:14px 0 4px;font-size:19px;font-weight:500;line-height:1.35}
+.std[lang=ar]{direction:rtl;font-family:"IBM Plex Sans Arabic"}
+.meter{margin:18px 0 6px}
+.meter .bar{position:relative;height:12px;background:var(--line);border-radius:6px;overflow:visible}
+.meter .fill{height:100%;border-radius:6px;background:var(--blue);transition:width .5s}
+.meter .tick{position:absolute;top:-5px;width:2px;height:22px;background:var(--ink)}
+.meter small{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin-top:6px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:14px 0;font-size:14px}
+dt{color:var(--mute)}dd{margin:0;font-variant-numeric:tabular-nums}
+.asks{margin:14px 0;padding:12px 14px;background:var(--chalk);border-inline-start:4px solid var(--mid);border-radius:4px}
+.asks p{margin:2px 0}
+.alts{font-size:14px;color:var(--mute);padding-inline-start:18px}
+#map{height:100vh;min-height:360px}
+@media (max-width:820px){.app{grid-template-columns:1fr}aside{max-height:none;border-right:0}#map{height:55vh}}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>tahdeed<span lang="ar">تحديد</span></h1>
+  <p class="sub">Type an address the way people actually write it, in Arabic, English or both.</p>
+  <form id="f"><label for="q" class="sr" style="position:absolute;left:-9999px">Address</label>
+  <textarea id="q" dir="auto" placeholder="29 Shabib Bin Saeed Al Muhairi St, Khalidiyah, Abu Dhabi">29 Shabib Bin Saeed Al Muhairi St, Khalidiyah, Abu Dhabi</textarea>
+  <button class="go" type="submit">Resolve address</button></form>
+  <div id="examples">
+    <button class="ex" type="button">٢٩ شارع شبيب بن سعيد المهيري، الخالدية، أبوظبي</button>
+    <button class="ex" type="button">3 Al Mayameen 5 Strit, Al Noud, Al Ain</button>
+    <button class="ex" type="button">Shabib Bin Saeed Al Muhairi Street, Khalidiyah</button>
+    <button class="ex" type="button">near Dubai Mall, Dubai</button>
+    <button class="ex" type="button">P.O. Box 12345, Dubai</button>
+  </div>
+  <div id="out" aria-live="polite"></div>
+</aside>
+<div id="map" role="application" aria-label="Map of the resolved location"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map').setView([24.4539, 54.3773], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+let layer = L.layerGroup().addTo(map);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const STATUS = {resolved:'Resolved', approximate:'Approximate area', ambiguous:'Ambiguous', unresolved:'Not found'};
+const TIER = {address:'registered address', poi:'place', interpolated:'between known buildings',
+  landmark:'near a landmark', street_area:'street within a district', street:'street', area:'area', city:'city'};
+
+async function resolve(text) {
+  $('out').textContent = 'Resolving…';
+  let j;
+  try {
+    const r = await fetch('/resolve', {method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({address: text})});
+    if (!r.ok) throw new Error(r.status === 422 ? 'Enter an address to resolve.' : 'The service returned an error (' + r.status + ').');
+    j = await r.json();
+  } catch (e) { $('out').textContent = e.message; return; }
+  render(j);
+}
+
+function render(j) {
+  layer.clearLayers();
+  const b = j.best;
+  let h = `<span class="status ${j.status}">${STATUS[j.status]}</span>`;
+  if (b) {
+    const p = b.p_within_50m, v = b.p_correct_at_tier, fine = ['address','poi','interpolated','landmark'].includes(b.tier);
+    const shown = fine ? p : v;
+    h += `<p class="std" lang="en">${esc(b.standard.en)}</p><p class="std" lang="ar">${esc(b.standard.ar)}</p>
+    <div class="meter"><div class="bar"><div class="fill" style="width:${Math.round(shown*100)}%"></div></div>
+    <small><span>${fine ? 'Chance the point is within 50 m' : 'Chance this is the right ' + esc(TIER[b.tier])}</span><b>${Math.round(shown*100)}%</b></small></div>
+    <dl><dt>Match level</dt><dd>${esc(TIER[b.tier])}</dd>
+    <dt>Coordinates</dt><dd>${b.lat}, ${b.lon}</dd>
+    <dt>Uncertainty</dt><dd>${fine ? 'within about ' : 'about '}${b.radius_m.toLocaleString()} m (90% of correct matches)</dd></dl>`;
+    const c = L.circle([b.lat, b.lon], {radius: Math.max(b.radius_m, 8), color: '#2b3fc4', weight: 2, fillOpacity: .12}).addTo(layer);
+    L.circleMarker([b.lat, b.lon], {radius: 6, color: '#2b3fc4', fillOpacity: 1}).addTo(layer)
+      .bindPopup(esc(b.standard.en));
+    (j.alternatives || []).forEach(a => L.circleMarker([a.lat, a.lon], {radius: 5, color: '#b87a06', fillOpacity: .7}).addTo(layer)
+      .bindPopup('Alternative: ' + esc(a.standard.en)));
+    map.fitBounds(c.getBounds().pad(.6), {maxZoom: 18});
+  } else {
+    h += `<p>No UAE place recognised in this text.</p>`;
+  }
+  if (j.asks.length) h += `<div class="asks"><b>To pin it down</b>${j.asks.map(a => `<p>${esc(a)}</p>`).join('')}</div>`;
+  if (j.notes.length) h += `<p style="color:var(--mute);font-size:14px">${j.notes.map(esc).join('<br>')}</p>`;
+  if ((j.alternatives || []).length) h += `<p style="margin-bottom:2px;font-size:14px">Other possibilities</p><ul class="alts">${j.alternatives.map(a => `<li>${esc(a.standard.en)} (${esc(TIER[a.tier])})</li>`).join('')}</ul>`;
+  $('out').innerHTML = h;
+}
+
+$('f').addEventListener('submit', e => { e.preventDefault(); resolve($('q').value); });
+document.querySelectorAll('.ex').forEach(b => b.addEventListener('click', () => { $('q').value = b.textContent; resolve(b.textContent); }));
+</script>
+</body>
+</html>
