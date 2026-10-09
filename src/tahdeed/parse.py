@@ -11,7 +11,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from .normalize import STREET_TYPES, to_ascii_digits, tokenize
+from rapidfuzz import fuzz, process
+
+from .normalize import STREET_TYPES, has_arabic, to_ascii_digits, tokenize
 
 _DELIMS = re.compile(r"[,،;\n|/\\]+(?=\s|$)|[,،;\n|]+")
 
@@ -28,6 +30,17 @@ BUILDING_WORDS = {
     "فيلا", "مبني", "مبنى", "بنايه", "بناية", "عمارة", "عماره", "منزل", "بيت", "رقم", "قطعه",
     "قطعة", "برج",
 }  # fmt: skip
+
+_TYPE_VOCAB = ["street", "avenue", "boulevard", "corniche", "highway", "roundabout", "interchange"]
+
+
+def _canonical_type(tok: str) -> str:
+    """Repair typos in street-type words: "stredt", "strreet", "sareet" -> "street"."""
+    if tok in STREET_TYPES or len(tok) < 5 or not tok.isalpha() or has_arabic(tok):
+        return tok
+    m = process.extractOne(tok, _TYPE_VOCAB, scorer=fuzz.ratio, score_cutoff=80)
+    return m[0] if m else tok
+
 
 POBOX_RE = re.compile(
     r"(?:p\.?\s?o\.?\s?box|po\s?box|pob|post\s?box|ص\.?\s?ب\.?|صندوق\s+بريد)\s*[:#]?\s*(\d{1,7})",
@@ -62,7 +75,8 @@ class NumberRef:
     value: str
     pos: int  # token index in `tokens`
     keyword: str | None = None  # building/villa/... that introduced it
-    adjacent_type: bool = False  # next to a street-type word (part of a street name)
+    adjacent_type: bool = False  # directly after a street-type word ("Street 23", "شارع 23")
+    before_type: bool = False  # directly before one ("29 شارع ..."): usually a house number
     leading: bool = False  # first token of its segment
     segment: int = 0
 
@@ -140,7 +154,7 @@ def parse(raw: str) -> ParsedQuery:
     seg_of: list[int] = []
     for si, seg in enumerate(segs):
         for t in tokenize(seg):
-            tokens.append(t)
+            tokens.append(_canonical_type(t))
             seg_of.append(si)
 
     consumed = [False] * len(tokens)
@@ -197,15 +211,15 @@ def parse(raw: str) -> ParsedQuery:
             kw = tokens[i - 1]
         elif i + 1 < len(tokens) and tokens[i + 1] in BUILDING_WORDS and seg_of[i + 1] == seg_of[i]:
             kw = tokens[i + 1]
-        adj = (i > 0 and tokens[i - 1] in STREET_TYPES and seg_of[i - 1] == seg_of[i]) or (
-            i + 1 < len(tokens) and tokens[i + 1] in STREET_TYPES and seg_of[i + 1] == seg_of[i]
-        )
+        adj = i > 0 and tokens[i - 1] in STREET_TYPES and seg_of[i - 1] == seg_of[i]
+        bef = i + 1 < len(tokens) and tokens[i + 1] in STREET_TYPES and seg_of[i + 1] == seg_of[i]
         pq.numbers.append(
             NumberRef(
                 value=t,
                 pos=i,
                 keyword=kw,
                 adjacent_type=adj,
+                before_type=bef,
                 leading=(seg_start.get(seg_of[i]) == i),
                 segment=seg_of[i],
             )  # fmt: skip

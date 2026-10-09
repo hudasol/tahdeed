@@ -72,3 +72,9 @@ def test_plain_address_has_no_relation():
 def test_postcode_keyword():
     pq = parse("Postcode 20039 Abu Dhabi")
     assert pq.postcode_hint == "20039"
+
+
+def test_arabic_leading_number_before_type_word_is_house_number():
+    pq = parse("٢٩ شارع شبيب بن سعيد المهيري")
+    n = pq.numbers[0]
+    assert n.value == "29" and n.before_type and not n.adjacent_type
