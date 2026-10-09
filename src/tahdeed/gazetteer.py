@@ -167,7 +167,8 @@ class Gazetteer:
             for nm in (c.en, c.ar, c.key, *c.aliases):
                 k = skeleton(nm)
                 if k:
-                    self.city_by_key_alias[k] = c.key
+                    # skeleton collisions (Dubai ~ Dibba): earlier, larger city in CITIES wins
+                    self.city_by_key_alias.setdefault(k, c.key)
         # "Al Dhafra" is a region whose seat is Madinat Zayed
         for nm in ("Al Dhafra", "Al Dhafra Region", "الظفرة", "منطقة الظفرة"):
             self.city_by_key_alias[skeleton(nm)] = "madinat zayed"
