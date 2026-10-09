@@ -43,6 +43,7 @@ class Query:
     split: str = "test"
     lang: str = "en"
     hidden: bool = False  # truth removed from the index at query time (coverage-hole test)
+    extra: dict = field(default_factory=dict)  # generator-specific provenance (for error analysis)
 
 
 # ----------------------------------------------------------------------------- perturbations

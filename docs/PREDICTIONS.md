@@ -57,3 +57,17 @@ Written before `tahdeed studies` was run.
 | P3.6 | Training without hole examples lowers mixed-benchmark resolved precision by ≥ 3 points | **Partial**: top-1 −4.1 points (significant), ECE 0.012 → 0.050, wrong confident answers 148 → 164; resolved precision only −1.3 points (predicted ≥3) |
 | P3.7 | Char-trigram TF-IDF baseline lands ≥ 15 points below the full system on top-1 ≤50 m | **Near miss**: TF-IDF baseline is 13.3 points below (CI −15.0..−11.5), predicted ≥15 |
 | P3.8 | At least one of the "recall aids" (siblings, fuzzy full-name, DP selection) does **not** produce a statistically significant gain on its own | **Hit**: sibling keys +0.5 (ns), consonant-class 0.0 (ns), all three recall aids together −0.36 (ns); fuzzy full-name −0.8 and DP selection −1.8 are significant but small |
+
+## Round 4 (after ATRC review): Arabic-specific matching
+
+Written before the Round 4 model was trained or evaluated. Round 3 baselines: v2 forced top-1 ≤50 m
+49.8% (arabizi 22.7%, gulf 57.8%, formal 60.5%); v2 resolved precision 97.0%.
+
+| # | Prediction | Result |
+|---|---|---|
+| P4.1 | Arabizi top-1 ≤50 m on v2 rises from 22.7% to at least 40% (digit decoding is the single largest known defect) | _pending_ |
+| P4.2 | Formal and gulf styles each gain 3 points or less (their errors are not digit-related) | _pending_ |
+| P4.3 | v1 headline (resolved precision) stays within ±0.5 points of 98.2%; resolved share within ±2 points | _pending_ |
+| P4.4 | Landmark tier: "near X, city" within 200 m of the landmark at least 15 points higher with the tier on than off | _pending_ |
+| P4.5 | Hand-written gold set (40 queries): top-1 ≤500 m at least 70%, but ≤50 m below 60% (human phrasing is harder than either generator) | _pending_ |
+| P4.6 | Resolved precision on v2 stays ≥ 96.5% (calibration should keep transferring) | _pending_ |

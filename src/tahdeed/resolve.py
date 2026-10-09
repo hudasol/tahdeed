@@ -17,6 +17,7 @@ from rapidfuzz import fuzz, process
 from .gazetteer import Gazetteer, hn_int, norm_hn
 from .geo import CITY_BY_KEY, haversine_m, haversine_np
 from .normalize import (
+    LATIN_ARTICLES,
     STOPWORDS,
     STREET_TYPES,
     coarse_key,
@@ -25,6 +26,7 @@ from .normalize import (
     strip_articles,
 )
 from .parse import RELATION_RADIUS_M, NumberRef, ParsedQuery, parse
+from .privacy import redact_pii
 
 FINE_TIERS = ("address", "poi", "interpolated", "landmark")
 TIER_ORDER = ("address", "poi", "interpolated", "landmark", "street_area", "street", "area", "city")
@@ -137,6 +139,11 @@ def _span_keys(tokens: list[str]) -> tuple[str, str]:
     return "".join(sk), "".join(sorted(sk))
 
 
+def _ends_with_article(toks: list[str]) -> bool:
+    """A trailing article ("joziria am al") is never part of a name; the next token owns it."""
+    return toks[-1] in LATIN_ARTICLES or toks[-1] == "ال"
+
+
 def _bad_edge(toks: list[str], has_type: bool) -> bool:
     """A bare number at the edge of a name span is a house/unit number, except 'Street 23'."""
     first = toks[0].isdigit() and not (len(toks) > 1 and toks[1] in STREET_TYPES)
@@ -170,7 +177,7 @@ def find_spans(
                 if all(t in STOPWORDS or t in STREET_TYPES for t in toks):
                     continue
                 key, skey = _span_keys(toks)
-                if len(key) < 2:
+                if _ends_with_article(toks) or (len(key) < 2 and key not in g.city_by_key_alias):
                     continue
                 has_type = any(t in STREET_TYPES for t in toks)
                 if (key.isdigit() and not has_type) or _bad_edge(toks, has_type):
@@ -218,7 +225,12 @@ def find_spans(
                     continue
                 key, _ = _span_keys(toks)
                 has_type = any(t in STREET_TYPES for t in toks)
-                if len(key) < 3 or key.isdigit() or _bad_edge(toks, has_type):
+                if (
+                    _ends_with_article(toks)
+                    or len(key) < 3
+                    or key.isdigit()
+                    or _bad_edge(toks, has_type)
+                ):
                     continue
                 sp = _approx_span(g, run[a], run[b - 1] + 1, key, has_type, " ".join(toks))
                 if sp is not None:
@@ -244,7 +256,9 @@ def find_spans(
                 key, _ = _span_keys(toks)
                 if len(key) < (5 if b - a == 1 else 6) or key.isdigit():
                     continue
-                if _bad_edge(toks, any(t in STREET_TYPES for t in toks)):
+                if _ends_with_article(toks) or _bad_edge(
+                    toks, any(t in STREET_TYPES for t in toks)
+                ):
                     continue
                 grams.append(
                     (len(key), lo, hi, key, any(t in STREET_TYPES for t in toks), " ".join(toks))
@@ -411,6 +425,7 @@ class Resolver:
         g = self.g
         t0 = time.perf_counter()
         text = (text or "")[:MAX_INPUT_CHARS]
+        text, pii = redact_pii(text)
         pq = parse(text)
         if len(pq.tokens) > MAX_TOKENS:
             pq = parse(" ".join(pq.tokens[:MAX_TOKENS]))
@@ -434,6 +449,8 @@ class Resolver:
             )
         if pq.po_box:
             notes.append("PO box is a mailing location, not a physical one: ignored for geocoding")
+        if pii:
+            notes.append("contact details (" + ", ".join(pii) + ") removed before matching")
         if pq.makani:
             notes.append(f"Makani number {pq.makani} recognised (not resolvable offline)")
 
