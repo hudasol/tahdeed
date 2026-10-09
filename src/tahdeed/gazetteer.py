@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import sqlite3
 from collections import defaultdict
@@ -44,6 +45,17 @@ def keys_of(*names: str | None) -> set[str]:
     return out
 
 
+SUPPORTED_SCHEMA = "2"
+
+
+def _file_sha256(path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def _bucket(keys: list[str]) -> dict[tuple[int, str], list[str]]:
     """Index by (length, consonant class of the first letter): typos rarely hit the first letter."""
     out: dict[tuple[int, str], list[str]] = defaultdict(list)
@@ -80,6 +92,7 @@ class Gazetteer:
 
     def __init__(self) -> None:
         self.meta: dict[str, str] = {}
+        self.sha256 = ""  # content hash of the database file
         # addresses
         self.addr: list[tuple] = []
         self.addr_lat = np.zeros(0)
@@ -118,8 +131,14 @@ class Gazetteer:
     @classmethod
     def load(cls, path: str | Path) -> Gazetteer:
         g = cls()
+        g.sha256 = _file_sha256(path)
         con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
         g.meta = dict(con.execute("SELECT k, v FROM meta"))
+        if g.meta.get("schema") != SUPPORTED_SCHEMA:
+            raise ValueError(
+                f"gazetteer schema {g.meta.get('schema')!r} not supported (need {SUPPORTED_SCHEMA!r}): "
+                "rebuild with `tahdeed build`"
+            )
         g.addr = con.execute(
             "SELECT id, hn, street_ar, street_en, district_ar, district_en, sub_ar, sub_en, "
             "city_key, city_ar, city_en, postcode, lat, lon, osm, structured FROM addresses "

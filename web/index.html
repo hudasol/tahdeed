@@ -3,21 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>tahdeed · UAE address resolver</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<title>tahdeed: UAE address resolver</title>
+<link rel="stylesheet" href="/static/vendor/leaflet.css">
 <style>
 :root{--ink:#10303a;--chalk:#edf1f2;--panel:#fbfcfc;--line:#c9d4d7;--mute:#566d74;
 --ok:#1b7f55;--mid:#b87a06;--bad:#a63a3a;--blue:#2b3fc4;}
 @media (prefers-color-scheme:dark){:root{--ink:#e4eef0;--chalk:#0c1d23;--panel:#12292f;--line:#2a444b;--mute:#93abb2;
 --ok:#4cc28a;--mid:#e0a63a;--bad:#e07a7a;--blue:#8c9bff;}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--chalk);color:var(--ink);font:16px/1.5 "IBM Plex Sans","IBM Plex Sans Arabic",system-ui,sans-serif}
+body{margin:0;background:var(--chalk);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans","Noto Naskh Arabic","Geeza Pro",Tahoma,sans-serif}
 .app{display:grid;grid-template-columns:minmax(320px,440px) 1fr;min-height:100vh}
 aside{padding:28px 24px;background:var(--panel);border-right:1px solid var(--line);overflow:auto;max-height:100vh}
 h1{font-size:28px;margin:0;font-weight:600;letter-spacing:-.01em}
-h1 span{font-family:"IBM Plex Sans Arabic";font-weight:500;margin-inline-start:10px;color:var(--mute)}
+h1 span{font-weight:500;margin-inline-start:10px;color:var(--mute)}
 .sub{color:var(--mute);margin:6px 0 20px;max-width:34ch}
 textarea{width:100%;font:inherit;padding:12px;border:1.5px solid var(--line);border-radius:6px;background:var(--chalk);color:var(--ink);resize:vertical;min-height:84px}
 textarea:focus,button:focus-visible,.ex:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
@@ -28,7 +26,7 @@ button.go{margin-top:10px;padding:10px 18px;font:inherit;font-weight:600;backgro
 .status{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:600;font-size:14px;border:1.5px solid currentColor}
 .resolved{color:var(--ok)}.approximate,.ambiguous{color:var(--mid)}.unresolved{color:var(--bad)}
 .std{margin:14px 0 4px;font-size:19px;font-weight:500;line-height:1.35}
-.std[lang=ar]{direction:rtl;font-family:"IBM Plex Sans Arabic"}
+.std[lang=ar]{direction:rtl}
 .meter{margin:18px 0 6px}
 .meter .bar{position:relative;height:12px;background:var(--line);border-radius:6px;overflow:visible}
 .meter .fill{height:100%;border-radius:6px;background:var(--blue);transition:width .5s}
@@ -63,11 +61,14 @@ dt{color:var(--mute)}dd{margin:0;font-variant-numeric:tabular-nums}
 </aside>
 <div id="map" role="application" aria-label="Map of the resolved location"></div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/vendor/leaflet.js"></script>
 <script>
 const map = L.map('map').setView([24.4539, 54.3773], 11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+// Basemap is optional: without network the map still shows the point and its radius.
+fetch('/config').then(r => r.json()).then(c => {
+  const t = L.tileLayer(c.tile_url, {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+  t.once('tileerror', () => { $('map').style.background = 'repeating-linear-gradient(0deg,transparent 0 39px,var(--line) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,var(--line) 39px 40px)'; });
+}).catch(() => {});
 let layer = L.layerGroup().addTo(map);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -81,6 +82,7 @@ async function resolve(text) {
   try {
     const r = await fetch('/resolve', {method:'POST', headers:{'content-type':'application/json'},
       body: JSON.stringify({address: text})});
+    if (r.status === 401) throw new Error('This server needs an access token.');
     if (!r.ok) throw new Error(r.status === 422 ? 'Enter an address to resolve.' : 'The service returned an error (' + r.status + ').');
     j = await r.json();
   } catch (e) { $('out').textContent = e.message; return; }
@@ -90,7 +92,7 @@ async function resolve(text) {
 function render(j) {
   layer.clearLayers();
   const b = j.best;
-  let h = `<span class="status ${j.status}">${STATUS[j.status]}</span>`;
+  let h = `<span class="status ${j.status}">${STATUS[j.status]}</span>${j.degraded ? ' <small title="The calibrated model is not loaded; scores are not probabilities.">uncalibrated</small>' : ''}`;
   if (b) {
     const p = b.p_within_50m, v = b.p_correct_at_tier, fine = ['address','poi','interpolated','landmark'].includes(b.tier);
     const shown = fine ? p : v;

@@ -1,0 +1,7 @@
+data/raw
+data/*.sqlite
+data/models
+tests
+docs
+.git
+__pycache__

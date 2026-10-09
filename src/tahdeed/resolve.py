@@ -7,6 +7,7 @@ ranker/calibrator -> decision (resolved / approximate / ambiguous / unresolved).
 
 from __future__ import annotations
 
+import time
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -41,6 +42,9 @@ DEFAULT_RADIUS_M = {
 }
 
 MAX_NGRAM = 8
+MAX_INPUT_CHARS = 500
+MAX_TOKENS = 60
+DEFAULT_BUDGET_MS = 250.0
 FUZZY_CUTOFF = 86.0
 
 
@@ -355,6 +359,8 @@ class Resolver:
     def __init__(self, g: Gazetteer, ranker=None, radii: dict[str, float] | None = None):
         self.g = g
         self.ranker = ranker  # object with .score(list[Candidate]) -> None (sets p50)
+        self.degraded_reason: str | None = None
+        self.budget_ms: float = DEFAULT_BUDGET_MS
         self.radii = dict(DEFAULT_RADIUS_M)
         if radii:
             self.radii.update(radii)
@@ -373,9 +379,29 @@ class Resolver:
 
     def _resolve(self, text, hide_addr, hide_poi, decide: bool):
         g = self.g
+        t0 = time.perf_counter()
+        text = (text or "")[:MAX_INPUT_CHARS]
         pq = parse(text)
+        if len(pq.tokens) > MAX_TOKENS:
+            pq = parse(" ".join(pq.tokens[:MAX_TOKENS]))
         spans = find_spans(g, pq)
         notes: list[str] = []
+        if (time.perf_counter() - t0) * 1000 > self.budget_ms:
+            notes.append(f"time budget of {self.budget_ms:.0f} ms exceeded while matching names")
+            return (
+                Resolution(
+                    text,
+                    "unresolved",
+                    None,
+                    [],
+                    ["Shorten the address and retry."],
+                    pq,
+                    spans,
+                    notes,
+                )
+                if decide
+                else []
+            )
         if pq.po_box:
             notes.append("PO box is a mailing location, not a physical one: ignored for geocoding")
         if pq.makani:
