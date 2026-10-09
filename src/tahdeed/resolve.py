@@ -48,6 +48,18 @@ DEFAULT_BUDGET_MS = 250.0
 FUZZY_CUTOFF = 86.0
 
 
+@dataclass(frozen=True)
+class Flags:
+    """Component switches for ablation studies (all on = the shipped system)."""
+
+    coarse: bool = True  # consonant-class (k/kh/q...) name matching
+    siblings: bool = True  # keep consonant-class sibling street keys next to exact ones
+    fuzzy: bool = True  # edit-distance full-name spans
+    dp: bool = True  # DP span selection (False: greedy longest-first)
+    interp: bool = True  # interpolate between neighbouring house numbers
+    landmark: bool = True  # landmark-relative tier
+
+
 # ----------------------------------------------------------------------------- data types
 
 
@@ -132,8 +144,11 @@ def _bad_edge(toks: list[str], has_type: bool) -> bool:
     return first or last
 
 
-def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) -> list[Span]:
+def find_spans(
+    g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None, flags: Flags | None = None
+) -> list[Span]:
     """All name matches for the (unconsumed) tokens, as non-overlapping spans."""
+    flags = flags or Flags()
     tokens = pq.tokens
     idx = pq.body_indices() if indices is None else indices
     # a number written *before* a street-type word is a house number, not part of a name
@@ -175,7 +190,7 @@ def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) 
                     if k in g.city_by_key_alias:
                         sp.city = g.city_by_key_alias[k]
                         hit = True
-                if len(key) >= 3:
+                if flags.siblings and len(key) >= 3:
                     sibs = [
                         k for k in g.street_coarse.get(coarse_key(key), [])
                         if k not in (key, skey) and fuzz.ratio(key, k) >= 60
@@ -193,7 +208,7 @@ def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) 
     # consonant-class (coarse) matches for n-grams without an exact hit: cheap dict lookups
     exact_ranges = {(s.start, s.end) for s in exact}
     approx: list[Span] = []
-    for run in runs:
+    for run in runs if flags.coarse else []:
         for a in range(len(run)):
             for b in range(a + 1, min(len(run), a + MAX_NGRAM) + 1):
                 if (run[a], run[b - 1] + 1) in exact_ranges:
@@ -235,11 +250,11 @@ def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) 
                     (len(key), lo, hi, key, any(t in STREET_TYPES for t in toks), " ".join(toks))
                 )
     grams.sort(reverse=True)
-    for _, lo, hi, key, has_type, text in grams[:14]:
+    for _, lo, hi, key, has_type, text in grams[:14] if flags.fuzzy else []:
         sp = _fuzzy_span(g, lo, hi, key, has_type, text)
         if sp is not None:
             fuzzy.append(sp)
-    chosen = _select(exact + approx + fuzzy)
+    chosen = (_select if flags.dp else _select_greedy)(exact + approx + fuzzy)
     return sorted(chosen, key=lambda s: s.start)
 
 
@@ -311,6 +326,20 @@ def _type_misplaced(s: Span) -> bool:
     return toks[0] in STREET_TYPES and toks[-1] not in STREET_TYPES and not toks[-1].isdigit()
 
 
+def _select_greedy(spans: list[Span]) -> list[Span]:
+    """Original v1.0 selection: longest span first (kept only for the ablation)."""
+    spans = sorted(spans, key=lambda s: (-s.n, -s.quality, s.start))
+    taken: set[int] = set()
+    out: list[Span] = []
+    for s in spans:
+        rng = set(range(s.start, s.end))
+        if rng & taken:
+            continue
+        out.append(s)
+        taken |= rng
+    return out
+
+
 def _mass(s: Span) -> float:
     # superadditive: one long matched name beats the same letters split into fragments
     m = (len(s.key) * s.quality) ** 1.5
@@ -360,6 +389,7 @@ class Resolver:
         self.g = g
         self.ranker = ranker  # object with .score(list[Candidate]) -> None (sets p50)
         self.degraded_reason: str | None = None
+        self.flags = Flags()
         self.budget_ms: float = DEFAULT_BUDGET_MS
         self.radii = dict(DEFAULT_RADIUS_M)
         if radii:
@@ -384,7 +414,7 @@ class Resolver:
         pq = parse(text)
         if len(pq.tokens) > MAX_TOKENS:
             pq = parse(" ".join(pq.tokens[:MAX_TOKENS]))
-        spans = find_spans(g, pq)
+        spans = find_spans(g, pq, flags=self.flags)
         notes: list[str] = []
         if (time.perf_counter() - t0) * 1000 > self.budget_ms:
             notes.append(f"time budget of {self.budget_ms:.0f} ms exceeded while matching names")
@@ -420,7 +450,7 @@ class Resolver:
         lm_spans: list[Span] = []
         if pq.landmark_span:
             a, b = pq.landmark_span
-            lm_spans = find_spans(g, pq, indices=list(range(a, b)))
+            lm_spans = find_spans(g, pq, indices=list(range(a, b)), flags=self.flags)
 
         cities = {s.city for s in spans if s.city}
         cities |= {s.city for s in lm_spans if s.city}
@@ -450,7 +480,8 @@ class Resolver:
         cands: list[Candidate] = []
         cands += self._address_candidates(ctx)
         cands += self._poi_candidates(ctx)
-        cands += self._landmark_candidates(ctx, lm_spans)
+        if self.flags.landmark:
+            cands += self._landmark_candidates(ctx, lm_spans)
         cands += self._area_candidates(ctx)
         cands += self._city_candidates(ctx)
 
@@ -607,7 +638,7 @@ class Resolver:
             # interpolation between neighbouring numbers (single district only); also offered
             # when every exact-number hit lies outside the district the query names
             ipool = [i for i in pool if g.addr_street_keys[i] & set(ss.street_keys[:2])] or pool
-            if ctx["hns"] and ipool:
+            if self.flags.interp and ctx["hns"] and ipool:
                 cand = self._interpolate(ipool, ctx["hns"][0], ss, base_feat, ctx)
                 if cand:
                     out.append(cand)

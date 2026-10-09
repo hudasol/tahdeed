@@ -15,10 +15,12 @@ _G: Gazetteer | None = None
 _R: Resolver | None = None
 
 
-def _init_worker(g: Gazetteer, ranker, radii) -> None:
+def _init_worker(g: Gazetteer, ranker, radii, flags=None) -> None:
     global _G, _R
     _G = g
     _R = Resolver(g, ranker=ranker, radii=radii)
+    if flags is not None:
+        _R.flags = flags
 
 
 def _hide(q: Query) -> tuple[frozenset[int], frozenset[int]]:
@@ -83,14 +85,14 @@ def _eval_one(q: Query):
     return out
 
 
-def _pool(g, ranker, radii, workers):
+def _pool(g, ranker, radii, workers, flags=None):
     ctx = mp.get_context("fork")
-    return ctx.Pool(workers, initializer=_init_worker, initargs=(g, ranker, radii))
+    return ctx.Pool(workers, initializer=_init_worker, initargs=(g, ranker, radii, flags))
 
 
-def run_pool(fn, queries, g, ranker=None, radii=None, workers=2):
+def run_pool(fn, queries, g, ranker=None, radii=None, workers=2, flags=None):
     if workers <= 1:
-        _init_worker(g, ranker, radii)
+        _init_worker(g, ranker, radii, flags)
         return [fn(q) for q in queries]
-    with _pool(g, ranker, radii, workers) as p:
+    with _pool(g, ranker, radii, workers, flags) as p:
         return p.map(fn, queries, chunksize=64)
