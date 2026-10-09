@@ -84,6 +84,8 @@ def _eval_one(q: Query):
         dist=d,
         p50=b.p50,
         p_valid=b.p_valid,
+        p200=b.p200,
+        p1k=b.p1k,
         radius=b.radius_m,
         within_radius=d <= b.radius_m,
         correct=bool(tier_correct(b, t, d)),
@@ -142,48 +144,58 @@ def _gbm() -> HistGradientBoostingClassifier:
     )
 
 
+HOLE_RATE = 0.30  # assumed share of queries whose true address is absent from the registry
+
+
+def _fit_head(model_factory, X, y, Xc, yc):
+    m = model_factory().fit(X, y)
+    iso = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0)
+    iso.fit(m.predict_proba(Xc)[:, 1], yc)
+    return m, iso
+
+
 def train(
     g: Gazetteer,
     n_train: int = 30000,
     n_calib: int = 12000,
     seed: int = 0,
     workers: int = 2,
+    hole_rate: float = HOLE_RATE,
     verbose: bool = True,
 ) -> tuple[GBMRanker, TrainReport]:
     t0 = time.time()
-    from .calibrate import HeuristicRanker  # noqa: F401  (documented baseline, see evaluate)
-
-    tr = build_queries(g, n_train, max(500, n_train // 20), "train", seed, hole_rate=0.15)
-    ca = build_queries(g, n_calib, max(300, n_calib // 20), "calib", seed + 1, hole_rate=0.15)
+    tr = build_queries(g, n_train, max(500, n_train // 20), "train", seed, hole_rate=hole_rate)
+    ca = build_queries(g, n_calib, max(300, n_calib // 20), "calib", seed + 1, hole_rate=hole_rate)
     if verbose:
-        print(f"train queries {len(tr)}, calibration queries {len(ca)}")
+        print(f"train queries {len(tr)}, calibration queries {len(ca)}, hole rate {hole_rate}")
 
     rows = run_pool(_collect_one, tr, g, workers=workers)
     flat = [r for rs in rows for r in rs]
     X = np.array([r[1] for r in flat])
-    y50 = np.array([r[3] for r in flat])
-    yv = np.array([r[4] for r in flat])
-    fine_mask = np.array([r[0] in FINE_TIERS for r in flat])
+    d = np.array([r[2] for r in flat])
+    y = {"p50": (d <= 50).astype(int), "p200": (d <= 200).astype(int),
+         "p1k": (d <= 1000).astype(int), "valid": np.array([r[4] for r in flat])}  # fmt: skip
+    fine = np.array([r[0] in FINE_TIERS for r in flat])
     if verbose:
         print(
-            f"train rows {len(flat)} (fine {int(fine_mask.sum())}), collected in {time.time() - t0:.0f}s"
+            f"train rows {len(flat)} (fine {int(fine.sum())}), collected in {time.time() - t0:.0f}s"
         )
-
-    m50 = _gbm().fit(X[fine_mask], y50[fine_mask])
-    mv = _gbm().fit(X, yv)
 
     rows_c = run_pool(_collect_one, ca, g, workers=workers)
     flat_c = [r for rs in rows_c for r in rs]
     Xc = np.array([r[1] for r in flat_c])
-    y50c = np.array([r[3] for r in flat_c])
-    yvc = np.array([r[4] for r in flat_c])
+    dc = np.array([r[2] for r in flat_c])
+    yc = {"p50": (dc <= 50).astype(int), "p200": (dc <= 200).astype(int),
+          "p1k": (dc <= 1000).astype(int), "valid": np.array([r[4] for r in flat_c])}  # fmt: skip
     fine_c = np.array([r[0] in FINE_TIERS for r in flat_c])
-    raw50 = m50.predict_proba(Xc[fine_c])[:, 1]
-    rawv = mv.predict_proba(Xc)[:, 1]
-    iso50 = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0).fit(raw50, y50c[fine_c])
-    isov = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0).fit(rawv, yvc)
 
-    ranker = GBMRanker(model50=m50, iso50=iso50, model_valid=mv, iso_valid=isov)
+    heads = {}
+    for name in ("p50", "p200", "p1k", "valid"):
+        if name == "p50":  # point head is only meaningful for tiers that claim a point
+            heads[name] = _fit_head(_gbm, X[fine], y[name][fine], Xc[fine_c], yc[name][fine_c])
+        else:
+            heads[name] = _fit_head(_gbm, X, y[name], Xc, yc[name])
+    ranker = GBMRanker(heads=heads)
 
     # operating point + radii from a decision-level pass over the calibration queries
     ev = run_pool(_eval_one, ca, g, ranker=ranker, workers=workers)

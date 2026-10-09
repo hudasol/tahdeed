@@ -15,7 +15,14 @@ from rapidfuzz import fuzz, process
 
 from .gazetteer import Gazetteer, hn_int, norm_hn
 from .geo import CITY_BY_KEY, haversine_m, haversine_np
-from .normalize import STOPWORDS, STREET_TYPES, coarse_key, skeleton_tokens, strip_articles
+from .normalize import (
+    STOPWORDS,
+    STREET_TYPES,
+    coarse_key,
+    has_arabic,
+    skeleton_tokens,
+    strip_articles,
+)
 from .parse import RELATION_RADIUS_M, NumberRef, ParsedQuery, parse
 
 FINE_TIERS = ("address", "poi", "interpolated", "landmark")
@@ -52,12 +59,29 @@ class Span:
     city: str | None = None
     quality: float = 1.0
     fuzzy: bool = False
+    view: int = 0  # 0 exact skeleton, 1 consonant-class (coarse), 2 edit distance
     has_type: bool = False
     text: str = ""
+
+    alt_keys: list[str] = field(default_factory=list)  # consonant-class sibling street keys
+    street_exact: bool = True  # False when the street evidence is only a consonant-class sibling
 
     @property
     def n(self) -> int:
         return self.end - self.start
+
+    @property
+    def street_key(self) -> str:
+        return self.key if self.street_exact else (self.alt_keys[0] if self.alt_keys else self.key)
+
+    @property
+    def street_keys(self) -> list[str]:
+        base = [self.key, self.sorted_key] if self.street_exact else []
+        return list(dict.fromkeys(base + self.alt_keys))
+
+    @property
+    def street_view(self) -> int:
+        return 0 if self.street_exact else 1
 
 
 @dataclass
@@ -71,6 +95,8 @@ class Candidate:
     features: dict = field(default_factory=dict)
     p50: float | None = None  # calibrated P(within 50 m); set by the ranker
     p_valid: float | None = None  # calibrated P(candidate is correct at its own tier)
+    p200: float | None = None  # calibrated P(within 200 m)
+    p1k: float | None = None  # calibrated P(within 1 km)
     ref: tuple[str, int] | None = None  # ("addr"|"street"|"area"|"poi", row index)
 
 
@@ -95,10 +121,20 @@ def _span_keys(tokens: list[str]) -> tuple[str, str]:
     return "".join(sk), "".join(sorted(sk))
 
 
+def _bad_edge(toks: list[str], has_type: bool) -> bool:
+    """A bare number at the edge of a name span is a house/unit number, except 'Street 23'."""
+    first = toks[0].isdigit() and not (len(toks) > 1 and toks[1] in STREET_TYPES)
+    last = toks[-1].isdigit() and not (len(toks) > 1 and toks[-2] in STREET_TYPES)
+    return first or last
+
+
 def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) -> list[Span]:
     """All name matches for the (unconsumed) tokens, as non-overlapping spans."""
     tokens = pq.tokens
     idx = pq.body_indices() if indices is None else indices
+    # a number written *before* a street-type word is a house number, not part of a name
+    hn_pos = {n.pos for n in pq.numbers if n.before_type and not n.adjacent_type}
+    idx = [i for i in idx if i not in hn_pos]
     # contiguous runs within a segment
     runs: list[list[int]] = []
     for i in idx:
@@ -115,10 +151,10 @@ def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) 
                 if all(t in STOPWORDS or t in STREET_TYPES for t in toks):
                     continue
                 key, skey = _span_keys(toks)
-                if not key:
+                if len(key) < 2:
                     continue
                 has_type = any(t in STREET_TYPES for t in toks)
-                if key.isdigit() and not has_type:
+                if (key.isdigit() and not has_type) or _bad_edge(toks, has_type):
                     continue
                 sp = Span(run[a], run[b - 1] + 1, key, skey, has_type=has_type, text=" ".join(toks))
                 hit = False
@@ -135,6 +171,18 @@ def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) 
                     if k in g.city_by_key_alias:
                         sp.city = g.city_by_key_alias[k]
                         hit = True
+                if len(key) >= 3:
+                    sibs = [
+                        k for k in g.street_coarse.get(coarse_key(key), [])
+                        if k not in (key, skey) and fuzz.ratio(key, k) >= 60
+                    ]  # fmt: skip
+                    sibs.sort(key=lambda k: -fuzz.ratio(key, k))
+                    if sibs:
+                        sp.alt_keys = sibs[:5]
+                        if not sp.streets:
+                            sp.streets = True
+                            sp.street_exact = False
+                            hit = True
                 if hit:
                     exact.append(sp)
 
@@ -150,38 +198,43 @@ def find_spans(g: Gazetteer, pq: ParsedQuery, indices: list[int] | None = None) 
                 if all(t in STOPWORDS or t in STREET_TYPES for t in toks):
                     continue
                 key, _ = _span_keys(toks)
-                if len(key) < 4 or key.isdigit():
-                    continue
                 has_type = any(t in STREET_TYPES for t in toks)
+                if len(key) < 3 or key.isdigit() or _bad_edge(toks, has_type):
+                    continue
                 sp = _approx_span(g, run[a], run[b - 1] + 1, key, has_type, " ".join(toks))
                 if sp is not None:
                     approx.append(sp)
 
-    chosen = _select(exact + approx)
-    # fuzzy (edit-distance) pass over runs not covered yet
-    covered = {i for s in chosen for i in range(s.start, s.end)}
+    # fuzzy (edit-distance) pass: long names only, over all n-grams (so a full-name fuzzy span
+    # can outcompete a short exact partial); selection below keeps the best explained mass
+    hit_ranges = exact_ranges | {(s.start, s.end) for s in approx}
     fuzzy: list[Span] = []
+    hit_spans = exact + approx
+    grams: list[tuple[int, int, int, str, bool, str]] = []
     for run in runs:
-        free = [i for i in run if i not in covered]
-        sub: list[list[int]] = []
-        for i in free:
-            if sub and sub[-1][-1] == i - 1:
-                sub[-1].append(i)
-            else:
-                sub.append([i])
-        for sr in sub:
-            for a in range(len(sr)):
-                for b in range(a + 1, min(len(sr), a + 4) + 1):
-                    toks = tokens[sr[a] : sr[b - 1] + 1]
-                    if all(t in STOPWORDS or t in STREET_TYPES for t in toks):
-                        continue
-                    key, _ = _span_keys(toks)
-                    if len(key) < 5 or key.isdigit():
-                        continue
-                    has_type = any(t in STREET_TYPES for t in toks)
-                    sp = _fuzzy_span(g, sr[a], sr[b - 1] + 1, key, has_type, " ".join(toks))
-                    if sp is not None:
-                        fuzzy.append(sp)
+        for a in range(len(run)):
+            for b in range(a + 1, min(len(run), a + 5) + 1):
+                lo, hi = run[a], run[b - 1] + 1
+                if (lo, hi) in hit_ranges:
+                    continue
+                if any(s.start <= lo and hi <= s.end and s.quality >= 0.9 for s in hit_spans):
+                    continue  # strictly inside a better-explained span: cannot win selection
+                toks = tokens[lo:hi]
+                if all(t in STOPWORDS or t in STREET_TYPES for t in toks):
+                    continue
+                key, _ = _span_keys(toks)
+                if len(key) < (5 if b - a == 1 else 6) or key.isdigit():
+                    continue
+                if _bad_edge(toks, any(t in STREET_TYPES for t in toks)):
+                    continue
+                grams.append(
+                    (len(key), lo, hi, key, any(t in STREET_TYPES for t in toks), " ".join(toks))
+                )
+    grams.sort(reverse=True)
+    for _, lo, hi, key, has_type, text in grams[:14]:
+        sp = _fuzzy_span(g, lo, hi, key, has_type, text)
+        if sp is not None:
+            fuzzy.append(sp)
     chosen = _select(exact + approx + fuzzy)
     return sorted(chosen, key=lambda s: s.start)
 
@@ -199,7 +252,7 @@ def _attach(g: Gazetteer, sp: Span, kind: str, k: str) -> None:
 def _approx_span(g, start, end, key, has_type, text) -> Span | None:
     """Coarse-key lookup: tolerates consonant-class transliteration variants (k/kh/q, s/sh...)."""
     ck = coarse_key(key)
-    sp = Span(start, end, key, key, has_type=has_type, fuzzy=True, text=text)
+    sp = Span(start, end, key, key, has_type=has_type, fuzzy=True, view=1, text=text)
     best = 0.0
     for table, kind in (
         (g.street_coarse, "street"),
@@ -211,7 +264,9 @@ def _approx_span(g, start, end, key, has_type, text) -> Span | None:
             continue
         k = max(keys, key=lambda x: fuzz.ratio(key, x))
         r = fuzz.ratio(key, k)
-        if r < 75 or not 0.75 <= len(k) / len(key) <= 1.34:
+        if len(key) <= 3:
+            r = min(r, 75.0)  # equal consonant classes, but only 3 letters: weak evidence
+        elif r < 75 or not 0.75 <= len(k) / len(key) <= 1.34:
             continue
         best = max(best, r)
         _attach(g, sp, kind, k)
@@ -222,14 +277,13 @@ def _approx_span(g, start, end, key, has_type, text) -> Span | None:
 
 
 def _fuzzy_span(g, start, end, key, has_type, text) -> Span | None:
-    sp = Span(start, end, key, key, has_type=has_type, fuzzy=True, text=text)
+    sp = Span(start, end, key, key, has_type=has_type, fuzzy=True, view=2, text=text)
     best = 0.0
-    for lst, kind in (
-        (g.street_key_list, "street"),
-        (g.area_key_list, "area"),
-        (g.poi_key_list, "poi"),
-    ):
-        m = process.extractOne(key, lst, scorer=fuzz.ratio, score_cutoff=FUZZY_CUTOFF)
+    for kind in ("street", "area", "poi"):
+        pool = g.fuzzy_pool(kind, key)
+        if not pool:
+            continue
+        m = process.extractOne(key, pool, scorer=fuzz.ratio, score_cutoff=FUZZY_CUTOFF)
         if not m:
             continue
         k, score, _ = m
@@ -241,18 +295,57 @@ def _fuzzy_span(g, start, end, key, has_type, text) -> Span | None:
     return sp
 
 
+def _type_misplaced(s: Span) -> bool:
+    """Latin street types follow the name ("Al Nadi Street"), Arabic ones precede it."""
+    if not s.has_type:
+        return False
+    toks = s.text.split()
+    if len(toks) < 2:
+        return False
+    if has_arabic(s.text):
+        return toks[-1] in STREET_TYPES and toks[0] not in STREET_TYPES
+    return toks[0] in STREET_TYPES and toks[-1] not in STREET_TYPES and not toks[-1].isdigit()
+
+
+def _mass(s: Span) -> float:
+    # superadditive: one long matched name beats the same letters split into fragments
+    m = (len(s.key) * s.quality) ** 1.5
+    if _type_misplaced(s):
+        return m * 0.7
+    return m * 1.05 if s.has_type else m
+
+
 def _select(spans: list[Span]) -> list[Span]:
-    """Greedy non-overlapping selection by explained name mass (key length x match quality)."""
-    spans = sorted(spans, key=lambda s: (-len(s.key) * s.quality, -s.n, s.start))
-    taken: set[int] = set()
-    out: list[Span] = []
+    """Non-overlapping subset maximising total explained name mass (weighted interval scheduling)."""
+    best_by_range: dict[tuple[int, int], Span] = {}
     for s in spans:
-        rng = set(range(s.start, s.end))
-        if rng & taken:
-            continue
-        out.append(s)
-        taken |= rng
-    return out
+        k = (s.start, s.end)
+        if k not in best_by_range or _mass(s) > _mass(best_by_range[k]):
+            best_by_range[k] = s
+    items = sorted(best_by_range.values(), key=lambda s: (s.end, s.start))
+    n = len(items)
+    ends = [s.end for s in items]
+    import bisect
+
+    prev = [bisect.bisect_right(ends, s.start) - 1 for s in items]
+    dp = [(0.0, 0)] * (n + 1)  # (mass, -number of spans) best for first i items
+    take = [False] * (n + 1)
+    for i in range(1, n + 1):
+        s = items[i - 1]
+        with_s = (dp[prev[i - 1] + 1][0] + _mass(s), dp[prev[i - 1] + 1][1] - 1)
+        if with_s > dp[i - 1]:
+            dp[i], take[i] = with_s, True
+        else:
+            dp[i] = dp[i - 1]
+    out: list[Span] = []
+    i = n
+    while i > 0:
+        if take[i]:
+            out.append(items[i - 1])
+            i = prev[i - 1] + 1
+        else:
+            i -= 1
+    return out[::-1]
 
 
 # ----------------------------------------------------------------------------- resolver
@@ -392,7 +485,7 @@ class Resolver:
         area_keys = self._area_key_set(ctx)
         cities = ctx["cities"]
         for ss in sorted(ctx["street_spans"], key=lambda s: -(s.n * s.quality))[:2]:
-            keys = [k for k in {ss.key, ss.sorted_key} if g.has_street_key(k)]
+            keys = [k for k in dict.fromkeys(ss.street_keys) if g.has_street_key(k)]
             ids: list[int] = []
             for k in keys:
                 ids += g.addr_by_street.get(k, [])
@@ -415,9 +508,11 @@ class Resolver:
             groups = Counter((g.addr[i][8], g.addr[i][5] or g.addr[i][4]) for i in pool)
             base_feat = {
                 "street_quality": ss.quality,
-                "street_fuzzy": int(ss.fuzzy),
+                "street_fuzzy": int(ss.fuzzy or not ss.street_exact),
+                "street_alt": len(ss.alt_keys),
+                "street_ambig": g.street_ambig.get(ss.street_key, 1),
                 "street_tokens": ss.n,
-                "street_key_len": len(ss.key),
+                "street_key_len": len(ss.street_key),
                 "street_has_type": int(ss.has_type),
                 "city_consistent": city_consistent,
                 "area_consistent": area_consistent,
@@ -429,6 +524,7 @@ class Resolver:
                 "has_hn": int(bool(ctx["hns"])),
             }
             produced = False
+            conflict = False
             for h in ctx["hns"][:2]:
                 ex: list[int] = []
                 for k in keys:
@@ -436,9 +532,22 @@ class Resolver:
                 ex = self._filter_ids(sorted(set(ex)), ctx)
                 if not ex:
                     continue
-                exc = [i for i in ex if city_ok(i)] or ex
-                exa = [i for i in exc if g.addr_area_keys[i] & area_keys] if area_keys else []
-                pick = exa or exc
+                exact_k = {ss.key, ss.sorted_key} if ss.street_exact else set()
+
+                def amatch(i: int) -> int:
+                    if not area_keys:
+                        return 0
+                    return 1 if g.addr_area_keys[i] & area_keys else -1
+
+                def cmatch(i: int) -> int:
+                    if not cities:
+                        return 0
+                    return 1 if g.addr[i][8] in cities else -1
+
+                def kex(i: int, exact_k=exact_k) -> int:
+                    return int(bool(g.addr_street_keys[i] & exact_k))
+
+                pick = sorted(ex, key=lambda i: (-kex(i), -amatch(i), -cmatch(i)))
                 cluster = len({(g.addr[i][8], g.addr[i][5] or g.addr[i][4]) for i in pick})
                 for i in pick[:4]:
                     a = g.addr[i]
@@ -448,6 +557,9 @@ class Resolver:
                         n_same_clusters=cluster,
                         hn_rank=ctx["hns"].index(h),
                         postcode_match=0,
+                        key_exact=kex(i),
+                        area_match=amatch(i),
+                        city_match=cmatch(i),
                     )
                     out.append(
                         Candidate(
@@ -461,12 +573,16 @@ class Resolver:
                             ref=("addr", i),
                         )  # fmt: skip
                     )
+                if all(amatch(i) <= 0 and cmatch(i) <= 0 for i in pick[:4]) and area_keys:
+                    conflict = True
                 produced = True
-            if produced:
+            if produced and not conflict:
                 continue
-            # interpolation between neighbouring numbers (single district only)
-            if ctx["hns"] and pool:
-                cand = self._interpolate(pool, ctx["hns"][0], ss, base_feat, ctx)
+            # interpolation between neighbouring numbers (single district only); also offered
+            # when every exact-number hit lies outside the district the query names
+            ipool = [i for i in pool if g.addr_street_keys[i] & set(ss.street_keys[:2])] or pool
+            if ctx["hns"] and ipool:
+                cand = self._interpolate(ipool, ctx["hns"][0], ss, base_feat, ctx)
                 if cand:
                     out.append(cand)
             # street (+area) only
@@ -522,7 +638,7 @@ class Resolver:
             ref_i = nb[1]
         f = dict(base_feat)
         f.update(gap=gap, span_m=span_m, between=int(kind == "between"), n_same=0, n_same_clusters=0,
-                 hn_rank=0, postcode_match=0)  # fmt: skip
+                 hn_rank=0, postcode_match=0, key_exact=1, area_match=0, city_match=0)  # fmt: skip
         lab = _addr_label(g.addr[ref_i])
         lab["building"] = h
         return Candidate("interpolated", float(lat), float(lon), self.radii["interpolated"],
@@ -615,7 +731,7 @@ class Resolver:
         g = self.g
         out: list[Candidate] = []
         cities = ctx["cities"]
-        street_keys = {k for s in ctx["street_spans"] for k in (s.key, s.sorted_key)}
+        street_keys = {k for s in ctx["street_spans"] for k in s.street_keys}
         area_keys = self._area_key_set(ctx)
         from .gazetteer import keys_of
 
@@ -645,6 +761,7 @@ class Resolver:
                     "poi_fuzzy": int(ps.fuzzy),
                     "poi_tokens": ps.n,
                     "poi_key_len": len(ps.key),
+                    "poi_ambig": g.poi_ambig.get(ps.key, 1),
                     "n_poi_same": len(ids),
                     "poi_street_consistent": st_ok,
                     "city_consistent": city_consistent,
@@ -731,10 +848,10 @@ class Resolver:
         """Where the rest of the address points to (to choose between same-name landmarks)."""
         g = self.g
         for ss in ctx["street_spans"]:
-            ids = g.addr_by_street.get(ss.key, []) or g.addr_by_street.get(ss.sorted_key, [])
+            ids = next((g.addr_by_street[k] for k in ss.street_keys if k in g.addr_by_street), [])
             if ids:
                 return float(np.mean(g.addr_lat[ids])), float(np.mean(g.addr_lon[ids]))
-            segs = g.street_by_key.get(ss.key, [])
+            segs = next((g.street_by_key[k] for k in ss.street_keys if k in g.street_by_key), [])
             if segs:
                 return float(np.mean(g.street_lat[segs])), float(np.mean(g.street_lon[segs]))
         for s in ctx["area_spans"]:
@@ -763,6 +880,7 @@ class Resolver:
                 f = {
                     "area_quality": s.quality, "area_fuzzy": int(s.fuzzy), "area_tokens": s.n,
                     "area_key_len": len(s.key),
+                    "area_ambig": g.area_ambig.get(s.key, 1),
                     "area_instances": len(s.areas), "area_n": a[8], "area_radius": a[7],
                     "city_consistent": 1 if cities and a[4] in cities else (0 if not cities else -1),
                     "n_body": ctx["n_body"], "n_unexplained": ctx["n_unexplained"],
@@ -845,7 +963,7 @@ def _ev(ss: Span, ctx: dict, hn: str | None, how: str) -> dict:
         "street_fuzzy": ss.fuzzy,
         "house_number": hn,
         "how": how,
-        "keys": sorted({ss.key, ss.sorted_key}),
+        "keys": sorted(set(ss.street_keys)),
     }
 
 
