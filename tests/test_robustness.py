@@ -102,3 +102,13 @@ def test_model_roundtrip_matches_sklearn_and_detects_tampering(tmp_path):
         pass
     else:
         raise AssertionError("tampered model must be refused")
+
+
+def test_pii_is_removed_before_matching():
+    from tahdeed.privacy import redact_pii
+
+    t, kinds = redact_pii("Villa 5 Al Wasl Rd Dubai call 050 123 4567 or a.b@x.com +971 4 123 4567")
+    assert "050" not in t and "@" not in t and "971" not in t
+    assert set(kinds) == {"email", "phone"}
+    t2, k2 = redact_pii("12345 67890 Makani, 29 Khalidiyah")
+    assert k2 == [] and "12345" in t2
