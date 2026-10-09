@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+build/
+dist/
+
+# Locally built data (ODbL-derived; rebuilt by `tahdeed build`)
+data/raw/
+data/gazetteer.sqlite
+data/*.sqlite
+data/models/
+.DS_Store
