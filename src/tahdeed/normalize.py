@@ -304,3 +304,30 @@ class Normalized:
 def normalize(s: str) -> Normalized:
     text = normalize_text(s)
     return Normalized(raw=s, text=text, tokens=tuple(_TOKEN_RE.findall(text)), script=script_of(s))
+
+
+# --------------------------------------------------------------------------- coarse keys
+
+_COARSE = str.maketrans(
+    {
+        "X": "k",
+        "G": "k",
+        "j": "k",
+        "y": "k",
+        "q": "k",
+        "g": "k",
+        "S": "s",
+        "z": "s",
+        "d": "t",
+        "p": "b",
+        "v": "f",
+    }  # fmt: skip
+)
+
+
+def coarse_key(k: str) -> str:
+    """Merge consonant classes that transliterations confuse (j/g/k/kh/gh, s/z/sh, d/t).
+
+    Used only as a *fallback* index: much higher recall, lower precision than the skeleton.
+    """
+    return _collapse(k.translate(_COARSE))
