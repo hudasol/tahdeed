@@ -17,8 +17,8 @@ from .calibrate import GBMRanker, HeuristicRanker
 from .gazetteer import Gazetteer
 from .geo import haversine_m
 from .noise import Query, make_address_queries, make_poi_queries
+from .parallel import _eval_one, run_pool
 from .resolve import FINE_TIERS, Resolver
-from .train import _eval_one, run_pool
 
 SPLIT = "dev"  # "sealed" only for the final report (docs/PREDICTIONS.md)
 

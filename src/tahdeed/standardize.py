@@ -64,6 +64,8 @@ def candidate_json(c: Candidate) -> dict:
         "lon": round(c.lon, 6),
         "radius_m": round(c.radius_m),
         "p_within_50m": None if c.p50 is None else round(c.p50, 3),
+        "p_within_200m": None if c.p200 is None else round(c.p200, 3),
+        "p_within_1km": None if c.p1k is None else round(c.p1k, 3),
         "p_correct_at_tier": None if c.p_valid is None else round(c.p_valid, 3),
         "standard": standard_form(c),
         "evidence": {k: v for k, v in c.evidence.items() if k not in ("keys", "area_keys")},

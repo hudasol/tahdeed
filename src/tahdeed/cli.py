@@ -19,7 +19,7 @@ def main(argv: list[str] | None = None) -> int:
 
     t = sub.add_parser("train", help="train + calibrate the ranker")
     t.add_argument("--db", default="data/gazetteer.sqlite")
-    t.add_argument("--out", default="data/models/ranker.pkl")
+    t.add_argument("--out", default="data/models/ranker.npz")
     t.add_argument("--n-train", type=int, default=30000)
     t.add_argument("--workers", type=int, default=2)
 
@@ -30,10 +30,17 @@ def main(argv: list[str] | None = None) -> int:
     ba = sub.add_parser("batch", help="resolve a CSV with an 'address' column")
     ba.add_argument("infile")
     ba.add_argument("outfile")
+    ba.add_argument("--workers", type=int, default=1)
+
+    sub.add_parser("verify", help="check gazetteer / model provenance and integrity")
+
+    be = sub.add_parser("bench", help="latency, throughput, load time and memory")
+    be.add_argument("--n", type=int, default=2000)
+    be.add_argument("--json", action="store_true")
 
     e = sub.add_parser("eval", help="run the evaluation harness")
     e.add_argument("--db", default="data/gazetteer.sqlite")
-    e.add_argument("--model", default="data/models/ranker.pkl")
+    e.add_argument("--model", default="data/models/ranker.npz")
     e.add_argument("--n", type=int, default=6000)
     e.add_argument("--nominatim", type=int, default=0)
     e.add_argument("--out", default="data/eval_results.json")
@@ -54,7 +61,9 @@ def main(argv: list[str] | None = None) -> int:
 
         g = Gazetteer.load(a.db)
         ranker, _ = train(g, n_train=a.n_train, n_calib=a.n_train // 3, workers=a.workers)
-        ranker.save(a.out)
+        from .model_io import export
+
+        export(ranker, a.out, g.sha256, {"n_train": a.n_train})
         print(f"saved {a.out}")
     elif a.cmd == "resolve":
         from .service import load_resolver
@@ -66,38 +75,115 @@ def main(argv: list[str] | None = None) -> int:
         else:
             _pretty(j)
     elif a.cmd == "batch":
-        from .service import load_resolver
-        from .standardize import resolution_json
-
-        res = load_resolver()
-        with (
-            open(a.infile, newline="", encoding="utf-8-sig") as fh,
-            open(a.outfile, "w", newline="", encoding="utf-8") as out,
-        ):
-            w = csv.writer(out)
-            w.writerow(["address", "status", "lat", "lon", "radius_m", "p_within_50m", "tier",
-                        "standard_en", "asks"])  # fmt: skip
-            for row in csv.DictReader(fh):
-                j = resolution_json(res.resolve(row["address"]))
-                bst = j["best"] or {}
-                w.writerow([row["address"], j["status"], bst.get("lat", ""), bst.get("lon", ""),
-                            bst.get("radius_m", ""), bst.get("p_within_50m", ""),
-                            bst.get("tier", ""), (bst.get("standard") or {}).get("en", ""),
-                            " | ".join(j["asks"])])  # fmt: skip
+        _batch(a.infile, a.outfile, a.workers)
+    elif a.cmd == "verify":
+        return _verify()
+    elif a.cmd == "bench":
+        return _bench(a.n, a.json)
     elif a.cmd == "eval":
-        from .calibrate import GBMRanker
         from .evaluate import evaluate, to_markdown
         from .gazetteer import Gazetteer
+        from .model_io import load as load_model
 
         g = Gazetteer.load(a.db)
-        res = evaluate(g, GBMRanker.load(a.model), n_addr=a.n, n_hole=a.n // 2,
-                       nominatim=a.nominatim)  # fmt: skip
+        ranker = load_model(a.model, gazetteer_sha256=g.sha256)
+        res = evaluate(g, ranker, n_addr=a.n, n_hole=a.n // 2, nominatim=a.nominatim)
         Path(a.out).write_text(json.dumps(res, indent=1, default=float))
         print(to_markdown(res))
     elif a.cmd == "serve":
         import uvicorn
 
         uvicorn.run("tahdeed.api:app_factory", factory=True, host=a.host, port=a.port)
+    return 0
+
+
+_R = None
+
+
+def _resolve_row(text: str) -> dict:
+    from .standardize import resolution_json
+
+    return resolution_json(_R.resolve(text[:500]))
+
+
+def _batch(infile: str, outfile: str, workers: int) -> None:
+    import multiprocessing as mp
+
+    from .service import load_resolver
+
+    global _R
+    _R = load_resolver()
+    with open(infile, newline="", encoding="utf-8-sig") as fh:
+        rows = list(csv.DictReader(fh))
+    if not rows or "address" not in rows[0]:
+        raise SystemExit("input CSV needs an 'address' column")
+    texts = [r["address"] for r in rows]
+    if workers > 1:
+        with mp.get_context("fork").Pool(workers) as pool:
+            results = pool.map(_resolve_row, texts, chunksize=64)
+    else:
+        results = [_resolve_row(t) for t in texts]
+    with open(outfile, "w", newline="", encoding="utf-8") as out:
+        w = csv.writer(out)
+        w.writerow(["address", "status", "lat", "lon", "radius_m", "p_within_50m", "p_within_1km",
+                    "tier", "standard_en", "asks", "calibrated"])  # fmt: skip
+        for t, j in zip(texts, results, strict=True):
+            b = j["best"] or {}
+            w.writerow([t, j["status"], b.get("lat", ""), b.get("lon", ""), b.get("radius_m", ""),
+                        b.get("p_within_50m", ""), b.get("p_within_1km", ""), b.get("tier", ""),
+                        (b.get("standard") or {}).get("en", ""), " | ".join(j["asks"]),
+                        not bool(_R.degraded_reason)])  # fmt: skip
+    print(f"resolved {len(texts)} addresses -> {outfile}")
+
+
+def _verify() -> int:
+    from .gazetteer import Gazetteer
+    from .model_io import ModelMismatch
+    from .model_io import load as load_model
+    from .service import DEFAULT_DB, DEFAULT_MODEL
+
+    g = Gazetteer.load(DEFAULT_DB)
+    print(f"gazetteer  {DEFAULT_DB}  sha256={g.sha256[:16]}  schema={g.meta.get('schema')}")
+    print(f"           source={g.meta.get('source')}  built_at={g.meta.get('built_at')}")
+    try:
+        m = load_model(DEFAULT_MODEL, gazetteer_sha256=g.sha256)
+        mf = m.manifest
+        print(
+            f"model      {DEFAULT_MODEL}  arrays_sha256={mf['arrays_sha256'][:16]}  tau={mf['policy']['tau']}"
+        )
+        print("OK: model matches code (feature list) and gazetteer, checksum valid")
+        return 0
+    except (ModelMismatch, OSError) as ex:
+        print(f"FAIL: {ex}")
+        return 1
+
+
+def _bench(n: int, as_json: bool) -> int:
+    import resource
+    import time
+
+    import numpy as np
+
+    from .noise import make_address_queries
+    from .service import load_resolver
+
+    t0 = time.perf_counter()
+    r = load_resolver()
+    load_s = time.perf_counter() - t0
+    qs = make_address_queries(r.g, n, "dev", seed=99)
+    lat = []
+    for q in qs[:50]:  # warm-up
+        r.resolve(q.text)
+    for q in qs:
+        t = time.perf_counter()
+        r.resolve(q.text)
+        lat.append((time.perf_counter() - t) * 1000)
+    rss_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    out = {"n": len(lat), "load_seconds": round(load_s, 2), "rss_mb": round(rss_mb),
+           "ms_p50": round(float(np.percentile(lat, 50)), 2), "ms_p95": round(float(np.percentile(lat, 95)), 2),
+           "ms_p99": round(float(np.percentile(lat, 99)), 2), "ms_max": round(max(lat), 1),
+           "qps_single_core": round(1000 / float(np.mean(lat)), 1)}  # fmt: skip
+    print(json.dumps(out) if as_json else "\n".join(f"{k:>16}: {v}" for k, v in out.items()))
     return 0
 
 
