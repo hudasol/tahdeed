@@ -201,7 +201,11 @@ def decide(resolver, text, pq, spans, cands, ctx, notes) -> Resolution:
 
     if fine and (fine[0].p50 or 0.0) >= policy.tau:
         top = fine[0]
-        rivals = [c for c in fine[1:] if _dist(top, c) > policy.min_separation_m]
+        rivals = [
+            c
+            for c in fine[1:]
+            if _dist(top, c) > policy.min_separation_m and (c.p50 or 0.0) >= 0.05
+        ]
         best, alts = top, rivals[:3]
         if rivals and (rivals[0].p50 or 0.0) >= policy.ambiguity_margin * (top.p50 or 0.0):
             status = "ambiguous"
