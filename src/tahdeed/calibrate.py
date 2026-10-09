@@ -275,5 +275,5 @@ def empirical_radii(errors_by_tier: dict[str, list[float]], q: float = 0.9) -> d
     out: dict[str, float] = {}
     for tier, errs in errors_by_tier.items():
         if len(errs) >= 30:
-            out[tier] = float(np.quantile(np.array(errs), q))
+            out[tier] = max(25.0, float(np.quantile(np.array(errs), q)))
     return out
