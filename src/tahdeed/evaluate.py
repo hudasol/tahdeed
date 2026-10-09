@@ -20,6 +20,8 @@ from .noise import Query, make_address_queries, make_poi_queries
 from .resolve import FINE_TIERS, Resolver
 from .train import _eval_one, run_pool
 
+SPLIT = "dev"  # "sealed" only for the final report (docs/PREDICTIONS.md)
+
 # ----------------------------------------------------------------------------- metrics
 
 
@@ -47,6 +49,16 @@ def reliability(p: np.ndarray, y: np.ndarray, bins: int = 10) -> list[dict]:
             out.append({"bin": f"{edges[b]:.1f}-{edges[b + 1]:.1f}", "n": int(m.sum()),
                         "mean_p": float(p[m].mean()), "frac_correct": float(y[m].mean())})  # fmt: skip
     return out
+
+
+def bootstrap_ci(x: np.ndarray, n_boot: int = 1000, seed: int = 0) -> tuple[float, float]:
+    """95% percentile bootstrap interval of the mean of a 0/1 (or real) vector."""
+    if len(x) == 0:
+        return (float("nan"), float("nan"))
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(x), size=(n_boot, len(x)))
+    means = x[idx].mean(axis=1)
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
 
 
 def summarize(ev: list[dict], queries: list[Query]) -> dict:
@@ -78,6 +90,17 @@ def summarize(ev: list[dict], queries: list[Query]) -> dict:
         "latency_ms_p95": float(np.percentile([e["ms"] for e in ev], 95)),
         "mean_asks": float(np.mean([e["asks"] for e in ev])),
     }
+    if resolved:
+        out["resolved_precision_50m_ci95"] = bootstrap_ci(
+            np.array([float(bool(e.get("within50"))) for e in resolved])
+        )
+    out["forced_top1_50m_ci95"] = bootstrap_ci(
+        np.array([float(bool(e.get("within50"))) for e in ev])
+    )
+    for head, key, thr in (("p200", "p200", "within200"), ("p1k", "p1k", "within1k")):
+        pp = [(e[key], float(bool(e[thr]))) for e in answered if e.get(key) is not None]
+        if pp:
+            out[f"ece_{head}"] = ece(np.array([a for a, _ in pp]), np.array([b for _, b in pp]))
     fine = [e for e in ev if e.get("fine_p50") is not None]
     if fine:
         p = np.array([e["fine_p50"] for e in fine])
@@ -199,6 +222,18 @@ def nominatim_sample(queries: list[Query], limit: int = 200) -> dict:
             "top1_1km": d1k / max(done, 1)}  # fmt: skip
 
 
+def hole_sensitivity(g, ranker, rates=(0.0, 0.15, 0.3, 0.5, 1.0), n=1500, seed=21, workers=2):
+    """How do precision / calibration move when the share of absent addresses changes?"""
+    out = {}
+    for r in rates:
+        qs = make_address_queries(g, n, SPLIT, seed=seed, hole_rate=r)
+        ev = run_pool(_eval_one, qs, g, ranker=ranker, radii=ranker.radii, workers=workers)
+        sm = summarize(ev, qs)
+        out[str(r)] = {k: sm.get(k) for k in ("resolved_coverage", "resolved_precision_50m",
+                                              "forced_top1_50m", "ece_p50", "ece_p1k")}  # fmt: skip
+    return out
+
+
 # ----------------------------------------------------------------------------- driver
 
 
@@ -213,9 +248,9 @@ def evaluate(
     seed: int = 7,
     workers: int = 2,
 ) -> dict:
-    addr_q = make_address_queries(g, n_addr, "test", seed=seed)
-    hole_q = make_address_queries(g, n_hole, "test", seed=seed + 1, hole_rate=1.0)
-    poi_q = make_poi_queries(g, n_poi, "test", seed=seed)
+    addr_q = make_address_queries(g, n_addr, SPLIT, seed=seed)
+    hole_q = make_address_queries(g, n_hole, SPLIT, seed=seed + 1, hole_rate=1.0)
+    poi_q = make_poi_queries(g, n_poi, SPLIT, seed=seed)
     res: dict = {"seed": seed, "gazetteer": g.stats(), "meta": g.meta}
 
     ev = run_pool(_eval_one, addr_q, g, ranker=ranker, radii=ranker.radii, workers=workers)
@@ -225,6 +260,8 @@ def evaluate(
     ev = run_pool(_eval_one, poi_q, g, ranker=ranker, radii=ranker.radii, workers=workers)
     res["dubai_poi"] = summarize(ev, poi_q)
 
+    res["hole_sensitivity"] = hole_sensitivity(g, ranker, workers=workers)
+    res["split"] = SPLIT
     heur = HeuristicRanker()
     ev = run_pool(_eval_one, addr_q[: n_baseline * 2], g, ranker=heur, radii=None, workers=workers)
     res["baseline_heuristic_ranker"] = summarize(ev, addr_q[: n_baseline * 2])

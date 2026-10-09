@@ -18,13 +18,17 @@ from dataclasses import dataclass, field
 from .gazetteer import Gazetteer
 from .normalize import has_arabic
 
-SPLITS = ("train", "calib", "test")
+SPLITS = ("train", "calib", "dev", "sealed")
 
 
 def split_of(key: str) -> str:
-    """Deterministic district-level split: 50% train, 20% calibration, 30% test."""
+    """Deterministic district-level split: 50% train, 20% calibration, 20% dev, 10% sealed.
+
+    ``dev`` is used freely while iterating. ``sealed`` is touched only for the v1.0 baseline
+    and for the final report (see docs/PREDICTIONS.md).
+    """
     b = zlib.crc32(key.encode("utf-8")) % 10
-    return "train" if b < 5 else ("calib" if b < 7 else "test")
+    return "train" if b < 5 else ("calib" if b < 7 else ("dev" if b < 9 else "sealed"))
 
 
 @dataclass
