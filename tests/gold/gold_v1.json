@@ -1,0 +1,282 @@
+[
+ {
+  "query": "64 Tawi Baaya St, Mazyad, Al Ain",
+  "lat": 24.0602013,
+  "lon": 55.8523175,
+  "street_en": "Tawi B'aya Street",
+  "area_en": "Mazyad"
+ },
+ {
+  "query": "42 Barqa Al Oqaila street MBZ city abu dhabi",
+  "lat": 24.3437865,
+  "lon": 54.5295832,
+  "street_en": "Barqa Al 'Iqaylah Street",
+  "area_en": "Mohamed Bin Zayed City"
+ },
+ {
+  "query": "villa 156 Al Manazir St Zakhir Al Ain",
+  "lat": 24.1380584,
+  "lon": 55.68464,
+  "street_en": "Al Manadhir Street",
+  "area_en": "Zakhir"
+ },
+ {
+  "query": "8 شارع القصائد الشامخة ابوظبي",
+  "lat": 24.3520634,
+  "lon": 54.6977236,
+  "street_en": "Al Qasa-id Street",
+  "area_en": "Al Shamkhah"
+ },
+ {
+  "query": "4 Al Atna street Mubazzarah Al Khadra Al Ain",
+  "lat": 24.0803043,
+  "lon": 55.7306921,
+  "street_en": "Al 'Atnah Street",
+  "area_en": "Mbazzarah Al Khadra"
+ },
+ {
+  "query": "15 Obaid bin Rashid Mansouri st Nahda Abu Dhabi",
+  "lat": 24.278909,
+  "lon": 54.6835574,
+  "street_en": "Obaid Bin Rashid Al Mansouri Street",
+  "area_en": "Al Nahdah"
+ },
+ {
+  "query": "25 salsabil st markhaniya al ain",
+  "lat": 24.2219029,
+  "lon": 55.6594372,
+  "street_en": "Al Salsabeel Street",
+  "area_en": "Al Markhaniyyah"
+ },
+ {
+  "query": "6 Niqyan Al Salam street Hili",
+  "lat": 24.289792,
+  "lon": 55.7771724,
+  "street_en": "Niqyan As Salam Street",
+  "area_en": "Hili"
+ },
+ {
+  "query": "38 Al Yarih St Al Bateen Abu Dhabi",
+  "lat": 24.4606006,
+  "lon": 54.3363368,
+  "street_en": "Al Yarih Street",
+  "area_en": "Al Bateen"
+ },
+ {
+  "query": "36 شارع الزيتون عشارج العين",
+  "lat": 24.2103152,
+  "lon": 55.6817358,
+  "street_en": "Az Zaytoun Street",
+  "area_en": "'Asharij"
+ },
+ {
+  "query": "138 Al Dhahar st Rawdat Al Reef",
+  "lat": 24.5476634,
+  "lon": 54.7071051,
+  "street_en": "Al Dhahar Street",
+  "area_en": "Rawdat Al Reef"
+ },
+ {
+  "query": "17 Aqabat Al Ashkhara st Al Nahda abu dhabi",
+  "lat": 24.2699937,
+  "lon": 54.6712961,
+  "street_en": "'Aqabat Al Ashkharah Street",
+  "area_en": "Al Nahdah"
+ },
+ {
+  "query": "2 Harithah bin Sahl, Bani Yas",
+  "lat": 24.294623,
+  "lon": 54.6338829,
+  "street_en": "Harithah Bin Sahl Street",
+  "area_en": "Bani Yas"
+ },
+ {
+  "query": "4 Al Nuzha street Muntazah Abu Dhabi",
+  "lat": 24.4305311,
+  "lon": 54.4657008,
+  "street_en": "An Nuzhah Street",
+  "area_en": "Al Muntazah"
+ },
+ {
+  "query": "12 Khor Qirqishan Street Al Bateen",
+  "lat": 24.4550776,
+  "lon": 54.3319336,
+  "street_en": "Khor Qirqishan Street",
+  "area_en": "Al Bateen"
+ },
+ {
+  "query": "9 Haboub st Tiwayya",
+  "lat": 24.2715077,
+  "lon": 55.713993,
+  "street_en": "Al Haboub Street",
+  "area_en": "Al Tiwayya"
+ },
+ {
+  "query": "6 Mousa bin Nusair st Al Falah",
+  "lat": 24.4222861,
+  "lon": 54.7466208,
+  "street_en": "Mousa Bin Nusayr Street",
+  "area_en": "Al Falah"
+ },
+ {
+  "query": "11 Bishra Street Al Amerah Al Ain",
+  "lat": 24.2194292,
+  "lon": 55.5491707,
+  "street_en": "Bishrah Street",
+  "area_en": "Al Aamerah"
+ },
+ {
+  "query": "16 Ar Rukn st Bani Yas East",
+  "lat": 24.289571,
+  "lon": 54.6429336,
+  "street_en": "Ar Rukn Street",
+  "area_en": "Bani Yas"
+ },
+ {
+  "query": "18 Seeh Al Nisouriyah st Rahbah",
+  "lat": 24.6078526,
+  "lon": 54.7090002,
+  "street_en": "Seeh Al Nisouriyyah Street",
+  "area_en": "Al Rahbah"
+ },
+ {
+  "query": "8 Al Hadeel st Muwaiji Al Ain",
+  "lat": 24.2211028,
+  "lon": 55.7053839,
+  "street_en": "Al Hadeel Street",
+  "area_en": "Al Muwaij'i"
+ },
+ {
+  "query": "34 Ash'ab St Al Nahyan Abu Dhabi",
+  "lat": 24.4677586,
+  "lon": 54.3738567,
+  "street_en": "Ash'ab Street",
+  "area_en": "Al Nahyan"
+ },
+ {
+  "query": "55 Mohammed bin Ghannam Al Hameli st Mahadir Madinat Zayed",
+  "lat": 23.1356321,
+  "lon": 53.9092485,
+  "street_en": "Mohammed Bin Ghannam Al Hameli Street",
+  "area_en": "Eastern Mahadir"
+ },
+ {
+  "query": "13 As Saqoul Rabdan",
+  "lat": 24.4052779,
+  "lon": 54.5161489,
+  "street_en": "As Saqoul Street",
+  "area_en": "Rabdan"
+ },
+ {
+  "query": "870 Sheikh Rashid bin Saeed St Mushrif",
+  "lat": 24.4496619,
+  "lon": 54.3891105,
+  "street_en": "Sheikh Rashid Bin Saeed Street",
+  "area_en": "Al Mushrif"
+ },
+ {
+  "query": "22 Maghayel Harib street Bani Yas west",
+  "lat": 24.2976496,
+  "lon": 54.620446,
+  "street_en": "Maghayil Harib Street",
+  "area_en": "Bani Yas"
+ },
+ {
+  "query": "7 Jarn Al Marzoum Al Rawdah Abu Dhabi",
+  "lat": 24.4275187,
+  "lon": 54.4237832,
+  "street_en": "Jarn Al Marzoum Street",
+  "area_en": "Al Rawdah"
+ },
+ {
+  "query": "66 Rawasi st Falaj Hazza Al Ain",
+  "lat": 24.191494,
+  "lon": 55.7420528,
+  "street_en": "Ar Rawasi Street",
+  "area_en": "Falaj Hazza'"
+ },
+ {
+  "query": "6 Al Qasab st Al Falah",
+  "lat": 24.4291078,
+  "lon": 54.7287526,
+  "street_en": "Al Qasab Street",
+  "area_en": "Al Falah"
+ },
+ {
+  "query": "6 شارع الديرة الطوية",
+  "lat": 24.2547064,
+  "lon": 55.7033125,
+  "street_en": "Ad Deerah Street",
+  "area_en": "Al Tiwayya"
+ },
+ {
+  "query": "10 Hid Al Lakkiya Salamat Al Ain",
+  "lat": 24.2117208,
+  "lon": 55.5840854,
+  "street_en": "Hid Al Lakkiyah Street",
+  "area_en": "Al Salamat"
+ },
+ {
+  "query": "24 Shees Al Yahal st Mubazzarah",
+  "lat": 24.0810467,
+  "lon": 55.737045,
+  "street_en": "Shees Al Yahal Street",
+  "area_en": "Mbazzarah Al Khadra"
+ },
+ {
+  "query": "14 Qussar Matar street zakher",
+  "lat": 24.1371821,
+  "lon": 55.7108033,
+  "street_en": "Qussar Matar Street",
+  "area_en": "Zakhir"
+ },
+ {
+  "query": "4 Arqoub Qata st Dhahir Al Ain",
+  "lat": 24.1142946,
+  "lon": 55.8539039,
+  "street_en": "'Arqoub Qata Street",
+  "area_en": "Al Dhahir"
+ },
+ {
+  "query": "77 Al Kiram street Samha",
+  "lat": 24.6346647,
+  "lon": 54.7206536,
+  "street_en": "Al Kiram Street",
+  "area_en": "Al Samhah"
+ },
+ {
+  "query": "25 شارع البيداء المعترض العين",
+  "lat": 24.2119359,
+  "lon": 55.740788,
+  "street_en": "Al Bayda Street",
+  "area_en": "Al Mu'tarid"
+ },
+ {
+  "query": "36 shari3 al zaytoun 3asharij al3ain",
+  "lat": 24.2103152,
+  "lon": 55.6817358,
+  "street_en": "Az Zaytoun Street",
+  "area_en": "'Asharij"
+ },
+ {
+  "query": "19 Mamar 2137 Eastern Mahadir Madinat Zayed",
+  "lat": 23.1482165,
+  "lon": 53.8964137,
+  "street_en": "Lane 2137",
+  "area_en": "Eastern Mahadir"
+ },
+ {
+  "query": "al bateen abu dhabi yarih st no 38",
+  "lat": 24.4606006,
+  "lon": 54.3363368,
+  "street_en": "Al Yarih Street",
+  "area_en": "Al Bateen"
+ },
+ {
+  "query": "عبيد بن راشد المنصوري 15 النهضة",
+  "lat": 24.278909,
+  "lon": 54.6835574,
+  "street_en": "Obaid Bin Rashid Al Mansouri Street",
+  "area_en": "Al Nahdah"
+ }
+]

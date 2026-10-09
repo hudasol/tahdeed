@@ -20,7 +20,7 @@ from .gazetteer import Gazetteer
 from .geo import haversine_m
 from .model_io import Isotonic, NumpyRanker
 from .noise import Query, make_address_queries
-from .noise2 import make_address_queries_v2
+from .noise2 import make_address_queries_v2, make_landmark_queries
 from .parallel import _eval_one, run_pool
 from .resolve import Flags
 
@@ -179,6 +179,21 @@ def run_studies(
             row["resolved_correct_vs_full"] = paired_diff(resolved_ok(ev), base_r)
         abl[name] = row
     res["ablations"] = {"n": len(mix_q), "rows": abl}
+
+    # 2b. landmark-relative queries ("near X"): does the landmark tier earn its keep? -------
+    lm_q = make_landmark_queries(g, min(n, 1500), SPLIT, seed=seed)
+    lm_on = run_pool(_eval_one, lm_q, g, ranker=ranker, radii=ranker.radii, workers=workers)
+    lm_off = run_pool(_eval_one, lm_q, g, ranker=ranker, radii=ranker.radii, workers=workers,
+                      flags=Flags(landmark=False))  # fmt: skip
+    res["landmark"] = {
+        "n": len(lm_q),
+        "with_landmark_tier": brief(lm_on),
+        "without": brief(lm_off),
+        "top1_within_200m": float(np.mean([float((e.get("dist") or 1e9) <= 200) for e in lm_on])),
+        "top1_within_200m_without": float(
+            np.mean([float((e.get("dist") or 1e9) <= 200) for e in lm_off])
+        ),
+    }
 
     # 3. baselines on the same mix ------------------------------------------------------------
     if baseline:

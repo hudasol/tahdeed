@@ -119,7 +119,7 @@ def tokenize(s: str) -> list[str]:
 # Definite articles / assimilated forms. Removed from skeletons when not the last token.
 LATIN_ARTICLES = {
     "al", "el", "ar", "as", "ash", "at", "ad", "az", "an", "ath", "adh", "ag", "ac",
-    "aj", "ak", "aq", "ap",
+    "aj", "ak", "aq", "ap", "aal", "ael", "ell", "il", "ul",
 }  # fmt: skip
 
 # Street-type words -> canonical type tag. Dropped from name keys; kept as a field.
@@ -130,6 +130,12 @@ STREET_TYPES: dict[str, str] = {
     "boulevard": "boulevard", "blvd": "boulevard", "بوليفارد": "boulevard",
     "corniche": "corniche", "كورنيش": "corniche",
     "highway": "highway", "hwy": "highway", "motorway": "highway",
+    "mamar": "lane", "momar": "lane", "mmr": "lane", "sikka": "lane", "sikkah": "lane",
+    "sekka": "lane", "sikkat": "lane",
+    "shari": "street", "shari3": "street", "share3": "street", "shar3": "street",
+    "shariaa": "street", "shaari": "street", "tareeq": "road", "tariiq": "road", "tareek": "road",
+    "dawar": "roundabout", "dawwar": "roundabout", "dowar": "roundabout", "jisr": "bridge",
+    "midan": "square", "maidan": "square",
     "lane": "lane", "ln": "lane", "زقاق": "lane", "ممر": "lane", "درب": "lane",
     "سكه": "lane", "سكة": "lane",
     "square": "square", "sq": "square", "ميدان": "square",
@@ -204,7 +210,21 @@ def _skeleton_arabic_word(w: str) -> str:
     return _collapse("".join(out))
 
 
+_ARABIZI = str.maketrans({"3": "", "2": "", "7": "h", "5": "X", "9": "s", "6": "t", "8": "G"})
+
+
+def _decode_arabizi(w: str) -> str:
+    """Chat-alphabet digits inside a word are letters: 3=ع 7=ح 5=خ 2=ء 9=ص 6=ط 8=غ.
+
+    Only for tokens with at least two letters, so house numbers like "12a" stay numbers.
+    """
+    if any(c.isdigit() for c in w) and sum(c.isalpha() for c in w) >= 2:
+        return w.translate(_ARABIZI)
+    return w
+
+
 def _skeleton_latin_word(w: str) -> str:
+    w = _decode_arabizi(w)
     w = re.sub(r"c(?=[eiy])", "s", w)
     w = re.sub(r"c", "k", w)
     for a, b in _LATIN_DIGRAPHS:

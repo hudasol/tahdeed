@@ -47,6 +47,8 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("verify", help="check gazetteer / model provenance and integrity")
 
+    go = sub.add_parser("gold", help="evaluate on the hand-written gold set")
+    go.add_argument("--out", default=None)
     be = sub.add_parser("bench", help="latency, throughput, load time and memory")
     be.add_argument("--n", type=int, default=2000)
     be.add_argument("--json", action="store_true")
@@ -107,6 +109,8 @@ def main(argv: list[str] | None = None) -> int:
         print("figures:", ", ".join(make_all(a.eval, a.studies, a.out)))
     elif a.cmd == "verify":
         return _verify()
+    elif a.cmd == "gold":
+        return _gold(a.out)
     elif a.cmd == "bench":
         return _bench(a.n, a.json)
     elif a.cmd == "eval":
@@ -185,6 +189,23 @@ def _verify() -> int:
     except (ModelMismatch, OSError) as ex:
         print(f"FAIL: {ex}")
         return 1
+
+
+def _gold(out: str | None) -> int:
+    import json
+
+    from .gold import run_gold
+    from .service import load_resolver
+
+    res = run_gold(load_resolver())
+    if out:
+        with open(out, "w") as fh:
+            json.dump(res, fh, indent=1, ensure_ascii=False)
+    print({k: v for k, v in res.items() if k != "rows"})
+    for r in res["rows"]:
+        if r["dist_m"] is None or r["dist_m"] > 50:
+            print(r)
+    return 0
 
 
 def _bench(n: int, as_json: bool) -> int:

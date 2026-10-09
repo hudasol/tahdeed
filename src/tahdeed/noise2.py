@@ -172,5 +172,68 @@ def make_address_queries_v2(
         hidden = rng.random() < hole_rate
         if hidden:
             tags.append("hidden_truth")
-        out.append(Query(text, "addr", i, a[12], a[13], tags, slice_name, split, "v2", hidden))
+        out.append(
+            Query(
+                text,
+                "addr",
+                i,
+                a[12],
+                a[13],
+                tags,
+                slice_name,
+                split,
+                "v2",
+                hidden,
+                {"street": street, "district": district, "style": style},
+            )  # fmt: skip
+        )
+    return out
+
+
+# ----------------------------------------------------------------------------- landmark queries
+
+_REL_PHRASES = {
+    "near": ["near", "close to", "قرب"],
+    "next_to": ["next to", "beside", "بجانب"],
+    "opposite": ["opposite", "across from", "مقابل"],
+    "behind": ["behind", "خلف"],
+}
+
+
+def make_landmark_queries(g, n: int, split: str, seed: int = 0) -> list[Query]:
+    """ "near <landmark>, <city>": truth is the landmark point; the relation sets the tolerance."""
+    import random
+
+    from .noise import split_of
+
+    rng = random.Random(f"{seed}-lm-{split}")
+    ids = [
+        i
+        for i, p in enumerate(g.pois)
+        if (p[3] or p[2]) and split_of(f"poi|{p[6]}|{p[5]}") == split
+    ]
+    rng.shuffle(ids)
+    out: list[Query] = []
+    for i in ids[:n]:
+        p = g.pois[i]
+        lang = "ar" if (p[2] and (not p[3] or rng.random() < 0.3)) else "en"
+        name = (p[2] if lang == "ar" else p[3]) or p[1]
+        rel = rng.choice(list(_REL_PHRASES))
+        phrase = [x for x in _REL_PHRASES[rel] if has_arabic(x) == (lang == "ar")] or ["near"]
+        ck, _ = g.city_name(p[6])
+        text = f"{rng.choice(phrase)} {name} {ck}"
+        out.append(
+            Query(
+                text,
+                "poi",
+                i,
+                p[8],
+                p[9],
+                ["landmark"],
+                "poi",
+                split,
+                lang,
+                extra={"relation": rel},
+            )  # fmt: skip
+        )
     return out
