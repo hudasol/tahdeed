@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import multiprocessing as mp
+import os
 import time
 from dataclasses import dataclass
 
-import numpy as np
+# libgomp thread pools deadlock in forked workers: keep OpenMP single-threaded (set pre-sklearn)
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+    os.environ.setdefault(_v, "1")
+
+import numpy as np  # noqa: E402
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.isotonic import IsotonicRegression
 
@@ -185,15 +190,13 @@ def train(
     tau = _choose_tau(ev)
     ranker.policy = Policy(tau=tau)
     ev2 = run_pool(_eval_one, ca, g, ranker=ranker, workers=workers)
+    # Radius = spatial extent *given the right place was found* (correct at its tier); whether
+    # it is the right place is what p_valid reports. 90th percentile of distance, per tier.
     errs: dict[str, list[float]] = {}
     for e in ev2:
-        if e.get("tier") and e["status"] == "approximate" and e.get("dist") is not None:
+        if e.get("tier") and e["status"] == "approximate" and e.get("correct"):
             errs.setdefault(e["tier"], []).append(e["dist"])
-        elif (
-            e.get("tier") and e["status"] in ("resolved", "ambiguous") and e.get("dist") is not None
-        ):
-            errs.setdefault("fine:" + e["tier"], []).append(e["dist"])
-    radii = empirical_radii({k: v for k, v in errs.items() if not k.startswith("fine:")})
+    radii = empirical_radii(errs)
     ranker.radii = radii
     rep = TrainReport(len(tr), len(ca), len(flat), tau, radii, time.time() - t0)
     if verbose:
