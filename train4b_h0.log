@@ -1,5 +1,5 @@
 train queries 33000, calibration queries 11000, hole rate 0.0
-train rows 271020 (fine 144272), collected in 50s
-tau=0.500 radii(90%)={'city': 95996, 'area': 11529, 'street': 12340, 'street_area': 1086, 'address': 25}
-done in 275s
+train rows 276798 (fine 148276), collected in 36s
+tau=0.500 radii(90%)={'city': 95972, 'area': 11620, 'street': 13447, 'street_area': 1109, 'address': 25, 'landmark': 25}
+done in 249s
 saved data/models/ranker_h0.npz

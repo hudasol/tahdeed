@@ -16,14 +16,17 @@ A fixed policy then chooses `resolved` (calibrated `p50` ≥ τ and no close riv
 
 **Training data.** Synthetic queries rendered from OpenStreetMap address points in *train* districts (50% of districts by hash), noise model v1 (`noise.py`), 30% of queries with the true address hidden from the index so the model learns what absence looks like. Calibrated on a disjoint 20% of districts. Evaluated on `dev` (20%); a further 10% (`sealed`) is reserved for the final report.
 
-**Performance** (dev split, synthetic queries): see `docs/EVALUATION.md`, `docs/studies.json`. Headline: resolved precision ≈98% at ≈64% resolved share with 0% holes; ≈94% with a 30% hole mix; on independently generated v2 queries (from Arabic names) resolved precision ≈97% but always-answer accuracy falls from 66% to 50%.
+**Performance**: see `docs/EVALUATION.md` (generated from the result files). Sealed split: resolved precision 98.7% at 65.5% resolved share; independent v2 generator 66.0% forced top-1 with 97.2% precision of confident answers; with the true address absent, 86.6%.
+
+**Training data.** Also includes landmark-relative queries ("near X, city"); without them the landmark tier answered nothing (found in Round 4).
 
 **Known limitations**
 - Trained only on noise we simulated. Real query distributions will differ.
-- Arabizi (digit) spellings are poorly handled (≈23% top-1 on v2).
-- Dubai has almost no structured OSM addresses: the model has effectively never seen Dubai-style structured addresses and only Dubai *POI* queries are evaluated.
-- The hole prior (30%) is an assumption; the calibration curve holds across 0-100% holes but precision does not (`docs/PREDICTIONS.md`).
-- Isotonic calibration did not improve calibration over raw boosted probabilities in the ablation (ECE 0.012 vs 0.007).
+- Arabizi spellings: about 50% top-1 on the independent generator (was 23% before digit decoding).
+- Dubai has almost no structured OSM addresses; only Dubai *POI* queries are evaluated, and calibration there is weaker (ECE 0.05).
+- The hole prior (30%) is an assumption; calibration holds across 0-100% holes but precision does not.
+- Isotonic calibration shows no significant effect on top-1 and no ECE advantage over raw boosted probabilities; it is kept because it is harmless, not because it helps.
+- A common street name present in several cities, written without the city, can produce a confident answer in the wrong city.
 
 **Ethical / privacy notes.** The model sees text, not people. Addresses are personal data: the API logs only a hash of the query unless `TAHDEED_LOG_RAW=1`. The gazetteer comes from public OSM data and contains buildings and POIs, not residents.
 

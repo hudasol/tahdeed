@@ -12,5 +12,9 @@ tahdeed train --hole-rate 0.00 --out data/models/ranker_h0.npz     # ablation on
 tahdeed verify
 tahdeed eval --n 6000 --out docs/eval.json
 tahdeed studies --n 2500 --h0 data/models/ranker_h0.npz --out docs/studies.json
+tahdeed gold --out docs/gold.json
+TAHDEED_SPLIT=sealed tahdeed eval --n 6000 --out docs/sealed/eval.json     # run once, after predictions
+TAHDEED_SPLIT=sealed tahdeed studies --n 2500 --h0 data/models/ranker_h0.npz --out docs/sealed/studies.json
 tahdeed figures
+python scripts/make_evaluation_md.py
 tahdeed bench --n 2000
