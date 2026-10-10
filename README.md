@@ -2,7 +2,7 @@
 
 **Bilingual Arabic/English address resolver for the UAE.** It turns messy free-text addresses into coordinates, an Onwani-style standard form and a calibrated confidence score, and it abstains when an address is too ambiguous.
 
-> **Status: v1.0.** Resolver, calibration, evaluation, API, CLI and dashboard are complete. Method and plan: [`plan.md`](plan.md). Results and failure analysis: [`docs/EVALUATION.md`](docs/EVALUATION.md).
+> **Status: v2.0.** Five review rounds (Google, Edge, TII, ATRC, senior) each produced a critique, a checklist and measured results: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/reviews/`](docs/reviews/). Predictions were written before each run: [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md). Results: [`docs/EVALUATION.md`](docs/EVALUATION.md).
 
 ## The problem
 
@@ -33,16 +33,18 @@ It runs offline and deterministically. No LLM and no API keys are involved.
 - Code: MIT (see `LICENSE`).
 - Data: © OpenStreetMap contributors, ODbL 1.0. The full derived gazetteer is built locally by the build command and is not committed. A small attributed fixture is included for tests. See `data/NOTICE.md`.
 
-## Results (synthetic noisy queries on held-out districts)
+## Results (sealed split: held-out districts, run once)
 
 | | |
 |---|---|
-| Answers it is confident about | 61.9% of queries, **98.1% of them within 50 m** |
-| Calibration (ECE of P(within 50 m)) | 0.020; candidates scored 0.9-1.0 are right 99.0% of the time |
-| Forced top-1 within 50 m | 64.6% (naive fuzzy baseline 54.8%, public Nominatim 45.0% on a 200-query sample) |
-| Latency | 5 ms median per query, CPU only |
+| Answers it is confident about | 65.5% of queries, **98.7% of them within 50 m** |
+| Forced top-1 within 50 m | 68.3% (char n-gram TF-IDF baseline: about 25 points lower on the mixed benchmark) |
+| Calibration (ECE of P(within 50 m)) | 0.030 held-out, 0.039 with holes, 0.054 on POI queries |
+| Independent generator (Latin text produced from Arabic names) | 66.0% forced top-1, 97.2% precision of confident answers; Arabizi 53.7% |
+| When the true address is missing from the registry | confident answers are 86.6% right (calibration holds, precision cannot) |
+| Latency / load | 5.8 ms median, 156 q/s on one core; 8 s load, 490 MB RSS |
 
-Caveats: queries are synthetic, truth is OpenStreetMap, Dubai is only evaluated on POI queries, and when the true address is missing from the registry about 29% of confident answers are a wrong neighbouring building. Predictions were not pre-registered before the run, despite the plan. Full tables and every known failure: [`docs/EVALUATION.md`](docs/EVALUATION.md).
+Caveats: queries are synthetic (plus 40 hand-written ones), truth is OpenStreetMap, Dubai is evaluated only on POI queries. Two of the seven final predictions missed (sealed top-1 4.4 points under dev; POI calibration 0.054 vs 0.04 predicted). Full tables, ablations and every known failure: [`docs/EVALUATION.md`](docs/EVALUATION.md).
 
 ## How it works
 
@@ -60,7 +62,7 @@ pip install -e ".[dev,build]"
 
 # OSM extract: https://download.openstreetmap.fr/extracts/asia/united_arab_emirates.osm.pbf
 tahdeed build united_arab_emirates.osm.pbf      # ~30 s, writes data/gazetteer.sqlite
-tahdeed train                                   # ~2 min, writes data/models/ranker.pkl
+tahdeed train                                   # ~5 min, writes data/models/ranker.npz (no pickle)
 tahdeed resolve "29 Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah, Abu Dhabi"
 tahdeed batch addresses.csv resolved.csv        # CSV with an `address` column
 tahdeed eval                                    # regenerates the evaluation numbers
@@ -71,12 +73,15 @@ API: `POST /resolve {"address": "..."}`, `POST /resolve/batch` (CSV upload), `GE
 
 Tests run against a small committed fixture (`tests/fixtures/mini.sqlite`, an OSM excerpt around Al Khalidiyah): `pytest`.
 
-## Limitations
+## Honest limits
 
-- Does not resolve official Makani / Onwani / National Address codes (registries are not open).
-- Quality follows OSM coverage: strong for Abu Dhabi, Al Ain and Al Dhafra, thin for structured Dubai addresses.
-- Consonant-changing transliterations (`kh`→`k`, `q`→`g`) remain the weakest case.
-- The noise model is ours; real user data would change the numbers.
+- **Synthetic queries.** No query in any benchmark came from a real user. The largest open gap; only real logs close it.
+- **OSM is not an official registry.** A missing record yields a confident wrong neighbour (86.6% precision when the address is absent). `RegistryAdapter` is an interface only and is not wired in.
+- **Common street names across cities.** Written without the city, a coarse key can merge a street word with an area word and answer confidently in the wrong place (seen once in the 40-row gold set, over 100 km off). Documented, not fixed.
+- **Arabizi** is the weakest style (about 50%).
+- **Landmark benchmark** tests finding the landmark, not the offset "near" implies.
+- Does not resolve official Makani / Onwani / National Address codes. Dubai structured addresses are thin in OSM.
+- The Dockerfile has never been built in the development environment.
 
 ## Author
 
