@@ -7,6 +7,7 @@ import re
 import sqlite3
 from collections import defaultdict
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
 import numpy as np
@@ -26,22 +27,28 @@ def sorted_key(s: str) -> str:
     return "".join(sorted(skeleton_tokens(name_tokens(s))))
 
 
+@cache
+def _part_keys(part: str) -> tuple[str, ...]:
+    k = skeleton(part)
+    if not k:
+        return ()
+    sk = sorted_key(part)
+    return (k, sk) if sk and sk != k else (k,)
+
+
 def keys_of(*names: str | None) -> set[str]:
-    """Index keys for one or more spellings of a name (ordered + order-insensitive)."""
+    """Index keys for one or more spellings of a name (ordered + order-insensitive).
+
+    Per-spelling results are memoised: the same street name recurs across thousands of rows.
+    """
     out: set[str] = set()
     for n in names:
         if not n:
             continue
         for part in re.split(r"[;/]", n):
             part = part.strip()
-            if not part:
-                continue
-            k = skeleton(part)
-            if k:
-                out.add(k)
-                sk = sorted_key(part)
-                if sk and sk != k:
-                    out.add(sk)
+            if part:
+                out.update(_part_keys(part))
     return out
 
 

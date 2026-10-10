@@ -7,6 +7,7 @@ districts the models never saw (see :func:`tahdeed.noise.split_of`).
 from __future__ import annotations
 
 import json
+import os
 import time
 from collections import defaultdict
 
@@ -20,7 +21,7 @@ from .noise import Query, make_address_queries, make_poi_queries
 from .parallel import _eval_one, run_pool
 from .resolve import FINE_TIERS, Resolver
 
-SPLIT = "dev"  # "sealed" only for the final report (docs/PREDICTIONS.md)
+SPLIT = os.environ.get("TAHDEED_SPLIT", "dev")  # "sealed" only for the final report (docs/PREDICTIONS.md)
 
 # ----------------------------------------------------------------------------- metrics
 
