@@ -71,3 +71,19 @@ Written before the Round 4 model was trained or evaluated. Round 3 baselines: v2
 | P4.4 | Landmark tier: "near X, city" within 200 m of the landmark at least 15 points higher with the tier on than off | **Hit, but only after a fix**: the first run showed 0% on and off. The ranker had never seen relation queries, and a trailing city name swallowed the landmark span. After fixing both: 75.3% with the tier, 0.1% without. Truth here is the landmark's own point, so this tests finding the landmark, not the offset a real "near" implies |
 | P4.5 | Hand-written gold set (40 queries): top-1 ≤500 m at least 70%, but ≤50 m below 60% (human phrasing is harder than either generator) | **Half**: ≤500 m 77.5% (hit); ≤50 m 75.0% (miss: I expected human phrasing to be harder). 3 of 33 resolved answers are wrong, two by more than 100 km (a common street name matched in the wrong city) |
 | P4.6 | Resolved precision on v2 stays ≥ 96.5% (calibration should keep transferring) | **Hit**: 97.6% |
+
+## Final round: sealed split (10% of districts, never used for any decision)
+
+Written before the final model was trained and before any sealed query was run. Dev reference
+values are from the Round 4 model; the final model adds an interior-street-type span guard and
+faster loading, so small movements are expected.
+
+| # | Prediction | Result |
+|---|---|---|
+| F1 | Held-out benchmark on sealed: resolved precision within ±1.5 points of dev (98.5%); top-1 ≤50 m within ±4 points of dev (70.1%) | _pending_ |
+| F2 | v2 (from-Arabic) forced top-1 ≤50 m on sealed between 55% and 66%; resolved precision ≥ 96% | _pending_ |
+| F3 | Hole benchmark on sealed: precision of resolved between 80% and 90% | _pending_ |
+| F4 | ECE of P(≤50 m) at most 0.04 on every sealed benchmark | _pending_ |
+| F5 | Landmark queries on sealed: within 200 m at least 65% | _pending_ |
+| F6 | Load time ≤ 10 s; median latency ≤ 9 ms | _pending_ |
+| F7 | Final model's dev numbers show no regression greater than 1 point on any Round 4 headline (interior-type guard is not a net loss) | _pending_ |
