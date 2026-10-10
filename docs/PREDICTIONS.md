@@ -80,10 +80,10 @@ faster loading, so small movements are expected.
 
 | # | Prediction | Result |
 |---|---|---|
-| F1 | Held-out benchmark on sealed: resolved precision within ±1.5 points of dev (98.5%); top-1 ≤50 m within ±4 points of dev (70.1%) | _pending_ |
-| F2 | v2 (from-Arabic) forced top-1 ≤50 m on sealed between 55% and 66%; resolved precision ≥ 96% | _pending_ |
-| F3 | Hole benchmark on sealed: precision of resolved between 80% and 90% | _pending_ |
-| F4 | ECE of P(≤50 m) at most 0.04 on every sealed benchmark | _pending_ |
-| F5 | Landmark queries on sealed: within 200 m at least 65% | _pending_ |
-| F6 | Load time ≤ 10 s; median latency ≤ 9 ms | _pending_ |
-| F7 | Final model's dev numbers show no regression greater than 1 point on any Round 4 headline (interior-type guard is not a net loss) | _pending_ |
+| F1 | Held-out benchmark on sealed: resolved precision within ±1.5 points of dev (98.5%); top-1 ≤50 m within ±4 points of dev (70.1%) | **Half**: precision 98.7% (hit). Top-1 68.3% on sealed vs 72.7% on dev with the final model: 4.4 points apart, narrowly outside the band. Sealed holds only 10% of districts, so more variance is expected |
+| F2 | v2 (from-Arabic) forced top-1 ≤50 m on sealed between 55% and 66%; resolved precision ≥ 96% | **Hit** (on the edge): 66.0%; precision 97.2% |
+| F3 | Hole benchmark on sealed: precision of resolved between 80% and 90% | **Hit**: 86.6% |
+| F4 | ECE of P(≤50 m) at most 0.04 on every sealed benchmark | **Miss**: 0.030 (Abu Dhabi), 0.039 (holes), **0.054 (Dubai/Sharjah/Ajman POI)**. The POI benchmark's truth is weaker (POI points, not surveyed addresses) |
+| F5 | Landmark queries on sealed: within 200 m at least 65% | **Hit**: 75.8% (0.0% with the tier off) |
+| F6 | Load time ≤ 10 s; median latency ≤ 9 ms | **Hit**: load 8.0 s (was 18.8 s), median 5.8 ms, p99 17.5 ms, 156 q/s single core, RSS 490 MB |
+| F7 | Final model's dev numbers show no regression greater than 1 point on any Round 4 headline (interior-type guard is not a net loss) | **Near miss**: everything improved (held-out resolved 67.2% → 69.4%, top-1 70.1% → 72.7%, v2 top-1 61.0% → 64.4%, Arabizi 48.8% → 51.3%) except landmark top-1 within 200 m, 75.3% → 74.2% (−1.1) |
