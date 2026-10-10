@@ -22,6 +22,7 @@ from .normalize import (
     STREET_TYPES,
     coarse_key,
     has_arabic,
+    skeleton_of_tokens,
     skeleton_tokens,
     strip_articles,
 )
@@ -468,6 +469,16 @@ class Resolver:
         if pq.landmark_span:
             a, b = pq.landmark_span
             lm_spans = find_spans(g, pq, indices=list(range(a, b)), flags=self.flags)
+            # "near Tim Hortons Al Ain": a trailing city name must not swallow or tie with the
+            # landmark, so also match the phrase with trailing city tokens removed
+            for k in (2, 1):
+                if b - k > a and skeleton_of_tokens(pq.tokens[b - k : b]) in g.city_by_key_alias:
+                    lm_spans += find_spans(g, pq, indices=list(range(a, b - k)), flags=self.flags)
+                    c = g.city_by_key_alias[skeleton_of_tokens(pq.tokens[b - k : b])]
+                    for sp in lm_spans:
+                        if sp.start >= b - k and not sp.city:
+                            sp.city = c
+                    break
 
         cities = {s.city for s in spans if s.city}
         cities |= {s.city for s in lm_spans if s.city}
@@ -877,7 +888,16 @@ class Resolver:
         out: list[Candidate] = []
         rel_r = float(RELATION_RADIUS_M.get(pq.relation, 250))
         anchor = self._context_anchor(ctx)
-        for ls in sorted(lm_spans, key=lambda s: -(s.n * s.quality))[:1]:
+        lm_spans = [s for s in lm_spans if s.pois or s.areas] or lm_spans
+        # prefer a real landmark over a bare city name that also happens to be a POI/area key
+        lm_spans = sorted(
+            lm_spans,
+            key=lambda s: (
+                s.city is not None and s.start != s.end and not s.has_type and len(s.pois) > 30,
+                -(s.n * s.quality),
+            ),
+        )
+        for ls in lm_spans[:1]:
             targets: list[tuple[float, float, str, dict, int, str]] = []
             for i in ls.pois:
                 p = g.pois[i]
