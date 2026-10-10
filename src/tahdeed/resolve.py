@@ -149,7 +149,10 @@ def _bad_edge(toks: list[str], has_type: bool) -> bool:
     """A bare number at the edge of a name span is a house/unit number, except 'Street 23'."""
     first = toks[0].isdigit() and not (len(toks) > 1 and toks[1] in STREET_TYPES)
     last = toks[-1].isdigit() and not (len(toks) > 1 and toks[-2] in STREET_TYPES)
-    return first or last
+    # a street-type word inside a span ("qata st dhahir al ain") means the span crosses from the
+    # street into the next component; type words are dropped from keys so such spans can collide
+    interior = any(t in STREET_TYPES for t in toks[1:-1])
+    return first or last or interior
 
 
 def find_spans(
