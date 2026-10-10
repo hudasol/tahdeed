@@ -44,3 +44,26 @@ dominant error, and only an official registry fixes that. There is no interface 
 - [x] **A7** PII guard (`privacy.py`): phone, email, Emirates ID removed before matching; noted in the result.
 - [x] **A8** `RegistryAdapter` protocol. Interface only; not wired in, no official adapter.
 - [ ] Learned Arabic↔Latin matching (T7). Deferred: no labelled transliteration pairs beyond what the gazetteer's own paired names give, and the rule keys now cover the known failures.
+
+## Result of this round (`docs/studies.json`, `docs/gold.json`, `docs/PREDICTIONS.md`)
+
+| Question | Before (Round 3) | After |
+|---|---|---|
+| v2 (from-Arabic) forced top-1 ≤50 m | 49.8% | **61.0%** |
+| Arabizi | 22.7% | **48.8%** |
+| Gulf / formal | 57.8% / 60.5% | 64.6% / 65.7% |
+| v2 precision of resolved answers | 97.0% | 97.6% |
+| v1 held-out: resolved share / precision | 64.5% / 98.2% | 67.2% / 98.5% |
+| Landmark queries, within 200 m | not measured | 75.3% (0.1% with the tier off) |
+| Hand-written gold set, ≤50 m | not measured | 75.0% (n=40) |
+
+Side effects worth reading: with the new matching, sibling street keys now show a small
+significant gain (+0.7 points) and the isotonic step no longer differs from raw scores
+(−0.02, not significant). The finding that mattered: digit letters and article handling, not
+consonant-class matching, were the transliteration problem. The landmark tier had been
+shipping without ever being exercised; a benchmark for it exposed that within minutes.
+
+Honest limits that remain: the gold set shows confident errors when a common street name
+exists in several cities and the query omits the city (two answers >100 km off at
+p≈0.65–0.75). The gold set has 40 rows, so its 75% has roughly ±13 points of sampling
+uncertainty. The landmark benchmark's truth is the landmark itself.
