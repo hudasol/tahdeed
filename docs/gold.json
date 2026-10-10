@@ -1,0 +1,293 @@
+{
+ "n": 40,
+ "status": {
+  "resolved": 33,
+  "approximate": 7
+ },
+ "top1_within_50m": 0.75,
+ "top1_within_500m": 0.775,
+ "resolved": 33,
+ "resolved_within_50m": 30,
+ "rows": [
+  {
+   "query": "64 Tawi Baaya St, Mazyad, Al Ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9636363636363636
+  },
+  {
+   "query": "42 Barqa Al Oqaila street MBZ city abu dhabi",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.8848920863309353
+  },
+  {
+   "query": "villa 156 Al Manazir St Zakhir Al Ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "8 شارع القصائد الشامخة ابوظبي",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9
+  },
+  {
+   "query": "4 Al Atna street Mubazzarah Al Khadra Al Ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9843342036553525
+  },
+  {
+   "query": "15 Obaid bin Rashid Mansouri st Nahda Abu Dhabi",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9848993288590604
+  },
+  {
+   "query": "25 salsabil st markhaniya al ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9
+  },
+  {
+   "query": "6 Niqyan Al Salam street Hili",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "38 Al Yarih St Al Bateen Abu Dhabi",
+   "status": "approximate",
+   "tier": "street",
+   "dist_m": 152,
+   "p50": 0.0
+  },
+  {
+   "query": "36 شارع الزيتون عشارج العين",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "138 Al Dhahar st Rawdat Al Reef",
+   "status": "approximate",
+   "tier": "street_area",
+   "dist_m": 113329,
+   "p50": 0.0
+  },
+  {
+   "query": "17 Aqabat Al Ashkhara st Al Nahda abu dhabi",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9347181008902077
+  },
+  {
+   "query": "2 Harithah bin Sahl, Bani Yas",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "4 Al Nuzha street Muntazah Abu Dhabi",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9848993288590604
+  },
+  {
+   "query": "12 Khor Qirqishan Street Al Bateen",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "9 Haboub st Tiwayya",
+   "status": "resolved",
+   "tier": "interpolated",
+   "dist_m": 4816,
+   "p50": 0.802547770700637
+  },
+  {
+   "query": "6 Mousa bin Nusair st Al Falah",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "11 Bishra Street Al Amerah Al Ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.8
+  },
+  {
+   "query": "16 Ar Rukn st Bani Yas East",
+   "status": "approximate",
+   "tier": "street_area",
+   "dist_m": 128362,
+   "p50": 0.0
+  },
+  {
+   "query": "18 Seeh Al Nisouriyah st Rahbah",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "8 Al Hadeel st Muwaiji Al Ain",
+   "status": "approximate",
+   "tier": "street",
+   "dist_m": 8020,
+   "p50": 0.0
+  },
+  {
+   "query": "34 Ash'ab St Al Nahyan Abu Dhabi",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.5588235294117647
+  },
+  {
+   "query": "55 Mohammed bin Ghannam Al Hameli st Mahadir Madinat Zayed",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9848993288590604
+  },
+  {
+   "query": "13 As Saqoul Rabdan",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9843342036553525
+  },
+  {
+   "query": "870 Sheikh Rashid bin Saeed St Mushrif",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 1.0
+  },
+  {
+   "query": "22 Maghayel Harib street Bani Yas west",
+   "status": "approximate",
+   "tier": "street_area",
+   "dist_m": 3686,
+   "p50": 0.0
+  },
+  {
+   "query": "7 Jarn Al Marzoum Al Rawdah Abu Dhabi",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9848993288590604
+  },
+  {
+   "query": "66 Rawasi st Falaj Hazza Al Ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9848993288590604
+  },
+  {
+   "query": "6 Al Qasab st Al Falah",
+   "status": "approximate",
+   "tier": "poi",
+   "dist_m": 74129,
+   "p50": 0.04810126582278481
+  },
+  {
+   "query": "6 شارع الديرة الطوية",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 101706,
+   "p50": 0.74
+  },
+  {
+   "query": "10 Hid Al Lakkiya Salamat Al Ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 1.0
+  },
+  {
+   "query": "24 Shees Al Yahal st Mubazzarah",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9636363636363636
+  },
+  {
+   "query": "14 Qussar Matar street zakher",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "4 Arqoub Qata st Dhahir Al Ain",
+   "status": "resolved",
+   "tier": "interpolated",
+   "dist_m": 156365,
+   "p50": 0.7009345794392523
+  },
+  {
+   "query": "77 Al Kiram street Samha",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9988864142538976
+  },
+  {
+   "query": "25 شارع البيداء المعترض العين",
+   "status": "approximate",
+   "tier": "address",
+   "dist_m": 104799,
+   "p50": 0.04810126582278481
+  },
+  {
+   "query": "36 shari3 al zaytoun 3asharij al3ain",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9913169319826338
+  },
+  {
+   "query": "19 Mamar 2137 Eastern Mahadir Madinat Zayed",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 1.0
+  },
+  {
+   "query": "al bateen abu dhabi yarih st no 38",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 0.9636363636363636
+  },
+  {
+   "query": "عبيد بن راشد المنصوري 15 النهضة",
+   "status": "resolved",
+   "tier": "address",
+   "dist_m": 0,
+   "p50": 1.0
+  }
+ ]
+}

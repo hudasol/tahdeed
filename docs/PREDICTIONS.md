@@ -65,9 +65,9 @@ Written before the Round 4 model was trained or evaluated. Round 3 baselines: v2
 
 | # | Prediction | Result |
 |---|---|---|
-| P4.1 | Arabizi top-1 ≤50 m on v2 rises from 22.7% to at least 40% (digit decoding is the single largest known defect) | _pending_ |
-| P4.2 | Formal and gulf styles each gain 3 points or less (their errors are not digit-related) | _pending_ |
-| P4.3 | v1 headline (resolved precision) stays within ±0.5 points of 98.2%; resolved share within ±2 points | _pending_ |
-| P4.4 | Landmark tier: "near X, city" within 200 m of the landmark at least 15 points higher with the tier on than off | _pending_ |
-| P4.5 | Hand-written gold set (40 queries): top-1 ≤500 m at least 70%, but ≤50 m below 60% (human phrasing is harder than either generator) | _pending_ |
-| P4.6 | Resolved precision on v2 stays ≥ 96.5% (calibration should keep transferring) | _pending_ |
+| P4.1 | Arabizi top-1 ≤50 m on v2 rises from 22.7% to at least 40% (digit decoding is the single largest known defect) | **Hit**: 48.8% |
+| P4.2 | Formal and gulf styles each gain 3 points or less (their errors are not digit-related) | **Miss**: formal 60.5% → 65.7% (+5.2), gulf 57.8% → 64.6% (+6.8). The article, city-alias and span fixes helped every style |
+| P4.3 | v1 headline (resolved precision) stays within ±0.5 points of 98.2%; resolved share within ±2 points | **Partial**: precision 98.5% (hit); resolved share 64.5% → 67.2% (+2.7, outside the band, in the good direction) |
+| P4.4 | Landmark tier: "near X, city" within 200 m of the landmark at least 15 points higher with the tier on than off | **Hit, but only after a fix**: the first run showed 0% on and off. The ranker had never seen relation queries, and a trailing city name swallowed the landmark span. After fixing both: 75.3% with the tier, 0.1% without. Truth here is the landmark's own point, so this tests finding the landmark, not the offset a real "near" implies |
+| P4.5 | Hand-written gold set (40 queries): top-1 ≤500 m at least 70%, but ≤50 m below 60% (human phrasing is harder than either generator) | **Half**: ≤500 m 77.5% (hit); ≤50 m 75.0% (miss: I expected human phrasing to be harder). 3 of 33 resolved answers are wrong, two by more than 100 km (a common street name matched in the wrong city) |
+| P4.6 | Resolved precision on v2 stays ≥ 96.5% (calibration should keep transferring) | **Hit**: 97.6% |

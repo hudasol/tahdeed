@@ -123,6 +123,25 @@ def _uncalibrated(r: NumpyRanker) -> NumpyRanker:
     return r2
 
 
+def _within(ev: list[dict], m: float) -> float:
+    return float(np.mean([e.get("dist") is not None and e["dist"] <= m for e in ev]))
+
+
+def landmark_study(g: Gazetteer, ranker, n: int, seed: int, workers: int = 2) -> dict:
+    """Landmark-relative queries ("near X, city"): does the landmark tier earn its keep?"""
+    lm_q = make_landmark_queries(g, min(n, 1500), SPLIT, seed=seed)
+    on = run_pool(_eval_one, lm_q, g, ranker=ranker, radii=ranker.radii, workers=workers)
+    off = run_pool(_eval_one, lm_q, g, ranker=ranker, radii=ranker.radii, workers=workers,
+                   flags=Flags(landmark=False))  # fmt: skip
+    return {
+        "n": len(lm_q),
+        "with_landmark_tier": brief(on),
+        "without": brief(off),
+        "top1_within_200m": _within(on, 200),
+        "top1_within_200m_without": _within(off, 200),
+    }
+
+
 def run_studies(
     g: Gazetteer,
     ranker: NumpyRanker,
@@ -180,20 +199,7 @@ def run_studies(
         abl[name] = row
     res["ablations"] = {"n": len(mix_q), "rows": abl}
 
-    # 2b. landmark-relative queries ("near X"): does the landmark tier earn its keep? -------
-    lm_q = make_landmark_queries(g, min(n, 1500), SPLIT, seed=seed)
-    lm_on = run_pool(_eval_one, lm_q, g, ranker=ranker, radii=ranker.radii, workers=workers)
-    lm_off = run_pool(_eval_one, lm_q, g, ranker=ranker, radii=ranker.radii, workers=workers,
-                      flags=Flags(landmark=False))  # fmt: skip
-    res["landmark"] = {
-        "n": len(lm_q),
-        "with_landmark_tier": brief(lm_on),
-        "without": brief(lm_off),
-        "top1_within_200m": float(np.mean([float((e.get("dist") or 1e9) <= 200) for e in lm_on])),
-        "top1_within_200m_without": float(
-            np.mean([float((e.get("dist") or 1e9) <= 200) for e in lm_off])
-        ),
-    }
+    res["landmark"] = landmark_study(g, ranker, n, seed, workers)
 
     # 3. baselines on the same mix ------------------------------------------------------------
     if baseline:
