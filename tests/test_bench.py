@@ -61,3 +61,24 @@ def test_geometric_city_fallback(tmp_path):
     d = _rows(tmp_path)
     o = bench.score(_preds(tmp_path, [{"id": "t-0", "lat": 24.45, "lon": 54.37}]), d)
     assert o["sets"]["t"]["overall"]["confident_wrong_city"][0] == 1.0
+
+
+def test_build_report_and_baselines_on_fixture(tmp_path):
+    from pathlib import Path
+
+    from tahdeed.bench_report import render
+
+    db = Path(__file__).parent / "fixtures" / "mini.sqlite"
+    man = bench.build(str(db), tmp_path / "d")
+    assert "gold_handwritten" in man["sets"] and man["sets"]["address_dev"]["n"] >= 0
+    rows = bench.load_rows(tmp_path / "d", ["gold_handwritten"])
+    assert len(rows) == 40 and all(r["synthetic"] is False for r in rows)
+    preds = bench.baseline_naive(rows, str(db))
+    assert {p["id"] for p in preds} == {r["id"] for r in rows}
+    out = tmp_path / "r"
+    out.mkdir()
+    p = tmp_path / "p.jsonl"
+    bench._write_preds(preds, p)
+    (out / "naive.score.json").write_text(json.dumps(bench.score(p, tmp_path / "d")))
+    md = render(out, tmp_path / "d")
+    assert "Gulf-AddressBench report" in md and "Pending real data" in md
