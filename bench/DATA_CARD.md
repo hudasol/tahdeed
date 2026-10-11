@@ -41,7 +41,7 @@ text is included in v1.
    until the human set exists.
 3. **Coverage is lopsided.** About 85% of structured address points are in Abu Dhabi emirate. Dubai
    and northern emirates are mostly POIs. Per-emirate claims would need per-emirate sets.
-4. **Truth city is the record's city tag** (gold: nearest city centre to the truth point), which can
+4. **Truth city is the record's city tag** (gold: the city tag of the registry record at the truth point), which can
    disagree with administrative boundaries near city edges.
 5. **Cross-city set composition** (collisions and holes) is chosen to expose a known failure; its
    rates are *not* prevalence estimates for real traffic.

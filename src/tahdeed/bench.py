@@ -134,19 +134,27 @@ def build(db: str, out: Path) -> dict:
     # hand-written gold set (40 rows, written by the maintainer during development: CONTAMINATED)
     gold = json.loads((ROOT / "tests" / "gold" / "gold_v1.json").read_text(encoding="utf-8"))
     p = out / "gold_handwritten.jsonl"
+    import numpy as np
+
+    alat = np.array([a[12] for a in g.addr])
+    alon = np.array([a[13] for a in g.addr])
     with open(p, "w", encoding="utf-8") as fh:
         for i, r in enumerate(gold):
-            c = nearest_city(r["lat"], r["lon"]).key
-            fh.write(json.dumps({
+            j = int(np.argmin((alat - r["lat"]) ** 2 + (alon - r["lon"]) ** 2))
+            c = g.addr[j][
+                8
+            ]  # gold coordinates are registry coordinates: take that record's city tag
+            row = {
                 "id": f"gold-{i:03d}", "set": "gold_handwritten", "split": "dev", "text": r["query"],
-                "lang": "mixed", "kind": "addr", "lat": r["lat"], "lon": r["lon"], "truth_city": c, "truth_city_geo": c,
-                "truth_ref": None, "hole": False, "stratum": "gold", "evidence": None, "noise": [],
-                "synthetic": False,
-            }, ensure_ascii=False) + "\n")  # fmt: skip
+                "lang": "mixed", "kind": "addr", "lat": r["lat"], "lon": r["lon"], "truth_city": c,
+                "truth_city_geo": nearest_city(r["lat"], r["lon"]).key, "truth_ref": None,
+                "hole": False, "stratum": "gold", "evidence": None, "noise": [], "synthetic": False,
+            }  # fmt: skip
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     manifest["sets"]["gold_handwritten"] = {
         "n": len(gold), "generator": "hand-written", "split": "dev", "seed": None,
         "contamination": "seen-throughout-development",
-        "description": "40 queries written by the maintainer; truth = registry coordinates; truth_city is derived from coordinates",
+        "description": "40 queries written by the maintainer; truth = registry coordinates; truth_city = that record's city tag",
         "sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
     }  # fmt: skip
     (out / "MANIFEST.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
@@ -273,9 +281,20 @@ def score_rows(rows: list[dict], preds: dict[str, dict]) -> dict:
     }
 
 
-def score(pred_path: str | Path, data: Path = DATA, sets: list[str] | None = None) -> dict:
+def score(
+    pred_path: str | Path,
+    data: Path = DATA,
+    sets: list[str] | None = None,
+    only_ids: set[str] | None = None,
+) -> dict:
+    """Score a prediction file. ``only_ids`` restricts scoring to those row ids (sampled runs and
+    like-for-like comparison on a baseline's sample); otherwise every row of a set counts, and rows
+    without a prediction count as abstentions."""
     preds = read_predictions(pred_path)
     rows = load_rows(data, sets)
+    if only_ids is not None:
+        rows = [r for r in rows if r["id"] in only_ids]
+        preds = {k: v for k, v in preds.items() if k in only_ids}
     known = {r["id"] for r in rows}
     unknown = sorted(set(preds) - known)
     if unknown:
@@ -460,6 +479,9 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--data", default=str(DATA))
     s.add_argument("--set", action="append", default=None)
     s.add_argument("--json", default=None)
+    s.add_argument(
+        "--only-ids-of", default=None, help="score only the ids present in this prediction file"
+    )
     r = sub.add_parser("report", help="render docs/BENCH_REPORT.md from bench/results/*.json")
     r.add_argument("--results", default=str(RESULTS))
     r.add_argument("--data", default=str(DATA))
@@ -485,7 +507,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"wrote {len(preds)} predictions to {a.out}")
     elif a.cmd == "score":
         try:
-            res = score(a.predictions, Path(a.data), a.set)
+            only = set(read_predictions(a.only_ids_of)) if a.only_ids_of else None
+            res = score(a.predictions, Path(a.data), a.set, only)
         except ValueError as ex:
             print(f"error: {ex}", file=sys.stderr)
             return 2

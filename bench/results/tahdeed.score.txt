@@ -34,7 +34,7 @@ crosscity_sealed  (n=4709, missing predictions: 0)
 gold_handwritten  (n=40, missing predictions: 0)
   answered           75.0% [60-86]
   precision@50m      96.7% [83-99]   (among answered)
-  conf.wrong city    10.0% [3-26]   (among answered)
+  conf.wrong city    3.3% [1-17]   (among answered)
   end-to-end@50m     72.5% [57-84]   (abstain = miss)
   forced@50m/1km     85.0% [71-93] / 85.0% [71-93]
   ECE (confidence vs within-50m, n=30): 0.041
