@@ -1,0 +1,51 @@
+# Render Blueprint for a public DEMO on the FREE plan, using a REDUCED-REGION gazetteer.
+#
+# The full UAE gazetteer does NOT fit Render's free 512 MB instance (measured 486 MB steady state,
+# 512 MB peak for the service alone); see docs/DEPLOYMENT.md. Build a regional gazetteer and its
+# own model first (deploy/make_region.py, `tahdeed train`), host both files over HTTPS, then set
+# the sync:false variables below in the Render dashboard. NOT deployed or validated by the author
+# against Render: check it in the dashboard (New > Blueprint) before relying on it.
+#
+# Blueprint file: put it at the repo root as render.yaml, or point Render at deploy/render.yaml.
+services:
+  - type: web
+    name: tahdeed-demo
+    runtime: python
+    plan: free
+    region: frankfurt # closest Render region to the UAE
+    # constraints.txt pins the tested versions; fetch_data.py downloads + hash-checks the data.
+    buildCommand: pip install --no-cache-dir -c constraints.txt . && python deploy/fetch_data.py --dest data
+    startCommand: python -m uvicorn tahdeed.api:app_factory --factory --host 0.0.0.0 --port $PORT --no-server-header
+    healthCheckPath: /health
+    autoDeployTrigger: "off" # redeploy manually; every deploy re-downloads the data
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: TAHDEED_STRICT # refuse to start with a missing/mismatched model
+        value: "1"
+      - key: TAHDEED_DB
+        value: data/gazetteer.sqlite
+      - key: TAHDEED_MODEL
+        value: data/ranker.npz
+      - key: TAHDEED_WEB
+        value: web
+      # Free instances have a single shared egress identity and Render fronts them with its own
+      # proxy; until you have checked how many X-Forwarded-For hops Render adds (see
+      # docs/DEPLOYMENT.md) leave TAHDEED_TRUST_PROXY unset: all clients then share ONE bucket,
+      # which is a safe global cap for a demo.
+      - key: TAHDEED_RATE_LIMIT
+        value: "120"
+      - key: TAHDEED_GAZETTEER_URL # https://.../gazetteer.sqlite.gz (regional gazetteer)
+        sync: false
+      - key: TAHDEED_GAZETTEER_SHA256 # of the decompressed file
+        sync: false
+      - key: TAHDEED_MODEL_URL # https://.../ranker.npz (trained on that regional gazetteer)
+        sync: false
+      - key: TAHDEED_MODEL_SHA256
+        sync: false
+      - key: TAHDEED_DATA_OFFER_URL # where the public can get the database (ODbL)
+        sync: false
+      - key: TAHDEED_TILE_URL # a tile service you may use at demo traffic; see DEPLOYMENT.md
+        sync: false

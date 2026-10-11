@@ -24,8 +24,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pip-audit && pip-audit -r constraints.txt --no-deps || true
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t tahdeed:ci .
+  # The image build + smoke test lives in docker.yml (it builds the image as its first step).

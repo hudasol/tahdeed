@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "python ../fetch_data.py --dest data",
+  "functions": {
+    "app.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{__pycache__/**,**/*.part}"
+    }
+  }
+}
