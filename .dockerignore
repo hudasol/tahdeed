@@ -1,7 +1,22 @@
-data/raw
-data/*.sqlite
-data/models
+# Only src/, web/, pyproject.toml, README.md, LICENSE and constraints.txt are needed.
+# Data is never baked into the image (it is ODbL-derived and mounted read-only at /data).
+data
 tests
 docs
+scripts
+deploy
 .git
-__pycache__
+.github
+.claude
+.venv
+.pytest_cache
+.ruff_cache
+.coverage
+**/__pycache__
+**/*.pyc
+*.egg-info
+build
+dist
+*.log
+*.done
+plan.md
