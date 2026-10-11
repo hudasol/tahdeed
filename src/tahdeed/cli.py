@@ -11,6 +11,16 @@ from pathlib import Path
 
 
 def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else list(argv)
+    # `bench build|baseline|score|report` is Gulf-AddressBench; bare `bench` stays the latency test.
+    if args[:1] == ["bench"] and args[1:2] and args[1] in {"build", "baseline", "score", "report"}:
+        from .bench import main as bench_main
+
+        return bench_main(args[1:])
+    if args[:1] == ["human"]:
+        from .human import main as human_main
+
+        return human_main(args[1:])
     ap = argparse.ArgumentParser(prog="tahdeed", description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -54,7 +64,11 @@ def main(argv: list[str] | None = None) -> int:
     cc.add_argument("--margins", default=None, help="comma list; default: the full sweep")
     go = sub.add_parser("gold", help="evaluate on the hand-written gold set")
     go.add_argument("--out", default=None)
-    be = sub.add_parser("bench", help="latency, throughput, load time and memory")
+    sub.add_parser("human", help="human-written query set: ingest | evaluate (see bench/human_kit)")
+    be = sub.add_parser(
+        "bench",
+        help="latency, throughput, memory; or `bench build|baseline|score|report` (Gulf-AddressBench)",
+    )
     be.add_argument("--n", type=int, default=2000)
     be.add_argument("--json", action="store_true")
 
