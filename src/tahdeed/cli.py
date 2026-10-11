@@ -6,6 +6,7 @@ import argparse
 import csv
 import json
 import sys
+from json import dump as json_dump
 from pathlib import Path
 
 
@@ -47,6 +48,10 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("verify", help="check gazetteer / model provenance and integrity")
 
+    cc = sub.add_parser("crosscity", help="cross-city confident-wrong-city experiment")
+    cc.add_argument("--split", default="dev")
+    cc.add_argument("--out", default="docs/crosscity_dev.json")
+    cc.add_argument("--margins", default=None, help="comma list; default: the full sweep")
     go = sub.add_parser("gold", help="evaluate on the hand-written gold set")
     go.add_argument("--out", default=None)
     be = sub.add_parser("bench", help="latency, throughput, load time and memory")
@@ -109,6 +114,18 @@ def main(argv: list[str] | None = None) -> int:
         print("figures:", ", ".join(make_all(a.eval, a.studies, a.out)))
     elif a.cmd == "verify":
         return _verify()
+    elif a.cmd == "crosscity":
+        from .crosscity import MARGINS, run_crosscity
+        from .gazetteer import Gazetteer
+        from .model_io import load as load_model
+
+        g = Gazetteer.load("data/gazetteer.sqlite")
+        rk = load_model("data/models/ranker.npz", gazetteer_sha256=g.sha256)
+        ms = tuple(float(x) for x in a.margins.split(",")) if a.margins else MARGINS
+        res = run_crosscity(g, rk, a.split, margins=ms)
+        with open(a.out, "w") as fh:
+            json_dump(res, fh, indent=1, default=float)
+        print("wrote", a.out)
     elif a.cmd == "gold":
         return _gold(a.out)
     elif a.cmd == "bench":
