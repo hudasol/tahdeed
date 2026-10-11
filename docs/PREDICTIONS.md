@@ -143,3 +143,25 @@ collision + hole strata at E0.
 | D8 | Diversification alone (gate off) changes the standard held-out headline by at most 0.5 points | _pending_ |
 | D9 | At the margin chosen on dev, the sealed risk-cell wrong-city rate is not significantly different from dev (intervals overlap) | _pending_ |
 | D10 | Hole strata at E0 remain the hardest: even with the gate, confident-wrong-city in them stays above 3% (a gate cannot see a rival that scores low) | _pending_ |
+
+### Goal 1, round 2: the calibrated alternative to a heuristic gate
+
+Written and committed **before the retrain**. First dev run of set v2 (recorded in the table above as the
+D-results) showed the heuristic city gate trades coverage for exposure almost one for one, because an
+exact hit whose true record is missing looks identical to one whose record is present. The principled fix
+is to give the ranker the evidence and the training examples so that its calibrated probability falls
+where the evidence is thin, and abstention then comes from the ordinary threshold `tau`. Changes:
+two new candidate features (`name_n_cities`, the number of cities the street or POI name occurs in; and
+`city_share`, the share of the name's instances in the candidate's city) and cross-city queries from the
+*train* and *calibration* districts added to the training mix. Dev and sealed districts are untouched.
+
+| # | Prediction (model retrained; gate **off** unless stated) | Result |
+|---|---|---|
+| E1 | Risk cells at E0: confident-wrong-city among resolved falls from 97.6% to at most 60% | _pending_ |
+| E2 | Risk cells at E0: wrong-city-of-all falls by at least 50% relative to the v2.0 baseline | _pending_ |
+| E3 | Control `named_unique` at E0 keeps at least 45% coverage (baseline 76%); i.e. cheaper than heuristic gate at margin 0.5 (33%) for a similar exposure cut | _pending_ |
+| E4 | Standard held-out dev benchmark: resolved share within ±2 points of 69.7%, precision within ±0.3 | _pending_ |
+| E5 | E2 (city given) risk-stratum confident-wrong-city stays at most 2% and coverage within 1 point of baseline | _pending_ |
+| E6 | Adding the heuristic gate at margin 0.35 on top of the retrained model reduces risk-cell wrong-city-of-all by at most 20% further (relative): the model has absorbed most of it | _pending_ |
+| E7 | Hole strata at E0 still have more than 50% wrong-city among resolved: the registry does not contain the evidence | _pending_ |
+| E8 | ECE of P(within 50 m) on risk cells at E0 (resolved-tier candidates) at most 0.10 | _pending_ |

@@ -306,7 +306,7 @@ def haversine_to(q: Query, lat: float, lon: float) -> float:
 
 # ----------------------------------------------------------------------------- experiment
 
-MARGINS = (0.9, 0.75, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05)
+MARGINS = (1.0, 0.75, 0.5, 0.35, 0.25, 0.15, 0.1, 0.05, 0.02)
 
 
 def run_crosscity(g, ranker, split: str, margins=MARGINS, workers: int = 2, seed: int = 0,

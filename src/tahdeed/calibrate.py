@@ -183,27 +183,35 @@ def _dist(a: Candidate, b: Candidate) -> float:
     return haversine_m(a.lat, a.lon, b.lat, b.lon)
 
 
-def _city_rivals(resolver, ctx, top: Candidate, fine: list[Candidate]) -> list[Candidate]:
-    """Fine candidates in another city scoring >= margin x the top, when the text names no city."""
+def _city_rivals(resolver, ctx, top: Candidate, cands: list[Candidate]) -> list[Candidate]:
+    """Candidates in another city that the model rates >= margin x the top, when no city is named.
+
+    Scores are the calibrated ``p_valid`` (P(right at its own tier)), the one head defined for
+    every tier, so a street-level candidate in another city can be compared with an exact hit.
+    """
     fl = getattr(resolver, "flags", None)
     if fl is None or not fl.city_gate or ctx["cities"]:
         return []
     g = resolver.g
     tc = candidate_city(g, top)
-    floor = fl.city_margin * (top.p50 or 0.0)
+    floor = fl.city_margin * (top.p_valid or 0.0)
     out = [
         c
-        for c in fine
-        if c is not top and candidate_city(g, c) not in (tc, None) and (c.p50 or 0.0) >= floor
+        for c in cands
+        if c is not top
+        and c.tier != "city"
+        and candidate_city(g, c) not in (tc, None)
+        and (c.p_valid or 0.0) >= floor
     ]
-    out.sort(key=lambda c: -(c.p50 or 0.0))
+    out.sort(key=lambda c: -(c.p_valid or 0.0))
     return out
 
 
 def decide(resolver, text, pq, spans, cands, ctx, notes) -> Resolution:
     policy: Policy = getattr(resolver.ranker, "policy", None) or Policy()
-    fine = sorted((c for c in cands if c.tier in FINE_TIERS), key=lambda c: -(c.p50 or 0.0))
-    coarse = [c for c in cands if c.tier not in FINE_TIERS]
+    real = [c for c in cands if not c.evidence.get("rival_only")]
+    fine = sorted((c for c in real if c.tier in FINE_TIERS), key=lambda c: -(c.p50 or 0.0))
+    coarse = [c for c in real if c.tier not in FINE_TIERS]
     coarse.sort(key=lambda c: (TIER_ORDER.index(c.tier), -(c.p_valid or 0.0)))
     trusted = [c for c in coarse if (c.p_valid or 0.0) >= MIN_VALID]
 
@@ -219,14 +227,14 @@ def decide(resolver, text, pq, spans, cands, ctx, notes) -> Resolution:
             if _dist(top, c) > policy.min_separation_m and (c.p50 or 0.0) >= 0.05
         ]
         best, alts = top, rivals[:3]
-        city_rivals = _city_rivals(resolver, ctx, top, fine)
+        city_rivals = _city_rivals(resolver, ctx, top, cands)
         if rivals and (rivals[0].p50 or 0.0) >= policy.ambiguity_margin * (top.p50 or 0.0):
             status = "ambiguous"
         elif city_rivals:
             # no city in the text and another city scores comparably: ask, do not guess
             status = "ambiguous"
             alts = (city_rivals + [c for c in alts if c not in city_rivals])[:3]
-            ctx["city_gate"] = True
+            ctx["city_gate"] = [top, *city_rivals]
         else:
             status = "resolved"
     elif trusted:
@@ -273,7 +281,7 @@ def _asks(resolver, pq, ctx, fine, coarse) -> list[str]:
         asks.append("Add a street name or a landmark to narrow it down.")
     if ctx.get("city_gate"):
         cs = []
-        for c in fine[:6]:
+        for c in ctx["city_gate"][:6]:
             ck = candidate_city(g, c)
             if ck and ck not in cs:
                 cs.append(ck)
