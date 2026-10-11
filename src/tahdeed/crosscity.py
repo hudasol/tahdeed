@@ -57,7 +57,7 @@ def _noisy(text: str, rng: random.Random, tags: list[str]) -> str:
     return text
 
 
-def make_crosscity_queries(
+def make_crosscity_queries_v1(
     g: Gazetteer, split: str, n_named: int = 600, n_numbered: int = 300, n_poi: int = 300,
     seed: int = 0,
 ) -> list[Query]:  # fmt: skip
@@ -107,7 +107,7 @@ def make_crosscity_queries(
     # POI names present in several cities
     pk: dict[str, set[str]] = {}
     pidx: dict[int, str] = {}
-    for i, p in enumerate(g.pois):
+    for p in g.pois:
         for kk in keys_of(p[3], p[2]):
             if len(kk) >= 4:
                 pk.setdefault(kk, set()).add(p[6])
@@ -131,6 +131,95 @@ def make_crosscity_queries(
                 Query(text, "poi", i, p[8], p[9], ["cc_poi", ev], "cc", split, lang,
                       extra={"stratum": "poi", "evidence": ev, "truth_city": p[6],
                              "n_cities": cs_n, "pair": f"p{i}", "truth_majority": None})
+            )  # fmt: skip
+    return out
+
+
+def make_crosscity_queries(
+    g: Gazetteer, split: str, n: int = 450, seed: int = 0
+) -> list[Query]:  # fmt: skip
+    """Set v2: the same (street, number) in several cities, with and without the true record.
+
+    Strata (``named_``/``numbered_`` prefix by street kind):
+    ``collision``: the (street key, house number) pair exists in at least two cities; truth present.
+    ``hole``: as above but the truth record is hidden, so the only candidates are in other cities.
+    ``unique``: control; the pair exists in one city only (street name still multi-city).
+    """
+    rng = random.Random(f"{seed}-cc2-{split}")
+    multi = _multi_city_keys(g)
+    pools: dict[str, list[tuple[int, str]]] = {
+        "named_collision": [], "numbered_collision": [], "named_hole": [],
+        "numbered_hole": [], "named_unique": [],
+    }  # fmt: skip
+    for i, a in enumerate(g.addr):
+        if not (a[1] and (a[2] or a[3])) or split_of(f"{a[8]}|{a[5] or a[4] or ''}") != split:
+            continue
+        k = next((k for k in sorted(g.addr_street_keys[i]) if k in multi), None)
+        if k is None:
+            continue
+        hn = g.addr_hn[i]
+        cities = {g.addr[j][8] for j in g.addr_by_street_hn.get((k, hn), [])}
+        kind = "numbered" if _NUMBERED.match((a[3] or a[2] or "").strip()) else "named"
+        others = cities - {a[8]}
+        if others:
+            pools[f"{kind}_collision"].append((i, k))
+            pools[f"{kind}_hole"].append((i, k))  # same record, hidden at query time
+        elif kind == "named":
+            pools["named_unique"].append((i, k))
+    for pl in pools.values():
+        rng.shuffle(pl)
+
+    out: list[Query] = []
+    for stratum, pool in pools.items():
+        for i, k in pool[:n]:
+            a = g.addr[i]
+            lang = "ar" if (a[2] and (not a[3] or rng.random() < 0.35)) else "en"
+            street = (a[2] if lang == "ar" else a[3]) or a[2] or a[3]
+            area = (a[4] if lang == "ar" else a[5]) or a[5] or a[4]
+            city = g.city_name(a[8])[1 if lang == "ar" else 0]
+            tags: list[str] = []
+            street = _noisy(street, rng, tags) if lang == "en" else street
+            texts = {
+                "E0": f"{a[1]} {street}",
+                "E1": f"{a[1]} {street}, {area}" if area else None,
+                "E2": f"{a[1]} {street}, {city}",
+            }
+            for ev, text in texts.items():
+                if text is None:
+                    continue
+                out.append(
+                    Query(text, "addr", i, a[12], a[13], tags + [f"cc_{stratum}", ev], "cc", split,
+                          lang, hidden=stratum.endswith("_hole"),
+                          extra={"stratum": stratum, "evidence": ev, "truth_city": a[8],
+                                 "n_cities": len(multi[k]), "pair": f"a{i}",
+                                 "truth_majority": None})
+                )  # fmt: skip
+
+    # POI names present in several cities: truth present, and truth hidden
+    pk: dict[str, set[str]] = {}
+    for p in g.pois:
+        for kk in keys_of(p[3], p[2]):
+            if len(kk) >= 4:
+                pk.setdefault(kk, set()).add(p[6])
+    pool_p: list[int] = []
+    for i, p in enumerate(g.pois):
+        if not (p[3] or p[2]) or split_of(f"poi|{p[6]}|{p[5]}") != split:
+            continue
+        if any(len(pk.get(kk, ())) >= 2 for kk in keys_of(p[3], p[2]) if len(kk) >= 4):
+            pool_p.append(i)
+    rng.shuffle(pool_p)
+    for j, i in enumerate(pool_p[: 2 * n]):
+        p = g.pois[i]
+        stratum = "poi" if j % 2 == 0 else "poi_hole"
+        lang = "ar" if (p[2] and (not p[3] or rng.random() < 0.3)) else "en"
+        name = (p[2] if lang == "ar" else p[3]) or p[3] or p[2]
+        city = g.city_name(p[6])[1 if lang == "ar" else 0]
+        for ev, text in (("E0", name), ("E2", f"{name}, {city}")):
+            out.append(
+                Query(text, "poi", i, p[8], p[9], [f"cc_{stratum}", ev], "cc", split, lang,
+                      hidden=stratum == "poi_hole",
+                      extra={"stratum": stratum, "evidence": ev, "truth_city": p[6],
+                             "n_cities": 2, "pair": f"p{i}", "truth_majority": None})
             )  # fmt: skip
     return out
 
@@ -188,8 +277,15 @@ def summarize_cc(ev: list[dict]) -> dict:
     """
     cells: dict[str, dict] = {}
     keys = sorted({(e["stratum"], e["evidence"]) for e in ev})
-    for s, evd in keys + [("all", e) for e in sorted({e for _, e in keys})]:
-        sel = [e for e in ev if (s == "all" or e["stratum"] == s) and e["evidence"] == evd]
+    risk = ("collision", "hole")
+    extra = [("risk", e) for e in sorted({e for _, e in keys})]
+    for s, evd in keys + extra:
+        sel = [
+            e
+            for e in ev
+            if e["evidence"] == evd
+            and (e["stratum"] == s or (s == "risk" and any(r in e["stratum"] for r in risk)))
+        ]
         n = len(sel)
         res = [e for e in sel if e["status"] == "resolved"]
         wrong = [e for e in res if e["wrong_city"]]
@@ -206,3 +302,51 @@ def summarize_cc(ev: list[dict]) -> dict:
 
 def haversine_to(q: Query, lat: float, lon: float) -> float:
     return haversine_m(q.lat, q.lon, lat, lon)
+
+
+# ----------------------------------------------------------------------------- experiment
+
+MARGINS = (0.9, 0.75, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05)
+
+
+def run_crosscity(g, ranker, split: str, margins=MARGINS, workers: int = 2, seed: int = 0,
+                  standard_n: int = 3000) -> dict:  # fmt: skip
+    """Baseline vs diversification vs gate at each margin, on the cross-city set and on the
+    standard held-out benchmark (the price of the gate on ordinary queries)."""
+    from .evaluate import summarize
+    from .noise import make_address_queries
+    from .parallel import _cc_one, _eval_one, run_pool
+    from .resolve import Flags
+
+    qs = make_crosscity_queries(g, split, seed=seed) + gold_regression_cases(g)
+    configs: dict[str, Flags] = {
+        "baseline_v2.0": Flags(diversify=False, city_gate=False),
+        "diversify_only": Flags(diversify=True, city_gate=False),
+    }
+    for m in margins:
+        configs[f"gate_{m}"] = Flags(diversify=True, city_gate=True, city_margin=m)
+    std_q = make_address_queries(g, standard_n, split, seed=seed + 5)
+    out: dict = {"split": split, "n_queries": len(qs), "configs": {}, "standard_n": len(std_q)}
+    for name, fl in configs.items():
+        ev = run_pool(_cc_one, qs, g, ranker=ranker, radii=ranker.radii, workers=workers, flags=fl)
+        std = run_pool(_eval_one, std_q, g, ranker=ranker, radii=ranker.radii, workers=workers,
+                       flags=fl)  # fmt: skip
+        sm = summarize(std, std_q)
+        out["configs"][name] = {
+            "cells": summarize_cc([e for e in ev if e["stratum"] != "gold"]),
+            "gold_cases": [
+                {k: e[k] for k in ("text", "status", "answer_city", "wrong_city", "city_gate")}
+                for e in ev
+                if e["stratum"] == "gold"
+            ],
+            "standard": {
+                k: sm[k]
+                for k in (
+                    "resolved_coverage",
+                    "resolved_precision_50m",
+                    "forced_top1_50m",
+                    "ece_p50",
+                )
+            },
+        }
+    return out

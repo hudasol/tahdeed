@@ -101,13 +101,45 @@ split is run once for the chosen margin. "Confident" means status `resolved`. Me
 
 | # | Prediction | Result |
 |---|---|---|
-| C1 | Before the gate (v2.0 behaviour), named streets at E0: confident-wrong-city rate among resolved is at least 10% | _pending_ |
-| C2 | Numbered streets at E0 ("Street 5") have a confident-wrong-city rate at least twice that of named streets at E0 | _pending_ |
-| C3 | E2 (city given) control: confident-wrong-city rate at most 2% for named streets | _pending_ |
-| C4 | A city-evidence gate (abstain and ask which city when a rival in another city scores at least `margin` × the top) at the best margin cuts named-street E0 confident-wrong-city by at least 60% relative | _pending_ |
-| C5 | The same gate costs at least 20% of E0 coverage (relative) on named streets: the cut is not free | _pending_ |
-| C6 | E2 control outcomes change by no more than 0.5 points of coverage under the gate | _pending_ |
-| C7 | Standard held-out dev benchmark: resolved share drops by at most 2 points and resolved precision moves by at most ±0.3 points | _pending_ |
-| C8 | Candidate diversification alone (gate off) moves the standard held-out headline by at most 0.5 points | _pending_ |
-| C9 | The margin chosen on dev transfers to sealed: the wrong-city-rate difference between dev and sealed is inside the combined interval | _pending_ |
-| C10 | POI chain names at E0 (no city): the gate lowers confident-wrong-city by a smaller relative amount than for streets (POIs often have several instances in one city, so the ambiguity is not only about city) | _pending_ |
+| C1 | Before the gate (v2.0 behaviour), named streets at E0: confident-wrong-city rate among resolved is at least 10% | **Miss**: 0.0% (Wilson 95% CI 0-1%), 48% of queries resolved |
+| C2 | Numbered streets at E0 ("Street 5") have a confident-wrong-city rate at least twice that of named streets at E0 | **Miss**: 0.0% (CI 0-3%) vs 0.0%: nothing to compare |
+| C3 | E2 (city given) control: confident-wrong-city rate at most 2% for named streets | **Hit**: 0.0% (CI 0-1%) |
+| C4 | A city-evidence gate (abstain and ask which city when a rival in another city scores at least `margin` × the top) at the best margin cuts named-street E0 confident-wrong-city by at least 60% relative | **Untestable**: baseline rate was already 0 |
+| C5 | The same gate costs at least 20% of E0 coverage (relative) on named streets: the cut is not free | **Miss**: the gate changed named-street E0 coverage by under 1 point at every margin down to 0.05 (it fired on 1% of queries at 0.05) |
+| C6 | E2 control outcomes change by no more than 0.5 points of coverage under the gate | **Hit**: unchanged |
+| C7 | Standard held-out dev benchmark: resolved share drops by at most 2 points and resolved precision moves by at most ±0.3 points | **Hit** (trivially): 69.7% / 98.7% at margins 0.9-0.1; 69.2% / 98.8% at 0.05 |
+| C8 | Candidate diversification alone (gate off) moves the standard held-out headline by at most 0.5 points | **Hit**: identical to baseline |
+| C9 | The margin chosen on dev transfers to sealed: the wrong-city-rate difference between dev and sealed is inside the combined interval | **Not run**: no margin was worth choosing on this set |
+| C10 | POI chain names at E0 (no city): the gate lowers confident-wrong-city by a smaller relative amount than for streets (POIs often have several instances in one city, so the ambiguity is not only about city) | **Untestable**: POI E0 resolved only 2% of the time, 0 wrong |
+
+**What this first run (set v1, `docs/crosscity_v1_dev.json`) actually showed.** On queries whose street
+*name* exists in several cities, the v2.0 system already made no confident wrong-city answers (0%,
+upper bound 1%). Reason found by reading the set, not by tuning: a house number almost always
+identifies one city, because the same (street, number) pair rarely exists in two cities. My set did
+not exercise the real failure. The real exposures are (a) the same (street, number) in two cities
+(collision), and (b) the true address missing from the registry while another city has that
+(street, number) (hole with rival). The gold-set failure ("6 شارع الديرة الطوية" answered in Abu Dhabi
+instead of Al Ain) is neither: it is a fuzzy span matching a different street. It is kept as a
+regression case. Set v2 below is therefore designed **after** seeing v1's result; v1 stays in the
+record as a null result.
+
+### Goal 1, set v2: collisions and registry holes with a rival city
+
+Written and committed before any v2 query is run. Strata: `*_collision` (the same street and number
+exist in at least two cities, truth present), `*_hole` (truth hidden from the index, another city has
+the same street and number), `named_unique` (control: number exists in one city only), `poi` and
+`poi_hole` (same name in several cities). Evidence levels E0/E1/E2 as before. "Risk cells" =
+collision + hole strata at E0.
+
+| # | Prediction | Result |
+|---|---|---|
+| D1 | Baseline (v2.0 behaviour): confident-wrong-city among resolved in the risk cells at E0 is at least 15% | _pending_ |
+| D2 | Hole strata have a higher confident-wrong-city rate than collision strata at E0 (a hidden truth leaves only the rival to answer) | _pending_ |
+| D3 | Control (`named_unique`, E0) confident-wrong-city is at most 1% | _pending_ |
+| D4 | E2 (city given) confident-wrong-city in the risk strata is at most 3% | _pending_ |
+| D5 | There is a gate margin that cuts risk-cell E0 confident-wrong-city by at least 50% relative while losing at most 25% of risk-cell E0 coverage (relative) | _pending_ |
+| D6 | The same margin changes the control stratum (`named_unique`) E0 coverage by at most 3 points | _pending_ |
+| D7 | The same margin changes standard held-out dev coverage by at most 1.5 points and precision by at most ±0.3 | _pending_ |
+| D8 | Diversification alone (gate off) changes the standard held-out headline by at most 0.5 points | _pending_ |
+| D9 | At the margin chosen on dev, the sealed risk-cell wrong-city rate is not significantly different from dev (intervals overlap) | _pending_ |
+| D10 | Hole strata at E0 remain the hardest: even with the gate, confident-wrong-city in them stays above 3% (a gate cannot see a rival that scores low) | _pending_ |

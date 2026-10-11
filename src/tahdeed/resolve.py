@@ -61,6 +61,9 @@ class Flags:
     dp: bool = True  # DP span selection (False: greedy longest-first)
     interp: bool = True  # interpolate between neighbouring house numbers
     landmark: bool = True  # landmark-relative tier
+    diversify: bool = True  # with no city evidence, offer candidates from several cities
+    city_gate: bool = True  # abstain and ask which city when a rival city scores comparably
+    city_margin: float = 0.5  # rival in another city triggers the gate at >= margin x top p50
 
 
 # ----------------------------------------------------------------------------- data types
@@ -132,6 +135,33 @@ class Resolution:
 
 
 # ----------------------------------------------------------------------------- span matching
+
+
+def _diversify(items: list, city_of, k: int) -> list:
+    """First item per city (in order), then the rest, up to k: keeps rival cities visible."""
+    seen: set = set()
+    first, rest = [], []
+    for it in items:
+        c = city_of(it)
+        if c in seen:
+            rest.append(it)
+        else:
+            seen.add(c)
+            first.append(it)
+    return (first + rest)[:k]
+
+
+def candidate_city(g: Gazetteer, c: Candidate) -> str | None:
+    """City key of a candidate (None when it cannot be told)."""
+    if c.ref:
+        kind, i = c.ref
+        if kind == "addr":
+            return g.addr[i][8]
+        if kind == "poi":
+            return g.pois[i][6]
+        if kind == "area":
+            return g.areas[i][4]
+    return c.label.get("city_key")
 
 
 def _span_keys(tokens: list[str]) -> tuple[str, str]:
@@ -637,7 +667,12 @@ class Resolver:
 
                 pick = sorted(ex, key=lambda i: (-kex(i), -amatch(i), -cmatch(i)))
                 cluster = len({(g.addr[i][8], g.addr[i][5] or g.addr[i][4]) for i in pick})
-                for i in pick[:4]:
+                picked = (
+                    _diversify(pick, lambda i: g.addr[i][8], 4)
+                    if (self.flags.diversify and not cities)
+                    else pick[:4]
+                )
+                for i in picked:
                     a = g.addr[i]
                     f = dict(base_feat)
                     f.update(
@@ -838,7 +873,11 @@ class Resolver:
                     st_ok = 1 if (keys_of(p[5]) & street_keys) else -1
                 scored.append((st_ok, i))
             scored.sort(key=lambda t: -t[0])
-            top = scored[:3]
+            top = (
+                _diversify(scored, lambda t: g.pois[t[1]][6], 3)
+                if (self.flags.diversify and not cities)
+                else scored[:3]
+            )
             names = Counter()
             for _, i in scored:
                 names[(g.pois[i][6])] += 1

@@ -96,3 +96,33 @@ def run_pool(fn, queries, g, ranker=None, radii=None, workers=2, flags=None):
         return [fn(q) for q in queries]
     with _pool(g, ranker, radii, workers, flags) as p:
         return p.map(fn, queries, chunksize=64)
+
+
+def _cc_one(q: Query):
+    """Cross-city outcome for one query (see ``crosscity.summarize_cc``)."""
+    from .resolve import candidate_city
+
+    assert _R is not None and _G is not None
+    ha, hp = _hide(q)
+    res = _R.resolve(q.text, ha, hp)
+    b = res.best
+    t = truth_of(_G, q)
+    out = {
+        "stratum": q.extra["stratum"],
+        "evidence": q.extra["evidence"],
+        "status": res.status,
+        "truth_majority": q.extra.get("truth_majority"),
+        "pair": q.extra["pair"],
+        "city_gate": any(a.startswith("Which city?") for a in res.asks),
+        "answer_city": None,
+        "wrong_city": False,
+        "within50": False,
+        "p50": None,
+        "tier": None,
+        "text": q.text,
+    }
+    if b is not None:
+        ac = candidate_city(_G, b)
+        out.update(answer_city=ac, wrong_city=bool(ac and ac != t.city), tier=b.tier, p50=b.p50,
+                   within50=haversine_m(b.lat, b.lon, t.lat, t.lon) <= 50.0)  # fmt: skip
+    return out
