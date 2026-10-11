@@ -133,16 +133,16 @@ collision + hole strata at E0.
 
 | # | Prediction | Result |
 |---|---|---|
-| D1 | Baseline (v2.0 behaviour): confident-wrong-city among resolved in the risk cells at E0 is at least 15% | _pending_ |
-| D2 | Hole strata have a higher confident-wrong-city rate than collision strata at E0 (a hidden truth leaves only the rival to answer) | _pending_ |
-| D3 | Control (`named_unique`, E0) confident-wrong-city is at most 1% | _pending_ |
-| D4 | E2 (city given) confident-wrong-city in the risk strata is at most 3% | _pending_ |
-| D5 | There is a gate margin that cuts risk-cell E0 confident-wrong-city by at least 50% relative while losing at most 25% of risk-cell E0 coverage (relative) | _pending_ |
-| D6 | The same margin changes the control stratum (`named_unique`) E0 coverage by at most 3 points | _pending_ |
-| D7 | The same margin changes standard held-out dev coverage by at most 1.5 points and precision by at most ±0.3 | _pending_ |
-| D8 | Diversification alone (gate off) changes the standard held-out headline by at most 0.5 points | _pending_ |
-| D9 | At the margin chosen on dev, the sealed risk-cell wrong-city rate is not significantly different from dev (intervals overlap) | _pending_ |
-| D10 | Hole strata at E0 remain the hardest: even with the gate, confident-wrong-city in them stays above 3% (a gate cannot see a rival that scores low) | _pending_ |
+| D1 | Baseline (v2.0 behaviour): confident-wrong-city among resolved in the risk cells at E0 is at least 15% | **Hit, far past it**: 97.6% (Wilson 95-99%) of the 15.1% of risk queries that were resolved were in the wrong city; that is 14.7% of all risk queries (n=1,646, dev) |
+| D2 | Hole strata have a higher confident-wrong-city rate than collision strata at E0 (a hidden truth leaves only the rival to answer) | **Hit**: named holes 98.4% (27% resolved) vs named collisions 33% (1% resolved, n=6 resolved: wide interval). The system already abstains on collisions; the exposure is holes |
+| D3 | Control (`named_unique`, E0) confident-wrong-city is at most 1% | **Hit**: 0.3% (CI 0-2%), 76.4% resolved |
+| D4 | E2 (city given) confident-wrong-city in the risk strata is at most 3% | **Hit**: 1.6% (CI 1-3%) |
+| D5 | There is a gate margin that cuts risk-cell E0 confident-wrong-city by at least 50% relative while losing at most 25% of risk-cell E0 coverage (relative) | **Miss**: the rate among resolved barely moves (97.6% → 95-96%) because the gate removes correct and wrong answers alike; in absolute exposure (wrong-city-of-all) margin 0.5 cuts 14.7% → 7.6% (-48%) at -48% coverage, margin 0.25 cuts to 6.0% (-59%) at -58% coverage. It never goes below 5.4%: those rivals are invisible |
+| D6 | The same margin changes the control stratum (`named_unique`) E0 coverage by at most 3 points | **Miss, badly**: 76.4% → 33.3% at margin 0.5, 15.6% at 0.25. An exact hit whose record is present is indistinguishable from one whose record is missing |
+| D7 | The same margin changes standard held-out dev coverage by at most 1.5 points and precision by at most ±0.3 | **Miss**: 69.7% → 65.5% resolved at margin 0.5 (62.1% at 0.25, 51.8% at 0.02); precision 98.7% → 98.8-99.1% |
+| D8 | Diversification alone (gate off) changes the standard held-out headline by at most 0.5 points | **Hit**: identical to baseline on every cell |
+| D9 | At the margin chosen on dev, the sealed risk-cell wrong-city rate is not significantly different from dev (intervals overlap) | _pending: sealed is run once, after the final model_ |
+| D10 | Hole strata at E0 remain the hardest: even with the gate, confident-wrong-city in them stays above 3% (a gate cannot see a rival that scores low) | **Hit**: 75-98% at every margin down to 0.02 |
 
 ### Goal 1, round 2: the calibrated alternative to a heuristic gate
 

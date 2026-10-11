@@ -279,12 +279,17 @@ def summarize_cc(ev: list[dict]) -> dict:
     keys = sorted({(e["stratum"], e["evidence"]) for e in ev})
     risk = ("collision", "hole")
     extra = [("risk", e) for e in sorted({e for _, e in keys})]
+    extra += [("all", e) for e in sorted({e for _, e in keys})]
     for s, evd in keys + extra:
         sel = [
             e
             for e in ev
             if e["evidence"] == evd
-            and (e["stratum"] == s or (s == "risk" and any(r in e["stratum"] for r in risk)))
+            and (
+                e["stratum"] == s
+                or s == "all"
+                or (s == "risk" and any(r in e["stratum"] for r in risk))
+            )
         ]
         n = len(sel)
         res = [e for e in sel if e["status"] == "resolved"]
@@ -296,8 +301,19 @@ def summarize_cc(ev: list[dict]) -> dict:
             "wrong_city_of_all": rate(len(wrong), n),
             "asked_city": rate(sum(1 for e in sel if e.get("city_gate")), n),
             "resolved_within_50m": rate(sum(1 for e in res if e["within50"]), len(res)),
+            "ece_p50_fine": _ece_fine(sel),
         }
     return cells
+
+
+def _ece_fine(sel: list[dict]) -> float | None:
+    from .evaluate import ece
+    from .resolve import FINE_TIERS
+
+    f = [e for e in sel if e["tier"] in FINE_TIERS and e["p50"] is not None]
+    if len(f) < 30:
+        return None
+    return ece(np.array([e["p50"] for e in f]), np.array([float(e["within50"]) for e in f]))
 
 
 def haversine_to(q: Query, lat: float, lon: float) -> float:
