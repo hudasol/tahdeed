@@ -7,6 +7,7 @@ ranker/calibrator -> decision (resolved / approximate / ambiguous / unresolved).
 
 from __future__ import annotations
 
+import os
 import time
 from collections import Counter
 from dataclasses import dataclass, field
@@ -63,7 +64,12 @@ class Flags:
     landmark: bool = True  # landmark-relative tier
     diversify: bool = True  # with no city evidence, offer candidates from several cities
     city_gate: bool = True  # abstain and ask which city when a rival city scores comparably
-    city_margin: float = 0.5  # rival in another city triggers the gate at >= margin x top p50
+    # rival in another city triggers the gate at >= margin x top p_valid. 0.35 was chosen on the
+    # DEV cross-city set (largest exposure cut with standard-benchmark coverage loss <= 5 points,
+    # see docs/PREDICTIONS.md); override with TAHDEED_CITY_MARGIN.
+    city_margin: float = field(
+        default_factory=lambda: float(os.environ.get("TAHDEED_CITY_MARGIN", "0.35"))
+    )
 
 
 # ----------------------------------------------------------------------------- data types
