@@ -192,6 +192,31 @@ def ablation(st: dict, out: Path) -> None:
     plt.close(fig)
 
 
+def crosscity_tradeoff(cc: dict, out: Path) -> None:
+    """Coverage vs wrong-city exposure as the gate margin sweeps (dev cross-city set)."""
+    cf = cc["configs"]
+    names = ["baseline_v2.0"] + [k for k in cf if k.startswith("gate_")]
+    pts = []
+    for k in names:
+        c = cf[k]["cells"]
+        r = c["risk/E0"]["wrong_city_of_all"]["rate"]
+        u = c["named_unique/E0"]["coverage"]["rate"]
+        sc = cf[k]["standard"]["resolved_coverage"]
+        pts.append((k, 100 * r, 100 * u, 100 * sc))
+    fig, axs = plt.subplots(1, 2, figsize=(9.2, 3.8))
+    for ax, j, lab in ((axs[0], 2, "coverage, unique names, no city (%)"),
+                       (axs[1], 3, "coverage, standard benchmark (%)")):  # fmt: skip
+        ax.plot([p[j] for p in pts], [p[1] for p in pts], "-o", color=BLUE, ms=4)
+        for p in pts:
+            ax.annotate(p[0].replace("baseline_v2.0", "off").replace("gate_", ""),
+                        (p[j], p[1]), fontsize=7, color=MUTE, xytext=(3, 3), textcoords="offset points")  # fmt: skip
+        _style(ax, "Wrong-city exposure vs coverage" if j == 2 else "Cost on the standard set", lab,
+               "wrong city, % of risk queries (no city given)")  # fmt: skip
+    fig.tight_layout()
+    fig.savefig(out / "crosscity_tradeoff.svg")
+    plt.close(fig)
+
+
 def make_all(eval_json: str, studies_json: str, out_dir: str) -> list[str]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -205,4 +230,8 @@ def make_all(eval_json: str, studies_json: str, out_dir: str) -> list[str]:
         for fn in (generator_gap, ablation):
             fn(st, out)
             made.append(fn.__name__)
+    cc = Path(eval_json).parent / "crosscity_dev.json"
+    if cc.exists():
+        crosscity_tradeoff(json.loads(cc.read_text()), out)
+        made.append("crosscity_tradeoff")
     return made

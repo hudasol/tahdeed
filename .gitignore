@@ -19,3 +19,4 @@ data/models/
 retrain.done
 .claude/
 smoke-logs/
+bench/results/*.cache.json
