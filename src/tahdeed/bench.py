@@ -30,14 +30,42 @@ RADII = (50, 200, 1000)
 
 # name -> (generator, split, n, seed, status, description). `status` records contamination.
 SETS = {
-    "address_dev": ("addr_v2", "dev", 1500, 101, "dev-seen", "synthetic structured addresses, mixed noise"),
+    "address_dev": (
+        "addr_v2",
+        "dev",
+        1500,
+        101,
+        "dev-seen",
+        "synthetic structured addresses, mixed noise",
+    ),
     "address_sealed": ("addr_v2", "sealed", 600, 102, "sealed", "same generator, sealed districts"),
     "hole_dev": ("addr_hole", "dev", 600, 103, "dev-seen", "truth record absent from the index"),
-    "hole_sealed": ("addr_hole", "sealed", 300, 104, "sealed", "truth record absent, sealed districts"),
+    "hole_sealed": (
+        "addr_hole",
+        "sealed",
+        300,
+        104,
+        "sealed",
+        "truth record absent, sealed districts",
+    ),
     "poi_dev": ("poi", "dev", 600, 105, "dev-seen", "POI name (+ street) + city"),
     "poi_sealed": ("poi", "sealed", 300, 106, "sealed", "POI, sealed districts"),
-    "landmark_dev": ("landmark", "dev", 400, 107, "dev-seen", "'near <landmark>' relational queries"),
-    "crosscity_dev": ("crosscity", "dev", 450, 0, "dev-seen", "names present in several cities; E0/E1/E2"),
+    "landmark_dev": (
+        "landmark",
+        "dev",
+        400,
+        107,
+        "dev-seen",
+        "'near <landmark>' relational queries",
+    ),
+    "crosscity_dev": (
+        "crosscity",
+        "dev",
+        450,
+        0,
+        "dev-seen",
+        "names present in several cities; E0/E1/E2",
+    ),
     "crosscity_sealed": ("crosscity", "sealed", 450, 0, "sealed-used-once", "cross-city, sealed"),
 }
 
@@ -62,6 +90,7 @@ def _row(i: int, name: str, split: str, q, g) -> dict:
         "lat": round(q.lat, 7),
         "lon": round(q.lon, 7),
         "truth_city": city,
+        "truth_city_geo": nearest_city(q.lat, q.lon).key,
         "truth_ref": ref,  # OSM element; hole rows: this record is absent from the reference index
         "hole": bool(q.hidden),
         "stratum": q.extra.get("stratum") or q.slice,
@@ -110,7 +139,7 @@ def build(db: str, out: Path) -> dict:
             c = nearest_city(r["lat"], r["lon"]).key
             fh.write(json.dumps({
                 "id": f"gold-{i:03d}", "set": "gold_handwritten", "split": "dev", "text": r["query"],
-                "lang": "mixed", "kind": "addr", "lat": r["lat"], "lon": r["lon"], "truth_city": c,
+                "lang": "mixed", "kind": "addr", "lat": r["lat"], "lon": r["lon"], "truth_city": c, "truth_city_geo": c,
                 "truth_ref": None, "hole": False, "stratum": "gold", "evidence": None, "noise": [],
                 "synthetic": False,
             }, ensure_ascii=False) + "\n")  # fmt: skip
@@ -182,9 +211,17 @@ def _ece(conf: list[float], hit: list[int], bins: int = 10) -> float:
         return float("nan")
     tot = 0.0
     for b in range(bins):
-        idx = [i for i, c in enumerate(conf) if b / bins <= c < (b + 1) / bins or (b == bins - 1 and c == 1)]
+        idx = [
+            i
+            for i, c in enumerate(conf)
+            if b / bins <= c < (b + 1) / bins or (b == bins - 1 and c == 1)
+        ]
         if idx:
-            tot += len(idx) / n * abs(sum(hit[i] for i in idx) / len(idx) - sum(conf[i] for i in idx) / len(idx))
+            tot += (
+                len(idx)
+                / n
+                * abs(sum(hit[i] for i in idx) / len(idx) - sum(conf[i] for i in idx) / len(idx))
+            )
     return tot
 
 
@@ -211,8 +248,10 @@ def score_rows(rows: list[dict], preds: dict[str, dict]) -> dict:
         a50 += d <= 50
         a200 += d <= 200
         a1k += d <= 1000
-        city = p.get("city") or nearest_city(p["lat"], p["lon"]).key
-        cwc += city != r["truth_city"]
+        if p.get("city"):  # tag semantics: compared with the record's city tag
+            cwc += p["city"] != r["truth_city"]
+        else:  # geometric semantics: nearest city centre on both sides
+            cwc += nearest_city(p["lat"], p["lon"]).key != r["truth_city_geo"]
         if p.get("confidence") is not None:
             conf.append(float(p["confidence"]))
             hit.append(int(d <= 50))
@@ -250,7 +289,9 @@ def score(pred_path: str | Path, data: Path = DATA, sets: list[str] | None = Non
         sub = {"overall": score_rows(rs, preds), "strata": {}}
         strata: dict[str, list[dict]] = defaultdict(list)
         for r in rs:
-            strata[f"{r['stratum']}/{r['evidence']}" if r["evidence"] else str(r["stratum"])].append(r)
+            strata[
+                f"{r['stratum']}/{r['evidence']}" if r["evidence"] else str(r["stratum"])
+            ].append(r)
         if len(strata) > 1:
             for k, v in sorted(strata.items()):
                 sub["strata"][k] = score_rows(v, preds)
@@ -273,7 +314,9 @@ def print_score(res: dict, w=print) -> None:
         w(f"  end-to-end@50m     {_pct(o['end_to_end_50m'])}   (abstain = miss)")
         w(f"  forced@50m/1km     {_pct(o['forced_50m'])} / {_pct(o['forced_1km'])}")
         if o["ece_conf_50m"] is not None:
-            w(f"  ECE (confidence vs within-50m, n={o['n_with_confidence']}): {o['ece_conf_50m']:.3f}")
+            w(
+                f"  ECE (confidence vs within-50m, n={o['n_with_confidence']}): {o['ece_conf_50m']:.3f}"
+            )
 
 
 # ----------------------------------------------------------------------------- baselines
@@ -318,12 +361,14 @@ def baseline_naive(rows: list[dict], db: str) -> list[dict]:
             out.append({"id": r["id"], "abstain": True})
             continue
         best = max(cands[:4000], key=lambda i: fuzz.token_set_ratio(qt, text_of(i)))
-        out.append({"id": r["id"], "lat": g.addr[best][12], "lon": g.addr[best][13]})
+        out.append({"id": r["id"], "lat": g.addr[best][12], "lon": g.addr[best][13],
+                    "city": g.addr[best][8]})  # fmt: skip
     return out
 
 
 def baseline_tahdeed(rows: list[dict], db: str, model: str) -> list[dict]:
     """The reference system. Hole rows are resolved with the truth record removed from the index."""
+    from .resolve import candidate_city
     from .service import load_resolver
 
     rs = load_resolver(db=Path(db), model=Path(model), strict=True)
@@ -346,7 +391,7 @@ def baseline_tahdeed(rows: list[dict], db: str, model: str) -> list[dict]:
             continue
         out.append({
             "id": r["id"], "lat": b.lat, "lon": b.lon, "abstain": res.status != "resolved",
-            "confidence": round(float(b.p50), 4), "city": getattr(b, "city", None),
+            "confidence": round(float(b.p50), 4), "city": candidate_city(g, b),
         })  # fmt: skip
     return out
 
@@ -363,14 +408,15 @@ def baseline_nominatim(rows: list[dict], limit: int, cache: Path | None = None) 
     out, done = [], 0
     for r in rows:
         if r["hole"] or done >= limit:
-            continue
+            continue  # (sampling is done by the caller)
         key = r["id"]
         if key not in cache_d:
             url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(
                 {"q": r["text"], "format": "jsonv2", "limit": 1, "countrycodes": "ae"}
             )
             req = urllib.request.Request(
-                url, headers={"User-Agent": "tahdeed-bench/1.0 (+https://github.com/hudasol/tahdeed)"}
+                url,
+                headers={"User-Agent": "tahdeed-bench/1.0 (+https://github.com/hudasol/tahdeed)"},
             )
             with urllib.request.urlopen(req, timeout=20) as resp:  # noqa: S310
                 cache_d[key] = json.load(resp)
@@ -431,7 +477,8 @@ def main(argv: list[str] | None = None) -> int:
         else:
             preds = []
             for name in sorted({r["set"] for r in rows}):
-                sample = [r for r in rows if r["set"] == name][:: 1]
+                allr = [r for r in rows if r["set"] == name and not r["hole"]]
+                sample = allr[:: max(1, len(allr) // a.limit)][: a.limit]  # even stride
                 cache = Path(a.out).with_suffix(".cache.json")
                 preds += baseline_nominatim(sample, a.limit, cache)
         _write_preds(preds, a.out)
