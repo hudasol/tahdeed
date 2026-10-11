@@ -61,6 +61,30 @@ def render(results: Path, data: Path) -> str:
                 L.append(f"| {label} | {o['n']} | {_p(o['answered'])} | {_p(o['precision_50m'])} | "
                          f"{_p(o['confident_wrong_city'])} | {_p(o['end_to_end_50m'])} | {_p(o['forced_1km'])} |")  # fmt: skip
         L.append("")
+    nom = scores.get("nominatim")
+    if nom:
+        L += ["### Like-for-like on Nominatim's sample", "",
+              "Public Nominatim was queried at ≤1 request/s on an even-stride sample of each set (hole rows "
+              "excluded: a global geocoder cannot have a record removed). Tahdeed and the naive baseline are "
+              "re-scored on exactly the same ids (`*.sample.score.json`). Nominatim is a competitor, never ground truth.", ""]  # fmt: skip
+        for s in nom["sets"]:
+            L += [f"**{s}**", "", "| System | n | Answered | Precision@50 m | Wrong city | End-to-end@50 m | Forced@1 km |",
+                  "|---|---|---|---|---|---|---|"]  # fmt: skip
+            for k, label in SYSTEMS:
+                f = results / (
+                    "nominatim.score.json" if k == "nominatim" else f"{k}.sample.score.json"
+                )
+                o = (
+                    json.loads(f.read_text())["sets"].get(s, {}).get("overall")
+                    if f.exists()
+                    else None
+                )
+                if o is None:
+                    L.append(f"| {label} | – | – | – | – | – | – |")
+                else:
+                    L.append(f"| {label} | {o['n']} | {_p(o['answered'])} | {_p(o['precision_50m'])} | "
+                             f"{_p(o['confident_wrong_city'])} | {_p(o['end_to_end_50m'])} | {_p(o['forced_1km'])} |")  # fmt: skip
+            L.append("")
     for s in ("crosscity_dev", "crosscity_sealed"):
         for k, label in SYSTEMS:
             sub = scores.get(k, {}).get("sets", {}).get(s)
@@ -74,6 +98,24 @@ def render(results: Path, data: Path) -> str:
                     f"| {st} | {o['n']} | {_p(o['answered'])} | {_p(o['confident_wrong_city'])} | {_p(o['end_to_end_50m'])} |"
                 )
             L.append("")
+    L += ["## Reading the results", "",
+          "- **Abstention changes what a table means.** Tahdeed answers fewer queries and is right far more often "
+          "when it does; the naive baseline answers almost everything and is mostly wrong. Compare *precision* and "
+          "*end-to-end* together, never one alone.",
+          "- **Nominatim** is a general geocoder queried with synthetic text that is garbled on purpose (transliteration "
+          "variants, typos). It answers few of those, and is competitive or ahead on clean-ish POI and cross-city text, where it "
+          "has the whole current OSM including the truth record. It is not a like-for-like opponent on hole sets (it cannot "
+          "have a record removed), so those rows are blank. Its sample is small (n=100 per set); intervals are wide.",
+          "- **Cross-city**: with no city given, Nominatim often answers (and is sometimes wrong city); Tahdeed's city gate "
+          "asks instead, which costs end-to-end score on this set by design. See `docs/EVALUATION.md` for the exposure/coverage trade-off.",
+          "", "## Limitations", "",
+          "1. OpenStreetMap is both the truth and the data the baselines index; \"within 50 m\" is relative to OSM.",
+          "2. All sets except `gold_handwritten` are synthetic; generated noise is not how people write. The human-written set is pending.",
+          "3. Dev-seen sets are optimistic for Tahdeed (see the contamination column); the sealed sets are the fair ones, and `crosscity_sealed` was used once.",
+          "4. The gold set has 40 rows and was used while building the system.",
+          "5. Cross-city set composition is chosen to expose a failure: rates are not prevalence estimates.",
+          "6. Coverage is concentrated in Abu Dhabi emirate (about 85% of structured addresses); no per-emirate claims are made.",
+          ""]  # fmt: skip
     L += ["### human_v1", "", "**Pending real data.** No volunteer data has been collected; this set is "
           "intentionally empty. See [bench/human_kit/README.md](../bench/human_kit/README.md). "
           "Numbers will appear here only from `tahdeed human evaluate` on real responses.", ""]  # fmt: skip

@@ -6,6 +6,47 @@ Splits are by district hash (train 50% / calibration 20% / **dev 20%** / **seale
 Dev was used while iterating; sealed was run **once**, after the predictions in
 [`PREDICTIONS.md`](PREDICTIONS.md) were written.
 
+## Cross-city answers (Phase 2)
+
+A street or POI name that exists in several cities, written without the city, can be answered
+confidently in the wrong one. The synthetic cross-city set pairs the same record at three evidence
+levels (E0 street+number only, E1 + district, E2 + city) and over strata *collision* (same street and
+number in several cities) and *hole* (the true record is missing while another city has the same
+street and number). **Risk** = collision + hole pooled. This set is built to expose the failure; its
+rates are not prevalence estimates. `std` = the standard benchmark (n=3000) run under the same flags.
+Intervals are Wilson 95%. Predictions and their hits and misses: [`PREDICTIONS.md`](PREDICTIONS.md).
+
+### Dev (all gate margins; 0.35 was chosen here)
+
+| Config | std resolved | std precision | risk E0: answered | risk E0: **wrong city, % of all** | risk E0: asked city | unique E0: answered | unique E0: asked | risk E1: wrong city | risk E2: wrong city |
+|---|---|---|---|---|---|---|---|---|---|
+| baseline_v2.0 | 69.2% | 99.1% | 10.3% (8.9-11.8) | 10.1% (8.7-11.6) | 0.0% | 72.4% | 0.0% | 0.6% (0.3-1.2) | 0.2% (0.1-0.5) |
+| diversify_only | 69.2% | 99.1% | 10.3% (8.9-11.8) | 10.1% (8.7-11.6) | 0.0% | 72.4% | 0.0% | 0.6% (0.3-1.2) | 0.2% (0.1-0.5) |
+| gate_1.0 | 68.6% | 99.1% | 10.0% (8.7-11.6) | 9.8% (8.5-11.4) | 0.2% | 69.6% | 2.9% | 0.6% (0.3-1.2) | 0.2% (0.1-0.5) |
+| gate_0.75 | 67.4% | 99.2% | 6.9% (5.8-8.3) | 6.7% (5.6-8.1) | 3.3% | 58.4% | 14.0% | 0.6% (0.3-1.2) | 0.2% (0.1-0.5) |
+| gate_0.5 | 66.0% | 99.2% | 4.4% (3.5-5.5) | 4.3% (3.4-5.4) | 5.8% | 39.8% | 32.7% | 0.1% (0.0-0.5) | 0.2% (0.1-0.5) |
+| gate_0.35 | 65.1% | 99.2% | 3.1% (2.4-4.1) | 3.0% (2.3-3.9) | 7.2% | 30.9% | 41.6% | 0.1% (0.0-0.5) | 0.2% (0.1-0.5) |
+| gate_0.25 | 59.6% | 99.3% | 1.6% (1.1-2.4) | 1.5% (1.0-2.2) | 8.6% | 5.1% | 67.3% | 0.0% (0.0-0.4) | 0.2% (0.1-0.5) |
+| gate_0.15 | 57.6% | 99.4% | 1.6% (1.1-2.3) | 1.5% (1.0-2.2) | 8.7% | 2.0% | 70.4% | 0.0% (0.0-0.4) | 0.2% (0.1-0.5) |
+| gate_0.1 | 52.5% | 99.4% | 1.5% (1.0-2.2) | 1.5% (1.0-2.2) | 8.7% | 2.0% | 70.4% | 0.0% (0.0-0.4) | 0.2% (0.1-0.5) |
+| gate_0.05 | 52.5% | 99.4% | 1.5% (1.0-2.2) | 1.5% (1.0-2.2) | 8.7% | 2.0% | 70.4% | 0.0% (0.0-0.4) | 0.2% (0.1-0.5) |
+| gate_0.02 | 52.5% | 99.4% | 1.5% (1.0-2.2) | 1.5% (1.0-2.2) | 8.7% | 2.0% | 70.4% | 0.0% (0.0-0.4) | 0.2% (0.1-0.5) |
+
+### Sealed (run once; baseline, diversify-only and the chosen margin)
+
+| Config | std resolved | std precision | risk E0: answered | risk E0: **wrong city, % of all** | risk E0: asked city | unique E0: answered | unique E0: asked | risk E1: wrong city | risk E2: wrong city |
+|---|---|---|---|---|---|---|---|---|---|
+| baseline_v2.0 | 64.7% | 98.9% | 12.4% (10.6-14.5) | 12.0% (10.2-14.1) | 0.0% | 73.8% | 0.0% | 0.2% (0.1-0.9) | 0.1% (0.0-0.5) |
+| diversify_only | 64.7% | 98.9% | 12.4% (10.6-14.5) | 12.0% (10.2-14.1) | 0.0% | 73.8% | 0.0% | 0.2% (0.1-0.9) | 0.1% (0.0-0.5) |
+| gate_0.35 | 61.0% | 99.0% | 3.0% (2.2-4.2) | 2.8% (2.0-4.0) | 9.4% | 36.0% | 37.8% | 0.0% (0.0-0.5) | 0.1% (0.0-0.5) |
+
+![tradeoff](figures/crosscity_tradeoff.svg)
+
+Reading: with no city given, holes in the registry look identical to unique, present records, so
+wrong-city exposure falls only by giving up answers (the gate asks "which city?"). Giving the district
+(E1) or city (E2) removes almost all of it. The residual after the gate is mostly rival cities
+that are invisible to the system.
+
 ## Read this first
 
 - Queries are **synthetic** (two generators, one independent of training) plus a 40-row hand-written set. No query comes from a real user. Absolute numbers are optimistic; relative comparisons and calibration are the findings.
@@ -13,7 +54,7 @@ Dev was used while iterating; sealed was run **once**, after the predictions in
 - Dubai has almost no structured OSM addresses, so only Dubai/Sharjah/Ajman POI queries are evaluated there.
 - The hand-written set was used to find one defect (interior street-type spans), so its score is no longer an untouched estimate.
 
-## Headline: sealed split (final report)
+## Headline: sealed split, frozen v2.0 release (model before Phase 2)
 
 | Benchmark | n | resolved | precision@50 m of resolved | top-1 ≤50 m (forced) | ≤1 km | ECE P(≤50 m) | median ms |
 |---|---|---|---|---|---|---|---|
@@ -21,13 +62,13 @@ Dev was used while iterating; sealed was run **once**, after the predictions in
 | Same, true address removed from the index | 3000 | 49.0% | **86.6%** | 44.5% | 62.7% | 0.039 | 6.2 |
 | Dubai / Sharjah / Ajman POI (weaker truth) | 1500 | 76.6% | **98.7%** | 78.5% | 80.8% | 0.054 | 4.6 |
 
-## Headline: dev split
+## Headline: dev split (v2.1: city gate on, retrained)
 
 | Benchmark | n | resolved | precision@50 m of resolved | top-1 ≤50 m (forced) | ≤1 km | ECE P(≤50 m) | median ms |
 |---|---|---|---|---|---|---|---|
-| Abu Dhabi / Al Ain / Al Dhafra, held-out districts | 6000 | 69.4% | **98.8%** | 72.7% | 80.7% | 0.024 | 5.7 |
-| Same, true address removed from the index | 3000 | 48.9% | **84.9%** | 43.3% | 65.7% | 0.043 | 6.1 |
-| Dubai / Sharjah / Ajman POI (weaker truth) | 1500 | 72.8% | **98.9%** | 74.5% | 77.2% | 0.069 | 4.5 |
+| Abu Dhabi / Al Ain / Al Dhafra, held-out districts | 6000 | 64.7% | **99.2%** | 72.1% | 80.1% | 0.030 | 6.2 |
+| Same, true address removed from the index | 3000 | 45.2% | **87.9%** | 43.0% | 65.9% | 0.033 | 6.5 |
+| Dubai / Sharjah / Ajman POI (weaker truth) | 1500 | 63.3% | **99.5%** | 72.9% | 75.5% | 0.105 | 4.5 |
 
 "Forced" counts the best candidate even where tahdeed would have abstained or given only an area. "Resolved" is the confident answer.
 
@@ -73,15 +114,16 @@ Calibration (ECE) stays low across the range but precision cannot: a registry ho
 
 ## Landmark queries ("near X, city")
 
-Sealed: 75.8% within 200 m of the landmark with the landmark tier, 0.0% without (n=1500). Dev: 74.2% within 200 m of the landmark with the landmark tier, 0.1% without (n=1500). Truth is the landmark's own point, so this tests finding the landmark, not the offset that "near" implies.
+Sealed: 75.8% within 200 m of the landmark with the landmark tier, 0.0% without (n=1500). Dev: 75.3% within 200 m of the landmark with the landmark tier, 0.1% without (n=1500). Truth is the landmark's own point, so this tests finding the landmark, not the offset that "near" implies.
 
 ## Hand-written gold set
 
-40 queries written by a person; 36 resolved, 34 of those within 50 m; forced top-1 ≤50 m 85.0%. Sampling uncertainty at n=40 is about ±13 points. See the caveat above.
+40 queries written by a person; 30 resolved, 29 of those within 50 m; forced top-1 ≤50 m 85.0%. Sampling uncertainty at n=40 is about ±13 points. See the caveat above.
 
 ## Known failures
 
-- A common street name that exists in several cities, written without the city, can win with a coarse key that merges a street word with the neighbouring area word (cross-token merge). Not fixed.
+- A street name that exists in several cities, written without the city, is still answered in the wrong city when the true record is missing from the registry (a hole looks like a unique, present record). The city gate lowers this at a coverage cost; the residual is shown in the cross-city section.
+- v2.1 regression: Dubai/Sharjah/Ajman POI calibration (ECE of P(within 50 m)) is worse than v2.0 on dev, and POI answers are fewer because chain names now trigger the city question. Not yet diagnosed which change (features, cross-city training mix, or gate) causes the ECE rise; the gate cannot change p50, so the model change is implicated.
 - Registry holes (above).
 - Arabizi remains the weakest style.
 - Interpolation (+10 points forced top-1) assumes house numbers increase along a street and is checked only against held-out OSM addresses.
