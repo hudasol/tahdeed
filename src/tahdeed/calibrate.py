@@ -35,6 +35,7 @@ FEATURES = [
     "anchor_dist_m", "relation_radius", "has_anchor", "area_quality", "area_fuzzy",
     "area_tokens", "area_key_len", "area_instances", "area_n", "area_radius",
     "street_alt", "street_ambig", "key_exact", "area_match", "city_match", "poi_ambig", "area_ambig",
+    "name_n_cities", "city_share",
 ]  # fmt: skip
 
 MIN_VALID = 0.15  # below this, even the best coarse candidate is not trusted

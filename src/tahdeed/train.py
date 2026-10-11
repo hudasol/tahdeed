@@ -19,6 +19,7 @@ from .calibrate import (
     Policy,
     empirical_radii,
 )
+from .crosscity import make_crosscity_queries
 from .gazetteer import Gazetteer
 from .noise import make_address_queries, make_poi_queries
 from .noise2 import make_landmark_queries
@@ -41,6 +42,9 @@ class TrainReport:
 def build_queries(g: Gazetteer, n_addr: int, n_poi: int, split: str, seed: int, hole_rate: float):
     qs = make_address_queries(g, n_addr, split, seed=seed, hole_rate=hole_rate)
     qs += make_poi_queries(g, n_poi, split, seed=seed)
+    # same street / POI name in several cities, with and without the true record (train and
+    # calibration districts only; dev and sealed districts are never touched)
+    qs += make_crosscity_queries(g, split, n=max(150, n_addr // 100), seed=seed)
     qs += make_landmark_queries(g, n_poi, split, seed=seed)  # "near <landmark>, <city>"
     return qs
 

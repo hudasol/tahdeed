@@ -603,11 +603,13 @@ class Resolver:
         area_keys = self._area_key_set(ctx)
         cities = ctx["cities"]
         for ss in sorted(ctx["street_spans"], key=lambda s: -(s.n * s.quality))[:2]:
+            n_before = len(out)
             keys = [k for k in dict.fromkeys(ss.street_keys) if g.has_street_key(k)]
             ids: list[int] = []
             for k in keys:
                 ids += g.addr_by_street.get(k, [])
             ids = self._filter_ids(sorted(set(ids)), ctx)
+            name_cities = Counter(g.addr[i][8] for i in ids)
             seg_ids: list[int] = []
             for k in keys:
                 seg_ids += g.street_by_key.get(k, [])
@@ -713,6 +715,7 @@ class Resolver:
                     ):
                         rc.evidence = {**rc.evidence, "rival_only": True}
                         out.append(rc)
+                self._city_share(out[n_before:], name_cities)
                 continue
             # interpolation between neighbouring numbers (single district only); also offered
             # when every exact-number hit lies outside the district the query names
@@ -725,7 +728,16 @@ class Resolver:
             out += self._street_candidates(
                 pool, seg_ids, ss, area_spans=ctx["area_spans"], base_feat=base_feat, ctx=ctx
             )
+            self._city_share(out[n_before:], name_cities)
         return out
+
+    def _city_share(self, cands: list[Candidate], name_cities: Counter) -> None:
+        """How many cities share this name, and how much of it lies in each candidate's city."""
+        tot = sum(name_cities.values())
+        for c in cands:
+            ck = candidate_city(self.g, c)
+            c.features["name_n_cities"] = len(name_cities)
+            c.features["city_share"] = name_cities.get(ck, 0) / tot if tot else -1.0
 
     def _area_key_set(self, ctx: dict) -> set[str]:
         g = self.g
@@ -894,6 +906,7 @@ class Resolver:
             names = Counter()
             for _, i in scored:
                 names[(g.pois[i][6])] += 1
+            n_names = sum(names.values())
             for st_ok, i in top:
                 p = g.pois[i]
                 f = {
@@ -912,6 +925,8 @@ class Resolver:
                     "n_unexplained": ctx["n_unexplained"],
                     "poi_is_whole_query": int(ps.n >= ctx["n_body"]),
                     "n_same_clusters": len(names),
+                    "name_n_cities": len(names),
+                    "city_share": names[p[6]] / n_names,
                 }
                 ck = CITY_BY_KEY.get(p[6])
                 out.append(
