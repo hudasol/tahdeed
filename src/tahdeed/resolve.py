@@ -547,7 +547,7 @@ class Resolver:
         cands += self._city_candidates(ctx)
 
         if not decide:
-            return cands
+            return [c for c in cands if not c.evidence.get("rival_only")]
         if self.ranker:
             self.ranker.score(cands)
         res = self._decide(text, pq, spans, cands, ctx, notes)
@@ -700,6 +700,19 @@ class Resolver:
                     conflict = True
                 produced = True
             if produced and not conflict:
+                if self.flags.city_gate and not cities:
+                    # street-level candidates in every city that has this street name: never
+                    # answered, only scored, so the city gate can see rivals the exact hit hides
+                    for rc in self._street_candidates(
+                        pool,
+                        seg_ids,
+                        ss,
+                        area_spans=ctx["area_spans"],
+                        base_feat=base_feat,
+                        ctx=ctx,
+                    ):
+                        rc.evidence = {**rc.evidence, "rival_only": True}
+                        out.append(rc)
                 continue
             # interpolation between neighbouring numbers (single district only); also offered
             # when every exact-number hit lies outside the district the query names
