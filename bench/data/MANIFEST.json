@@ -89,8 +89,8 @@
    "split": "dev",
    "seed": null,
    "contamination": "seen-throughout-development",
-   "description": "40 queries written by the maintainer; truth = registry coordinates; truth_city is derived from coordinates",
-   "sha256": "805d0d30c2458d956105dd62b5c813868b99608a91be181c4ee0453d1c38b0c3"
+   "description": "40 queries written by the maintainer; truth = registry coordinates; truth_city = that record's city tag",
+   "sha256": "e90f866321571cd64f6180a2d7ab5e4de320fbb78e21a55c29298f1fdf327101"
   }
  }
 }

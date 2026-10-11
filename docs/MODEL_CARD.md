@@ -16,7 +16,11 @@ A fixed policy then chooses `resolved` (calibrated `p50` ≥ τ and no close riv
 
 **Training data.** Synthetic queries rendered from OpenStreetMap address points in *train* districts (50% of districts by hash), noise model v1 (`noise.py`), 30% of queries with the true address hidden from the index so the model learns what absence looks like. Calibrated on a disjoint 20% of districts. Evaluated on `dev` (20%); a further 10% (`sealed`) is reserved for the final report.
 
-**Performance**: see `docs/EVALUATION.md` (generated from the result files). Sealed split: resolved precision 98.7% at 65.5% resolved share; independent v2 generator 66.0% forced top-1 with 97.2% precision of confident answers; with the true address absent, 86.6%.
+**Performance**: see `docs/EVALUATION.md` (generated from the result files).
+
+<!-- RESULTS:model_card BEGIN -->
+Standard benchmark, sealed (run once): 61.0% answered, 99.0% of those within 50 m. Cross-city risk queries with no city given: wrong-city answers 12.0% (10.2-14.1) without the gate, 2.8% (2.0-4.0) with it. True address missing (dev): 87.9% of confident answers right. Dubai/Sharjah/Ajman POI calibration (dev) ECE 0.105 (was 0.069 on v2.0: a regression, see EVALUATION.md).
+<!-- RESULTS:model_card END -->
 
 **Training data.** Also includes landmark-relative queries ("near X, city"); without them the landmark tier answered nothing (found in Round 4).
 
@@ -26,7 +30,7 @@ A fixed policy then chooses `resolved` (calibrated `p50` ≥ τ and no close riv
 - Dubai has almost no structured OSM addresses; only Dubai *POI* queries are evaluated, and calibration there is weaker (ECE 0.05).
 - The hole prior (30%) is an assumption; calibration holds across 0-100% holes but precision does not.
 - Isotonic calibration shows no significant effect on top-1 and no ECE advantage over raw boosted probabilities; it is kept because it is harmless, not because it helps.
-- A common street name present in several cities, written without the city, can produce a confident answer in the wrong city.
+- A common street name present in several cities, written without the city, can still produce a confident answer in the wrong city when the true record is missing from the registry; the city gate reduces but does not remove this and costs coverage. Features `name_n_cities` and `city_share` and cross-city training queries were added in v2.1.
 
 **Ethical / privacy notes.** The model sees text, not people. Addresses are personal data: the API logs only a hash of the query unless `TAHDEED_LOG_RAW=1`. The gazetteer comes from public OSM data and contains buildings and POIs, not residents.
 

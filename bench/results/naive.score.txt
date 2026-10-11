@@ -30,7 +30,7 @@ crosscity_sealed  (n=4709, missing predictions: 738)
 gold_handwritten  (n=40, missing predictions: 0)
   answered           100.0% [91-100]
   precision@50m      80.0% [65-90]   (among answered)
-  conf.wrong city    5.0% [1-17]   (among answered)
+  conf.wrong city    0.0% [0-9]   (among answered)
   end-to-end@50m     80.0% [65-90]   (abstain = miss)
   forced@50m/1km     80.0% [65-90] / 82.5% [68-91]
 
