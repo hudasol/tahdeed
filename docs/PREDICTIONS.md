@@ -157,11 +157,11 @@ two new candidate features (`name_n_cities`, the number of cities the street or 
 
 | # | Prediction (model retrained; gate **off** unless stated) | Result |
 |---|---|---|
-| E1 | Risk cells at E0: confident-wrong-city among resolved falls from 97.6% to at most 60% | _pending_ |
-| E2 | Risk cells at E0: wrong-city-of-all falls by at least 50% relative to the v2.0 baseline | _pending_ |
-| E3 | Control `named_unique` at E0 keeps at least 45% coverage (baseline 76%); i.e. cheaper than heuristic gate at margin 0.5 (33%) for a similar exposure cut | _pending_ |
-| E4 | Standard held-out dev benchmark: resolved share within ±2 points of 69.7%, precision within ±0.3 | _pending_ |
-| E5 | E2 (city given) risk-stratum confident-wrong-city stays at most 2% and coverage within 1 point of baseline | _pending_ |
-| E6 | Adding the heuristic gate at margin 0.35 on top of the retrained model reduces risk-cell wrong-city-of-all by at most 20% further (relative): the model has absorbed most of it | _pending_ |
-| E7 | Hole strata at E0 still have more than 50% wrong-city among resolved: the registry does not contain the evidence | _pending_ |
-| E8 | ECE of P(within 50 m) on risk cells at E0 (resolved-tier candidates) at most 0.10 | _pending_ |
+| E1 | Risk cells at E0: confident-wrong-city among resolved falls from 97.6% to at most 60% | **Miss**: 98.2% (CI 95-99%) of resolved risk-E0 answers are still wrong-city. The model learned to answer less (coverage 14.8%→10.3%) but not to answer *differently*: when it resolves, it is on holes. |
+| E2 | Risk cells at E0: wrong-city-of-all falls by at least 50% relative to the v2.0 baseline | **Miss**: 14.7%→10.1% wrong-of-all, a 31% relative cut (target 50%). |
+| E3 | Control `named_unique` at E0 keeps at least 45% coverage (baseline 76%); i.e. cheaper than heuristic gate at margin 0.5 (33%) for a similar exposure cut | **Hit**: 72.4% coverage (CI in JSON) vs 76.4% baseline. Caveat: the retrained model barely moved this control; the heuristic gate at 0.35 costs far more (30.9%). |
+| E4 | Standard held-out dev benchmark: resolved share within ±2 points of 69.7%, precision within ±0.3 | **Partial**: coverage 69.2% (within ±2 of 69.7%) hit; precision 99.08% vs 98.71% is +0.37, outside the ±0.3 band (in the good direction), so strictly a miss. |
+| E5 | E2 (city given) risk-stratum confident-wrong-city stays at most 2% and coverage within 1 point of baseline | **Miss**: confident-wrong-city 0.8% (hit) but coverage fell 26.1%→22.2% (−3.9 points; target ≤1). |
+| E6 | Adding the heuristic gate at margin 0.35 on top of the retrained model reduces risk-cell wrong-city-of-all by at most 20% further (relative): the model has absorbed most of it | **Miss** (in the informative direction): the gate still cuts risk wrong-of-all 10.1%→3.0% (−70% relative). The model did NOT absorb the gate's job; the gate remains the main protection. |
+| E7 | Hole strata at E0 still have more than 50% wrong-city among resolved: the registry does not contain the evidence | **Hit**: named holes at E0 are 99.1% wrong-city among resolved. Missing registry evidence cannot be recovered by a calibrator. |
+| E8 | ECE of P(within 50 m) on risk cells at E0 (resolved-tier candidates) at most 0.10 | **Miss**: ECE 0.222 on risk-E0 (named holes 0.398). The cell is selected on a hidden variable (record missing), so per-cell ECE is expected to be large; the mixture cell `all/E0` has ECE 0.083 and the standard benchmark 0.037. |
