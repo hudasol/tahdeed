@@ -87,3 +87,27 @@ faster loading, so small movements are expected.
 | F5 | Landmark queries on sealed: within 200 m at least 65% | **Hit**: 75.8% (0.0% with the tier off) |
 | F6 | Load time ≤ 10 s; median latency ≤ 9 ms | **Hit**: load 8.0 s (was 18.8 s), median 5.8 ms, p99 17.5 ms, 156 q/s single core, RSS 490 MB |
 | F7 | Final model's dev numbers show no regression greater than 1 point on any Round 4 headline (interior-type guard is not a net loss) | **Near miss**: everything improved (held-out resolved 67.2% → 69.4%, top-1 70.1% → 72.7%, v2 top-1 61.0% → 64.4%, Arabizi 48.8% → 51.3%) except landmark top-1 within 200 m, 75.3% → 74.2% (−1.1) |
+
+# Phase 2 (branch `phase2-crosscity-bench`)
+
+## Goal 1: cross-city confident-wrong answers
+
+Written and committed **before any query of the cross-city set was run**. The set
+(`src/tahdeed/crosscity.py`) is synthetic, rendered from OSM records, paired across evidence levels
+(E0 street only, E1 + district, E2 + city). Dev split is used to choose the gate margin; the sealed
+split is run once for the chosen margin. "Confident" means status `resolved`. Metrics: coverage
+(share resolved), confident-wrong-city rate (wrong city among resolved), wrong-city-of-all
+(resolved and wrong city, over all queries). All with Wilson 95% intervals.
+
+| # | Prediction | Result |
+|---|---|---|
+| C1 | Before the gate (v2.0 behaviour), named streets at E0: confident-wrong-city rate among resolved is at least 10% | _pending_ |
+| C2 | Numbered streets at E0 ("Street 5") have a confident-wrong-city rate at least twice that of named streets at E0 | _pending_ |
+| C3 | E2 (city given) control: confident-wrong-city rate at most 2% for named streets | _pending_ |
+| C4 | A city-evidence gate (abstain and ask which city when a rival in another city scores at least `margin` × the top) at the best margin cuts named-street E0 confident-wrong-city by at least 60% relative | _pending_ |
+| C5 | The same gate costs at least 20% of E0 coverage (relative) on named streets: the cut is not free | _pending_ |
+| C6 | E2 control outcomes change by no more than 0.5 points of coverage under the gate | _pending_ |
+| C7 | Standard held-out dev benchmark: resolved share drops by at most 2 points and resolved precision moves by at most ±0.3 points | _pending_ |
+| C8 | Candidate diversification alone (gate off) moves the standard held-out headline by at most 0.5 points | _pending_ |
+| C9 | The margin chosen on dev transfers to sealed: the wrong-city-rate difference between dev and sealed is inside the combined interval | _pending_ |
+| C10 | POI chain names at E0 (no city): the gate lowers confident-wrong-city by a smaller relative amount than for streets (POIs often have several instances in one city, so the ambiguity is not only about city) | _pending_ |
