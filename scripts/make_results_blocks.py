@@ -34,14 +34,19 @@ def blocks() -> dict[str, str]:
         f"| Forced top-1 within 50 m | {pc(sd['forced_top1_50m'])} | {pc(ss['forced_top1_50m'])} |",
         f"| ECE of P(within 50 m) | {sd['ece_p50']:.3f} | {ss['ece_p50']:.3f} |",
     ]
-    for lab, cfg in (("no city gate (v2.0 behaviour)", "baseline_v2.0"), ("city gate on (default)", "gate_0.35")):
+    for lab, cfg in (
+        ("no city gate (v2.0 behaviour)", "baseline_v2.0"),
+        ("city gate on (default)", "gate_0.35"),
+    ):
         rk = {k: risk(ccd, cfg) for k in ("d",)}["d"]
         rs = risk(ccs, cfg)
-        rows.append(f"| **Wrong-city answers, % of cross-city risk queries with no city given** ({lab}) | {ci(rk[0]['wrong_city_of_all'])} | {ci(rs[0]['wrong_city_of_all'])} |")
+        rows.append(
+            f"| **Wrong-city answers, % of cross-city risk queries with no city given** ({lab}) | {ci(rk[0]['wrong_city_of_all'])} | {ci(rs[0]['wrong_city_of_all'])} |"
+        )
     rk, rs = risk(ccd, "gate_0.35"), risk(ccs, "gate_0.35")
     rows += [
         f"| ...cost: answered share of those queries | {ci(rk[0]['coverage'])} | {ci(rs[0]['coverage'])} |",
-        f"| ...cost: asked \"which city?\" on unique names (E0) | {pc(rk[1]['asked_city']['rate'])} | {pc(rs[1]['asked_city']['rate'])} |",
+        f'| ...cost: asked "which city?" on unique names (E0) | {pc(rk[1]["asked_city"]["rate"])} | {pc(rs[1]["asked_city"]["rate"])} |',
         f"| ...with the city written (E2), wrong-city rate of answers | {ci(rk[2]['confident_wrong_city'])} | {ci(rs[2]['confident_wrong_city'])} |",
         f"| True address missing from the index: precision of confident answers | {pc(h['resolved_precision_50m'])} | not re-run |",
         f"| Dubai/Sharjah/Ajman POI queries: answered / ECE | {pc(p['resolved_coverage'])} / {p['ece_p50']:.3f} | not re-run |",
