@@ -32,8 +32,16 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--db", default="data/gazetteer.sqlite")
     t.add_argument("--out", default="data/models/ranker.npz")
     t.add_argument("--n-train", type=int, default=30000)
+    t.add_argument("--seed", type=int, default=0, help="query-generation seed (default 0)")
     t.add_argument("--workers", type=int, default=2)
     t.add_argument("--hole-rate", type=float, default=0.30)
+    t.add_argument("--no-crosscity-mix", action="store_true", help="ablation: v2.0 training mix")
+    t.add_argument(
+        "--no-poi-hole", action="store_true", help="cross-city mix without its poi_hole stratum"
+    )
+    t.add_argument(
+        "--mask-features", default="", help="comma list of features held at -1 (ablation)"
+    )
 
     r = sub.add_parser("resolve", help="resolve one address")
     r.add_argument("address")
@@ -62,6 +70,12 @@ def main(argv: list[str] | None = None) -> int:
     cc.add_argument("--split", default="dev")
     cc.add_argument("--out", default="docs/crosscity_dev.json")
     cc.add_argument("--margins", default=None, help="comma list; default: the full sweep")
+    ab = sub.add_parser("ablate-poi", help="POI calibration ablation over trained models (dev)")
+    ab.add_argument("models", help="comma list name=path.npz")
+    ab.add_argument("--db", default="data/gazetteer.sqlite")
+    ab.add_argument("--out", default="docs/poi_ablation.json")
+    ab.add_argument("--workers", type=int, default=2)
+    ab.add_argument("--no-crosscity", action="store_true")
     go = sub.add_parser("gold", help="evaluate on the hand-written gold set")
     go.add_argument("--out", default=None)
     sub.add_parser("human", help="human-written query set: ingest | evaluate (see bench/human_kit)")
@@ -91,15 +105,28 @@ def main(argv: list[str] | None = None) -> int:
         build(a.pbf, a.out)
     elif a.cmd == "train":
         from .gazetteer import Gazetteer
-        from .train import train
+        from .train import MixOptions, train
 
         g = Gazetteer.load(a.db)
+        masked = tuple(x.strip() for x in a.mask_features.split(",") if x.strip())
+        mix = MixOptions(
+            crosscity=not a.no_crosscity_mix,
+            crosscity_poi_hole=not a.no_poi_hole,
+            mask_features=masked,
+        )
         ranker, _ = train(
-            g, n_train=a.n_train, n_calib=a.n_train // 3, workers=a.workers, hole_rate=a.hole_rate
+            g,
+            n_train=a.n_train,
+            n_calib=a.n_train // 3,
+            workers=a.workers,
+            hole_rate=a.hole_rate,
+            mix=mix,
+            seed=a.seed,
         )
         from .model_io import export
 
-        export(ranker, a.out, g.sha256, {"n_train": a.n_train, "hole_rate": a.hole_rate})
+        meta = {"n_train": a.n_train, "hole_rate": a.hole_rate, "seed": a.seed, **mix.manifest()}
+        export(ranker, a.out, g.sha256, meta)
         print(f"saved {a.out}")
     elif a.cmd == "resolve":
         from .service import load_resolver
@@ -139,6 +166,12 @@ def main(argv: list[str] | None = None) -> int:
         res = run_crosscity(g, rk, a.split, margins=ms)
         with open(a.out, "w") as fh:
             json_dump(res, fh, indent=1, default=float)
+        print("wrote", a.out)
+    elif a.cmd == "ablate-poi":
+        from .poi_ablation import run as run_ablation
+
+        models = dict(x.split("=", 1) for x in a.models.split(",") if x)
+        run_ablation(models, a.db, a.out, workers=a.workers, crosscity=not a.no_crosscity)
         print("wrote", a.out)
     elif a.cmd == "gold":
         return _gold(a.out)
