@@ -6,7 +6,7 @@ version; scorer refactors that leave every committed score identical do not.
 ## Unreleased
 
 - CI job `bench-drift` (`scripts/check_bench_drift.py`): checks every `data/*.jsonl` against the
-  SHA-256 and row count in `MANIFEST.json`, re-scores each committed prediction file, and requires
+  SHA-256 and row count in `MANIFEST.json`, scores each committed prediction file again, and requires
   the result and `docs/BENCH_REPORT.md` to match the committed files exactly. No data or score changed.
 - `CITATION.cff` and `codemeta.json` added. No DOI has been minted.
 - No new set. A second sealed set is not available; see `docs/SEALED2.md`.
