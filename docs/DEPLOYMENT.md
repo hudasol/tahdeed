@@ -340,6 +340,52 @@ Abu Dhabi emirate (87% of addresses) is 74% of the file and 74% of the memory.
 3. Build command (set in `vercel.json`): `python ../fetch_data.py --dest data`. Entrypoint:
    `app.py` (`app = create_app()`), which loads the data on each instance's first request.
 
+### 5.6 Abu Dhabi emirate demo build (built and measured, not deployed)
+
+Reproducible with one command on Linux, from a full gazetteer built by `tahdeed build`:
+
+```bash
+pip install -c constraints.txt -e ".[train]"
+WORKERS=2 bash deploy/build_demo_region.sh data/gazetteer.sqlite region
+```
+
+It runs `deploy/make_region.py --preset abu-dhabi-emirate` (Abu Dhabi, Al Ain, Al Ruwais, Madinat
+Zayed, Liwa), trains a model on exactly that file (`tahdeed train`, defaults: 30,000 training
+queries, seed 0), measures memory with `deploy/measure_rss.py`, then writes
+`region/gazetteer.sqlite.gz` and `region/SHA256SUMS`. Measured on the 2026-10-15 OSM extract
+(`docs/region_rss.json`, Python 3.12, WSL2 Linux):
+
+| | Value |
+|---|---|
+| Rows (addresses / street segments / areas / POIs) | 127,705 / 46,667 / 1,798 / 13,926 |
+| Interpreter with FastAPI and uvicorn imported, nothing loaded | 45 MB |
+| Resident after loading gazetteer and model in strict mode (VmRSS) | 362 MB |
+| Resident after 400 requests through the app (VmRSS) | 365 MB |
+| Peak resident, whole run (VmHWM) | 369.9 MB |
+| Load time | 39.5 s on a heavily shared CPU (other jobs were running); expect less on an idle core and more on Render's 0.1 CPU |
+
+The measurement process also imports the HTTP test client, so the server alone should be slightly
+smaller. Peak 369.9 MB leaves about 142 MB under Render's 512 MB, for one worker. Concurrent
+requests add little (each request allocates far less than 1 MB), but nothing above was measured
+under concurrent load.
+
+**Not measured:** the accuracy of the regional model. Its benchmarks (`tahdeed eval`) were not
+run; Dubai POI queries cannot be answered by an Abu Dhabi only file by design. Say so on the demo
+page.
+
+**Deploy steps (Render, free).** Not done by the author; these are what the owner clicks.
+
+1. Create a GitHub Release (for example `demo-ad-2026-10`) and upload `region/gazetteer.sqlite.gz`
+   and `region/ranker.npz` as assets. This release is also the ODbL offer of the database (section 6).
+2. In Render: New > Blueprint, select this repository, blueprint path `deploy/render.yaml`.
+3. Set the `sync: false` variables: `TAHDEED_GAZETTEER_URL` (the `.gz` asset URL),
+   `TAHDEED_GAZETTEER_SHA256` (the line for `gazetteer.sqlite`, the *decompressed* file, in
+   `region/SHA256SUMS`), `TAHDEED_MODEL_URL`, `TAHDEED_MODEL_SHA256` (the `ranker.npz` line),
+   `TAHDEED_DATA_OFFER_URL` (the release page). Leave `TAHDEED_TRUST_PROXY` unset.
+4. Apply. Check `/health` returns `"status": "ok"` and `"degraded": false`; resolve one Abu Dhabi
+   address on the dashboard; read Render's metrics page for memory under 512 MB.
+5. Do not publish the URL until the page shows the ODbL notice (section 6) and the limits above.
+
 ## 6. Serving ODbL data publicly: what you owe
 
 The gazetteer is built from an OpenStreetMap extract (see `data/NOTICE.md`) and is a database
