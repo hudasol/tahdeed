@@ -246,10 +246,10 @@ Hole strata (truth hidden) are reported separately: there the right outcome is *
 
 | # | Prediction | Result |
 |---|---|---|
-| T2.1 | Non hole strata, E0 queries asked "Which city?": with the true city supplied, at least 60% become resolved within 50 m (Wilson interval reported) | |
-| T2.2 | Same queries: at most 2% become resolved but more than 50 m away | |
-| T2.3 | Hole strata asked "Which city?": with the true city supplied, at most 5% become resolved (any resolved answer there is wrong) | |
-| T2.4 | The hinted status equals the status of the same record written with the city in the text (E2) for at least 95% of the asked queries | |
+| T2.1 | Non hole strata, E0 queries asked "Which city?": with the true city supplied, at least 60% become resolved within 50 m (Wilson interval reported) | **Hit**: 247 of 248, 99.6% (97.8 to 99.9). Asked share 16.6% of 1,498 E0 queries, almost all `named_unique` (247) |
+| T2.2 | Same queries: at most 2% become resolved but more than 50 m away | **Hit**: 0 of 248 (0 to 1.5%) |
+| T2.3 | Hole strata asked "Which city?": with the true city supplied, at most 5% become resolved (any resolved answer there is wrong) | **Miss**: 43 of 128 resolved (33.6%). My premise was wrong too: 41 of the 43 are within 50 m of the hidden record, because another OSM record (a duplicate or a neighbouring entrance) sits that close; 2 are beyond 50 m (1.6%, 0.4 to 5.5). None was in another city |
+| T2.4 | The hinted status equals the status of the same record written with the city in the text (E2) for at least 95% of the asked queries | **Hit**: 376 of 376 (248 non hole, 128 hole). Expected by construction; the downgrade guard never fired |
 
 ## Phase 2, T6 (exploratory): last meter entrance proposals
 
@@ -265,11 +265,17 @@ entrance of that building, share within 10 m with a Wilson interval. Baselines: 
 
 | # | Prediction | Result |
 |---|---|---|
-| T6.1 | At least 100 buildings carry a mapped entrance vertex (n is reported) | |
-| T6.2 | The outline point nearest to the nearest road is within 10 m of a mapped entrance for at least 35% of buildings | |
-| T6.3 | The centroid is within 10 m for at most 20% | |
-| T6.4 | The outline proposal's median distance is at least 30% lower than the centroid's | |
-| T6.5 | The nearest road point is within 10 m for at most 25% (a road is not a door) | |
+| T6.1 | At least 100 buildings carry a mapped entrance vertex (n is reported) | **Hit**: 242 buildings, 410 entrances (of 587 entrance nodes in the bbox; 199,773 building outlines) |
+| T6.2 | The outline point nearest to the nearest road is within 10 m of a mapped entrance for at least 35% of buildings | **Miss**: 24.0% (19.0 to 29.7) |
+| T6.3 | The centroid is within 10 m for at most 20% | **Miss**: 29.8% (24.3 to 35.8); the labelled buildings are small |
+| T6.4 | The outline proposal's median distance is at least 30% lower than the centroid's | **Miss, reversed**: 24.7 m against 16.3 m for the centroid. Facing the nearest road is not where doors are on these buildings |
+| T6.5 | The nearest road point is within 10 m for at most 25% (a road is not a door) | **Hit**: 11.6% (8.1 to 16.2), median 31.9 m |
+
+**Not predicted, and partly leakage.** The `path_endpoint` proposer (a footway or service way ending
+within 15 m of the outline) is within 10 m of a mapped entrance for 59.9% (53.6 to 65.9) of
+buildings, median 0 m. OSM mappers usually join the footway to the entrance node itself, so on these
+buildings the proposer partly reads the hidden label. It is a real signal in OSM data, but this
+evaluation cannot say how well it works on buildings whose entrances are not mapped.
 
 ## Phase 2, T4: Overture Places and GeoNames as Dubai POI supplements
 
@@ -283,11 +289,11 @@ found only in Overture has no independent truth here.
 
 | # | Prediction | Result |
 |---|---|---|
-| T4.1 | At least 95% of Overture Places rows in the bbox carry only CDLA Permissive 2.0, Apache 2.0 or CC0 1.0 source licences (so they could be added to an ODbL database as contents) | |
-| T4.2 | Of OSM Dubai POIs (dev split, named, the truth pool of the POI benchmark), between 30% and 70% have an Overture place with the same name key within 100 m | |
-| T4.3 | For those matched pairs, the median distance is at most 40 m | |
-| T4.4 | At least 50% of Overture Dubai places with confidence at least 0.7 have no OSM POI with the same name key within 500 m (potential coverage gain) | |
-| T4.5 | GeoNames adds little: fewer than 1,000 feature class S rows in the bbox, and fewer than 500 of them without an OSM POI of the same name key within 500 m | |
+| T4.1 | At least 95% of Overture Places rows in the bbox carry only CDLA Permissive 2.0, Apache 2.0 or CC0 1.0 source licences (so they could be added to an ODbL database as contents) | **Hit**: 104,442 of 104,442 |
+| T4.2 | Of OSM Dubai POIs (dev split, named, the truth pool of the POI benchmark), between 30% and 70% have an Overture place with the same name key within 100 m | **Miss**: 185 of 2,034, 9.1% (7.9 to 10.4). Exact name key agreement is rare; names differ in form between the sources, so this understates overlap |
+| T4.3 | For those matched pairs, the median distance is at most 40 m | **Hit**: 17.8 m |
+| T4.4 | At least 50% of Overture Dubai places with confidence at least 0.7 have no OSM POI with the same name key within 500 m (potential coverage gain) | **Hit**: 45,603 of 49,912, 91.4%. Inflated by the same naming mismatch as T4.2: an upper bound on new places, not a count |
+| T4.5 | GeoNames adds little: fewer than 1,000 feature class S rows in the bbox, and fewer than 500 of them without an OSM POI of the same name key within 500 m | **Miss**: 1,890 rows, 1,633 without a same key OSM POI within 500 m |
 
 Decision rule, fixed now: neither source is merged into the shipped gazetteer in this session. A
 merge needs a resolver evaluation whose truth is not the supplement itself; the measurement above

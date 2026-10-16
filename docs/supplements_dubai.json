@@ -1,0 +1,54 @@
+{
+ "caveat": "mixed truth: agreement between sources is not accuracy",
+ "bbox_lon_lat": [
+  54.9,
+  24.75,
+  55.65,
+  25.45
+ ],
+ "overture": {
+  "rows_in_bbox": 104442,
+  "rows_only_permissive_licences": {
+   "k": 104442,
+   "n": 104442,
+   "rate": 1.0,
+   "ci95": [
+    0.9999632192154214,
+    0.9999999999999999
+   ]
+  },
+  "licence_counts": {
+   "CDLA-Permissive-2.0": 104442,
+   "Apache-2.0": 5936,
+   "CC0-1.0": 1162
+  },
+  "named_rows": 104283,
+  "confidence_ge_0_7": 49912,
+  "confident_without_osm_same_key_500m": {
+   "k": 45603,
+   "n": 49912,
+   "rate": 0.9136680557781696,
+   "ci95": [
+    0.9111721488802468,
+    0.9161002896155114
+   ]
+  }
+ },
+ "osm_dev_dubai_poi_pool": {
+  "n": 2034,
+  "overture_same_key_within_100m": {
+   "k": 185,
+   "n": 2034,
+   "rate": 0.09095378564405113,
+   "ci95": [
+    0.07921651234168146,
+    0.10423327099771056
+   ]
+  },
+  "median_m_of_matched": 17.81007075805189
+ },
+ "geonames": {
+  "class_S_rows_in_bbox": 1890,
+  "without_osm_same_key_500m": 1633
+ }
+}

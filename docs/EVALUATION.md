@@ -74,9 +74,13 @@ currently costs about three times the wrong-city exposure on the address risk se
 
 Cross-city dev set, model M21 above, shipped flags. Every E0 query that came back with a
 "Which city?" question is resolved again with the true city as the `city` hint. In hole strata the
-true record is hidden, so any resolved answer there is wrong. Source: `docs/clarify_dev.json`.
+true record is hidden, but another OSM record (a duplicate or a neighbouring entrance) can lie
+within 50 m of it, so some answers there are close. Source: `docs/clarify_dev.json`.
 
-Not run yet.
+| Group | E0 queries | asked "Which city?" | with the true city: resolved within 50 m | resolved beyond 50 m | resolved in another city | same status as E2 |
+|---|---|---|---|---|---|---|
+| non hole | 1498 | 16.6% (14.8-18.5) | 99.6% (97.8-99.9) | 0.0% (0.0-1.5) | 0.0% (0.0-1.5) | 100.0% (98.5-100.0) |
+| hole | 1048 | 12.2% (10.4-14.3) | 32.0% (24.6-40.5) | 1.6% (0.4-5.5) | 0.0% (0.0-2.9) | 100.0% (97.1-100.0) |
 
 ## Dubai POI supplements: Overture Places and GeoNames (Phase 2, T4)
 
@@ -84,7 +88,14 @@ Not run yet.
 and a place found only in a supplement has no independent truth here. Nothing was merged into the
 gazetteer. Source: `docs/supplements_dubai.json`.
 
-Not run yet.
+| Measure | Value |
+|---|---|
+| Overture Places rows in the Dubai bbox | 104,442 |
+| ...with only CDLA Permissive 2.0 / Apache 2.0 / CC0 source licences | 100.0% (100.0-100.0) |
+| OSM dev Dubai POIs (n=2034) with an Overture place of the same name key within 100 m | 9.1% (7.9-10.4), median 18 m |
+| Overture places with confidence at least 0.7 (n=49912) and no OSM POI of the same key within 500 m | 91.4% (91.1-91.6) |
+| GeoNames feature class S rows in the bbox | 1,890 |
+| ...without an OSM POI of the same key within 500 m | 1,633 |
 
 ## Last meter entrance proposals (EXPLORATORY, Phase 2, T6)
 
@@ -101,6 +112,10 @@ n=242 labelled buildings, 410 mapped entrances.
 | nearest_road_point | 6.2% (3.8-10.0) | 11.6% (8.1-16.2) | 27.7% (22.4-33.6) | 31.9 | 20 |
 | outline_nearest_road | 15.7% (11.7-20.8) | 24.0% (19.0-29.7) | 40.5% (34.5-46.8) | 24.7 | 15 |
 | path_endpoint | 53.3% (47.0-59.5) | 59.9% (53.6-65.9) | 69.0% (62.9-74.5) | 0.0 | 30 |
+
+`path_endpoint` partly reads the label: OSM mappers usually join a footway to the entrance node
+itself, so on these buildings the hidden entrance is encoded in the path geometry. How well it works
+where entrances are not mapped is unknown.
 
 ## Read this first
 
