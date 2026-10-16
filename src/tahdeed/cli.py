@@ -46,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("resolve", help="resolve one address")
     r.add_argument("address")
     r.add_argument("--json", action="store_true")
+    r.add_argument("--city", default=None, help='answer to "Which city?" (key or name)')
 
     ba = sub.add_parser("batch", help="resolve a CSV with an 'address' column")
     ba.add_argument("infile")
@@ -76,6 +77,11 @@ def main(argv: list[str] | None = None) -> int:
     ab.add_argument("--out", default="docs/poi_ablation.json")
     ab.add_argument("--workers", type=int, default=2)
     ab.add_argument("--no-crosscity", action="store_true")
+    cl = sub.add_parser("clarify", help='T2: answer "Which city?" with the true city (dev)')
+    cl.add_argument("--db", default="data/gazetteer.sqlite")
+    cl.add_argument("--model", default="data/models/ranker.npz")
+    cl.add_argument("--out", default="docs/clarify_dev.json")
+    cl.add_argument("--workers", type=int, default=2)
     go = sub.add_parser("gold", help="evaluate on the hand-written gold set")
     go.add_argument("--out", default=None)
     sub.add_parser("human", help="human-written query set: ingest | evaluate (see bench/human_kit)")
@@ -132,7 +138,11 @@ def main(argv: list[str] | None = None) -> int:
         from .service import load_resolver
         from .standardize import resolution_json
 
-        j = resolution_json(load_resolver().resolve(a.address))
+        try:
+            j = resolution_json(load_resolver().resolve(a.address, city=a.city))
+        except ValueError as ex:
+            print(ex, file=sys.stderr)
+            return 2
         if a.json:
             print(json.dumps(j, ensure_ascii=False, indent=2))
         else:
@@ -172,6 +182,12 @@ def main(argv: list[str] | None = None) -> int:
 
         models = dict(x.split("=", 1) for x in a.models.split(",") if x)
         run_ablation(models, a.db, a.out, workers=a.workers, crosscity=not a.no_crosscity)
+        print("wrote", a.out)
+    elif a.cmd == "clarify":
+        from .clarify import run as run_clarify
+
+        res = run_clarify(a.db, a.model, a.out, workers=a.workers)
+        print(json.dumps(res["groups"]["non_hole"], default=float)[:400])
         print("wrote", a.out)
     elif a.cmd == "gold":
         return _gold(a.out)
@@ -310,6 +326,9 @@ def _pretty(j: dict) -> None:
         print(f"en    : {b['standard']['en']}\nar    : {b['standard']['ar']}")
     for q in j["asks"]:
         print(f"ask   : {q}")
+    if j.get("city_options"):
+        keys = ", ".join(o["key"] for o in j["city_options"])
+        print(f"retry : add --city with one of: {keys}")
     for n in j["notes"]:
         print(f"note  : {n}")
 

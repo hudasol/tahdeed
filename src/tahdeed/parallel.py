@@ -126,3 +126,30 @@ def _cc_one(q: Query):
         out.update(answer_city=ac, wrong_city=bool(ac and ac != t.city), tier=b.tier, p50=b.p50,
                    within50=haversine_m(b.lat, b.lon, t.lat, t.lon) <= 50.0)  # fmt: skip
     return out
+
+
+def _clarify_one(q: Query):
+    """E0 query: status as asked, then (if the city gate asked) status with the true city given."""
+    from .resolve import candidate_city
+
+    assert _R is not None and _G is not None
+    ha, hp = _hide(q)
+    t = truth_of(_G, q)
+    res = _R.resolve(q.text, ha, hp)
+    out = {
+        "stratum": q.extra["stratum"],
+        "evidence": q.extra["evidence"],
+        "pair": q.extra["pair"],
+        "status": res.status,
+        "asked_city": bool(res.city_options),
+        "hinted": None,
+    }
+    if res.city_options and q.extra["evidence"] == "E0":
+        r2 = _R.resolve(q.text, ha, hp, city=t.city)
+        b = r2.best
+        out["hinted"] = {
+            "status": r2.status,
+            "within50": bool(b and haversine_m(b.lat, b.lon, t.lat, t.lon) <= 50.0),
+            "wrong_city": bool(b and candidate_city(_G, b) not in (None, t.city)),
+        }
+    return out

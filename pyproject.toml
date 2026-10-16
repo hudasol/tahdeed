@@ -38,7 +38,7 @@ addopts = "-q"
 
 [tool.coverage.run]
 source = ["tahdeed"]
-omit = ["*/build.py", "*/figures.py", "*/studies.py", "*/train.py", "*/parallel.py", "*/poi_ablation.py"]  # offline experiment drivers, run by scripts/reproduce.sh
+omit = ["*/build.py", "*/figures.py", "*/studies.py", "*/train.py", "*/parallel.py", "*/poi_ablation.py", "*/clarify.py"]  # offline experiment drivers, run by scripts/reproduce.sh
 
 [tool.ruff]
 line-length = 100
