@@ -165,3 +165,58 @@ two new candidate features (`name_n_cities`, the number of cities the street or 
 | E6 | Adding the heuristic gate at margin 0.35 on top of the retrained model reduces risk-cell wrong-city-of-all by at most 20% further (relative): the model has absorbed most of it | **Miss** (in the informative direction): the gate still cuts risk wrong-of-all 10.1%→3.0% (−70% relative). The model did NOT absorb the gate's job; the gate remains the main protection. |
 | E7 | Hole strata at E0 still have more than 50% wrong-city among resolved: the registry does not contain the evidence | **Hit**: named holes at E0 are 99.1% wrong-city among resolved. Missing registry evidence cannot be recovered by a calibrator. |
 | E8 | ECE of P(within 50 m) on risk cells at E0 (resolved-tier candidates) at most 0.10 | **Miss**: ECE 0.222 on risk-E0 (named holes 0.398). The cell is selected on a hidden variable (record missing), so per-cell ECE is expected to be large; the mixture cell `all/E0` has ECE 0.083 and the standard benchmark 0.037. |
+
+## Phase 2, T1: Dubai POI calibration regression (v2.0 to v2.1)
+
+Written and committed **before any model below was trained or scored**. Observation that prompted it
+(dev, published files): Dubai/Sharjah/Ajman POI ECE of P(within 50 m) rose from 0.069 (v2.0) to 0.105
+(v2.1) and the answered (resolved) share fell from 72.8% to 63.3%. The published reliability table
+shows the v2.1 model *underconfident* in the middle: bins 0.3 to 0.9 hold 364 queries whose
+accuracy is 68% to 98%, against 302 in v2.0. Four things changed between the two: the features
+`name_n_cities` and `city_share`, the cross city training mix, diversification of candidates across
+cities, and the city gate.
+
+**Data snapshot changes here.** The OSM extract used for every published number (2026-10-09, sha256
+`875a1a23...`) is no longer offered by the mirror, which keeps only the latest file. Everything in
+this section is run on the 2026-10-15 extract (sha256 `a0d00fee...`), with every model retrained on
+it, so comparisons inside this section are like for like. Published sealed numbers stay on the old
+snapshot and are labelled as such.
+
+**Hypothesis H1.** The ECE rise comes from the cross city training mix, specifically its `poi_hole`
+stratum: a POI name present in several cities with the true POI hidden, at E0 and at E2. Those rows
+label multi city chain names as wrong, so the model lowers P(within 50 m) for correct Dubai chain
+POIs. The features alone carry little signal without those rows. The gate cannot move the top fine
+candidate's p50, so it does not move ECE, but it does cut the answered share (more "ambiguous").
+
+**Models** (dev split only; one training seed, 0, for each, as for every published model; intervals
+are bootstrap or Wilson over queries and do not include training variance):
+
+| Model | features `name_n_cities`, `city_share` | cross city mix | `poi_hole` rows |
+|---|---|---|---|
+| M21 | on | on | on (v2.1 as published) |
+| M_nofeat (ablation a) | masked | on | on |
+| M_nomix (ablation b) | on | off | off |
+| M20 | masked | off | off (v2.0 training) |
+| M_nopoihole (fix candidate) | on | on | **off** |
+
+Resolver flags: `shipped` (diversification on, gate on), `gate_off` (ablation c), `v20_flags`
+(diversification off, gate off). Δ = ECE(M21, shipped) minus ECE(M20, v20_flags). Driver:
+`tahdeed ablate-poi`, output `docs/poi_ablation.json`.
+
+| # | Prediction | Result |
+|---|---|---|
+| T1.1 | The regression reproduces on the new snapshot: M21 shipped has POI ECE at least 0.085 and answered share at most 68% | |
+| T1.2 | M20 with v20_flags has POI ECE at most 0.080 and answered share at least 69% (v2.0 behaviour reproduces) | |
+| T1.3 | Ablation (b), M_nomix shipped, recovers at least 60% of Δ | |
+| T1.4 | Ablation (a), M_nofeat shipped, recovers at most 40% of Δ (features are not the main cause) | |
+| T1.5 | Ablation (c), M21 gate_off vs shipped: ECE moves by at most 0.01, answered share rises by at least 3 points | |
+| T1.6 | M21 v20_flags vs gate_off (diversification alone): ECE moves by at most 0.015 | |
+| T1.7 | Fix candidate M_nopoihole shipped: POI ECE at most 0.080 and answered share at least 66%; cross city risk E0 wrong city, % of all (gate 0.35) at most 3.9% (the upper end of the published dev interval) and inside the Wilson interval of M21 on the new snapshot | |
+| T1.8 | M_nopoihole standard benchmark (crosscity driver, n=3000, gate 0.35): resolved share within ±1.5 points of M21, precision at least 98.8% | |
+
+**Adoption rule, fixed now.** Candidates in order: M_nopoihole, then M_nomix. Adopt the first whose
+shipped POI ECE is at least 0.02 below M21's, whose risk E0 wrong city, % of all at gate 0.35 is at
+most 3.9% and inside M21's Wilson interval, and whose standard benchmark precision is at least 98.8%.
+If none qualifies, keep M21 and document the trade off. If time allows, M21 and the adopted model
+are retrained with seeds 1 and 2; the conclusion stands only if the sign of the ECE difference holds
+for every seed.
