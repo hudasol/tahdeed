@@ -258,3 +258,25 @@ entrance of that building, share within 10 m with a Wilson interval. Baselines: 
 | T6.3 | The centroid is within 10 m for at most 20% | |
 | T6.4 | The outline proposal's median distance is at least 30% lower than the centroid's | |
 | T6.5 | The nearest road point is within 10 m for at most 25% (a road is not a door) | |
+
+## Phase 2, T4: Overture Places and GeoNames as Dubai POI supplements
+
+Written and committed before any Overture or GeoNames row was downloaded for this task. Sources:
+Overture Places (latest release on the public bucket; per source licences CDLA Permissive 2.0,
+Apache 2.0, CC0 1.0) and GeoNames `AE` (CC BY 4.0), Dubai bounding box 54.9 to 55.65 E, 24.75 to
+25.45 N. Driver: `scripts/eval_supplements.py`, output `docs/supplements_dubai.json`. "Same name" means
+a shared tahdeed name key (`keys_of`, the matcher the resolver uses). **Mixed truth caveat**: OSM,
+Overture and GeoNames are each someone's claim; agreement between them is not accuracy, and a place
+found only in Overture has no independent truth here.
+
+| # | Prediction | Result |
+|---|---|---|
+| T4.1 | At least 95% of Overture Places rows in the bbox carry only CDLA Permissive 2.0, Apache 2.0 or CC0 1.0 source licences (so they could be added to an ODbL database as contents) | |
+| T4.2 | Of OSM Dubai POIs (dev split, named, the truth pool of the POI benchmark), between 30% and 70% have an Overture place with the same name key within 100 m | |
+| T4.3 | For those matched pairs, the median distance is at most 40 m | |
+| T4.4 | At least 50% of Overture Dubai places with confidence at least 0.7 have no OSM POI with the same name key within 500 m (potential coverage gain) | |
+| T4.5 | GeoNames adds little: fewer than 1,000 feature class S rows in the bbox, and fewer than 500 of them without an OSM POI of the same name key within 500 m | |
+
+Decision rule, fixed now: neither source is merged into the shipped gazetteer in this session. A
+merge needs a resolver evaluation whose truth is not the supplement itself; the measurement above
+only sizes the opportunity and checks the licences.
