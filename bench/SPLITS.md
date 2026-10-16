@@ -17,3 +17,7 @@ calibration districts only. The benchmark exports only dev and sealed districts.
 
 Anything not listed was never evaluated. Sealed sets lose their value once anyone tunes against them;
 if you do, say so. New sealed material should come from newly collected data (the human set).
+
+**A second sealed set.** None exists yet: every district is already in a split and the sealed bucket
+has been opened. The policy for building one, and the count showing why fresh OSM records cannot
+supply it, are in [`docs/SEALED2.md`](../docs/SEALED2.md).
