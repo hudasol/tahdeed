@@ -238,3 +238,23 @@ Hole strata (truth hidden) are reported separately: there the right outcome is *
 | T2.2 | Same queries: at most 2% become resolved but more than 50 m away | |
 | T2.3 | Hole strata asked "Which city?": with the true city supplied, at most 5% become resolved (any resolved answer there is wrong) | |
 | T2.4 | The hinted status equals the status of the same record written with the city in the text (E2) for at least 95% of the asked queries | |
+
+## Phase 2, T6 (exploratory): last meter entrance proposals
+
+Written and committed before the extraction or the evaluation was run. **Exploratory**: not part of
+any headline claim. Question: given a resolved building point, can open map geometry alone propose
+where a delivery robot or courier should stop? Labels: entrance nodes that OpenStreetMap
+contributors mapped as vertices of a building outline (`entrance=*` or `door=*`), inside the Abu
+Dhabi emirate bounding box. Labels are **OSM derived**, not surveyed and not drawn by me; the
+selection rule is fixed in code. The query point is the outline's centroid, and the mapped
+entrances are hidden from the proposers. Metric: distance from the proposal to the nearest mapped
+entrance of that building, share within 10 m with a Wilson interval. Baselines: the centroid itself
+(simple) and the point of the nearest road closest to the centroid (what a geocoder returns).
+
+| # | Prediction | Result |
+|---|---|---|
+| T6.1 | At least 100 buildings carry a mapped entrance vertex (n is reported) | |
+| T6.2 | The outline point nearest to the nearest road is within 10 m of a mapped entrance for at least 35% of buildings | |
+| T6.3 | The centroid is within 10 m for at most 20% | |
+| T6.4 | The outline proposal's median distance is at least 30% lower than the centroid's | |
+| T6.5 | The nearest road point is within 10 m for at most 25% (a road is not a door) | |
