@@ -231,7 +231,7 @@ rule neither candidate qualifies, so **M21 stays** and the trade off is document
 exposure on the address risk set. The second and third training seeds were not run (each training
 took about 1.5 hours on the shared machine), so training variance is unmeasured. A fix that leaves
 the address model alone (a separate calibration map for the POI tier, fitted on calibration
-district POI queries) is the next experiment; it was not pre-registered here and was not run.
+district POI queries) is the next experiment; it was not registered in advance here and was not run.
 
 ## Phase 2, T2: answering "Which city?"
 

@@ -60,7 +60,7 @@ be resolved, to say how sure the answer is, and to ask when it is not.
 
 ## Evidence
 
-Held-out districts, frozen v2.0 release, run once [sealed/eval.json]: {pc(a["resolved_coverage"])} of
+Held out districts, frozen v2.0 release, run once [sealed/eval.json]: {pc(a["resolved_coverage"])} of
 Abu Dhabi emirate queries answered confidently; {pc(a["resolved_precision_50m"])} of those within 50 m;
 calibration error (ECE) {a["ece_p50"]:.3f}. When the true address is missing from the map, precision
 of confident answers falls to {pc(h["resolved_precision_50m"])}: a missing record yields a confident
@@ -97,7 +97,7 @@ to the entrance itself; the outline point facing the nearest road manages
   been evaluated; absolute numbers are optimistic.
 - Truth is OpenStreetMap, not an official register. Dubai has few structured addresses in OSM and
   is evaluated only on named places.
-- No unused held-out data remains: the v2.1 model has dev numbers only (docs/SEALED2.md).
+- No unused held out data remains: the v2.1 model has dev numbers only (docs/SEALED2.md).
 - Training variance is not measured (one seed per model), and the original map snapshot could not
   be recovered, so the T1 diagnosis ran on a newer extract.
 - The last meter results are exploratory, on mapped entrances only, with a leakage caveat.
@@ -106,7 +106,7 @@ to the entrance itself; the outline point facing the nearest road manages
 
 1. **Human written test set.** Collect 1,000 or more addresses as couriers and customers write them
    (kit in `bench/human_kit/`), held back as the next sealed set. It replaces the synthetic numbers
-   above with real ones and is the only realistic source of fresh held-out data.
+   above with real ones and is the only realistic source of fresh held out data.
 2. **Official registry adapter.** With a written licence from Dubai Municipality (Makani; draft
    request in `docs/outreach/`) or Abu Dhabi (Onwani), wire the existing `RegistryAdapter` interface
    to a lookup and evaluate against the official entrance points. This removes the missing record

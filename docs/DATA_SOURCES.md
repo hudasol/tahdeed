@@ -36,7 +36,7 @@ unconfirmed says **not verified**.
 
 ## 1. Dubai
 
-### Dubai Pulse (dubaipulse.gov.ae) — exists, access is request-based
+### Dubai Pulse (dubaipulse.gov.ae): exists, access is request based
 - `https://www.dubaipulse.gov.ae/data/dm-general/dm_building_usages-open`: CSV, 13.87 MB, updated 31 Dec 2025.
   "Rights: Everyone", but "Users must submit a request and acknowledge the terms ... confirmation within 14 days";
   API Key + Secret "emailed to users", exchanged for a time-limited bearer token. **License: "notspecified"**.
@@ -141,7 +141,7 @@ clause-by-clause reading was **not re-verified** here; check the licence text be
 
 ## Evaluated 2026-10-16: Overture Places and GeoNames as Dubai POI supplements (Phase 2, T4)
 
-Licences re-checked on 2026-10-16. Overture attribution page (<https://docs.overturemaps.org/attribution/>):
+Licences checked again on 2026-10-16. Overture attribution page (<https://docs.overturemaps.org/attribution/>):
 Places sources are Meta, Microsoft, PinMeTo, Krick, RenderSEO, DAC and BrightQuery under CDLA
 Permissive 2.0, Foursquare under Apache 2.0 ("Copyright 2024 Foursquare Labs, Inc. All rights
 reserved." plus the NOTICE file Overture links), AllThePlaces under CC0 1.0. GeoNames readme
