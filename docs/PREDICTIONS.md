@@ -205,14 +205,14 @@ Resolver flags: `shipped` (diversification on, gate on), `gate_off` (ablation c)
 
 | # | Prediction | Result |
 |---|---|---|
-| T1.1 | The regression reproduces on the new snapshot: M21 shipped has POI ECE at least 0.085 and answered share at most 68% | |
-| T1.2 | M20 with v20_flags has POI ECE at most 0.080 and answered share at least 69% (v2.0 behaviour reproduces) | |
-| T1.3 | Ablation (b), M_nomix shipped, recovers at least 60% of Δ | |
-| T1.4 | Ablation (a), M_nofeat shipped, recovers at most 40% of Δ (features are not the main cause) | |
-| T1.5 | Ablation (c), M21 gate_off vs shipped: ECE moves by at most 0.01, answered share rises by at least 3 points | |
-| T1.6 | M21 v20_flags vs gate_off (diversification alone): ECE moves by at most 0.015 | |
-| T1.7 | Fix candidate M_nopoihole shipped: POI ECE at most 0.080 and answered share at least 66%; cross city risk E0 wrong city, % of all (gate 0.35) at most 3.9% (the upper end of the published dev interval) and inside the Wilson interval of M21 on the new snapshot | |
-| T1.8 | M_nopoihole standard benchmark (crosscity driver, n=3000, gate 0.35): resolved share within ±1.5 points of M21, precision at least 98.8% | |
+| T1.1 | The regression reproduces on the new snapshot: M21 shipped has POI ECE at least 0.085 and answered share at most 68% | **Hit**: ECE 0.103 (bootstrap 0.090 to 0.117), answered 61.7% |
+| T1.2 | M20 with v20_flags has POI ECE at most 0.080 and answered share at least 69% (v2.0 behaviour reproduces) | **Hit**: ECE 0.066, answered 73.7%. Δ = 0.0375 |
+| T1.3 | Ablation (b), M_nomix shipped, recovers at least 60% of Δ | **Hit**: ECE 0.064, recovers 104% of Δ. The cross city training mix is the cause |
+| T1.4 | Ablation (a), M_nofeat shipped, recovers at most 40% of Δ (features are not the main cause) | **Hit**: ECE 0.102, recovers 2% |
+| T1.5 | Ablation (c), M21 gate_off vs shipped: ECE moves by at most 0.01, answered share rises by at least 3 points | **Hit**: ECE moves by 0.0001; answered 61.7% to 69.6% (+7.9 points) |
+| T1.6 | M21 v20_flags vs gate_off (diversification alone): ECE moves by at most 0.015 | **Hit**: 0.0007 |
+| T1.7 | Fix candidate M_nopoihole shipped: POI ECE at most 0.080 and answered share at least 66%; cross city risk E0 wrong city, % of all (gate 0.35) at most 3.9% (the upper end of the published dev interval) and inside the Wilson interval of M21 on the new snapshot | **Miss**: ECE 0.072 (hit; 83% of Δ recovered) but answered 64.5% (below 66%) and risk E0 wrong city 7.7% (6.5 to 9.1) against M21's 2.2% (1.6 to 3.0): more than three times the exposure |
+| T1.8 | M_nopoihole standard benchmark (crosscity driver, n=3000, gate 0.35): resolved share within ±1.5 points of M21, precision at least 98.8% | **Hit**: 63.3% vs 62.4%, precision 99.1% |
 
 **Adoption rule, fixed now.** Candidates in order: M_nopoihole, then M_nomix. Adopt the first whose
 shipped POI ECE is at least 0.02 below M21's, whose risk E0 wrong city, % of all at gate 0.35 is at
@@ -220,6 +220,18 @@ most 3.9% and inside M21's Wilson interval, and whose standard benchmark precisi
 If none qualifies, keep M21 and document the trade off. If time allows, M21 and the adopted model
 are retrained with seeds 1 and 2; the conclusion stands only if the sign of the ECE difference holds
 for every seed.
+
+**Outcome (recorded after the run; `docs/poi_ablation.json`).** H1 holds: the cross city training
+mix causes the POI calibration rise (removing it recovers all of Δ), and its `poi_hole` rows cause
+most of it (83%); the two features and the gate do not move ECE. But the same rows are what make the
+model cautious about names shared across cities for *addresses*: without them, risk E0 wrong city
+exposure at gate 0.35 rises from 2.2% to 7.7% (M_nopoihole) or 6.3% (M_nomix). By the adoption
+rule neither candidate qualifies, so **M21 stays** and the trade off is documented in
+`docs/EVALUATION.md`: better Dubai POI calibration costs roughly three times the wrong city
+exposure on the address risk set. The second and third training seeds were not run (each training
+took about 1.5 hours on the shared machine), so training variance is unmeasured. A fix that leaves
+the address model alone (a separate calibration map for the POI tier, fitted on calibration
+district POI queries) is the next experiment; it was not pre-registered here and was not run.
 
 ## Phase 2, T2: answering "Which city?"
 
