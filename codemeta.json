@@ -1,0 +1,39 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "tahdeed",
+  "description": "Bilingual Arabic/English UAE address resolver with calibrated confidence and abstention, and the Gulf-AddressBench benchmark (version 1.0.0).",
+  "version": "2.0.0",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Huda",
+      "familyName": "Mueen"
+    }
+  ],
+  "codeRepository": "https://github.com/hudasol/tahdeed",
+  "license": [
+    "https://spdx.org/licenses/MIT",
+    "https://spdx.org/licenses/ODbL-1.0"
+  ],
+  "programmingLanguage": "Python",
+  "runtimePlatform": "Python 3.11+",
+  "softwareRequirements": [
+    "rapidfuzz",
+    "numpy",
+    "fastapi",
+    "uvicorn",
+    "python-multipart"
+  ],
+  "keywords": [
+    "geocoding",
+    "address resolution",
+    "Arabic",
+    "United Arab Emirates",
+    "calibration",
+    "abstention",
+    "benchmark"
+  ],
+  "developmentStatus": "active",
+  "isAccessibleForFree": true
+}
