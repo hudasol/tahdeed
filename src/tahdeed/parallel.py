@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import multiprocessing as mp
 import time
 
@@ -86,6 +87,10 @@ def _eval_one(q: Query):
 
 
 def _pool(g, ranker, radii, workers, flags=None):
+    # Move the loaded gazetteer (millions of tuples) out of the collector's reach: otherwise each
+    # full collection while results stream in rescans it, and the parent's result thread can
+    # fall far behind the workers. Pure performance; no effect on any result.
+    gc.freeze()
     ctx = mp.get_context("fork")
     return ctx.Pool(workers, initializer=_init_worker, initargs=(g, ranker, radii, flags))
 
