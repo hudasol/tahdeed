@@ -220,3 +220,21 @@ most 3.9% and inside M21's Wilson interval, and whose standard benchmark precisi
 If none qualifies, keep M21 and document the trade off. If time allows, M21 and the adopted model
 are retrained with seeds 1 and 2; the conclusion stands only if the sign of the ECE difference holds
 for every seed.
+
+## Phase 2, T2: answering "Which city?"
+
+Written and committed before the measurement below was run. The resolver, API (`city` field),
+batch (`city` column), CLI (`--city`) and dashboard accept an optional city. It is applied as if
+the user had written the city after the address (the form the ranker saw in training as evidence
+level E2), and a confident answer outside the given city is downgraded to "ambiguous". Measurement
+(`tahdeed clarify`, output `docs/clarify_dev.json`): the cross city dev set (same generator and seed
+as `crosscity_dev`), the model chosen in T1, shipped flags. Take every E0 query that came back
+"ambiguous" with a "Which city?" question; resolve it again with the true city as the hint.
+Hole strata (truth hidden) are reported separately: there the right outcome is *not* to answer.
+
+| # | Prediction | Result |
+|---|---|---|
+| T2.1 | Non hole strata, E0 queries asked "Which city?": with the true city supplied, at least 60% become resolved within 50 m (Wilson interval reported) | |
+| T2.2 | Same queries: at most 2% become resolved but more than 50 m away | |
+| T2.3 | Hole strata asked "Which city?": with the true city supplied, at most 5% become resolved (any resolved answer there is wrong) | |
+| T2.4 | The hinted status equals the status of the same record written with the city in the text (E2) for at least 95% of the asked queries | |
