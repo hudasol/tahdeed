@@ -107,6 +107,120 @@ def crosscity_tbl(cc):
     return "\n".join(rows)
 
 
+def maybe(p):
+    return load(p) if (D / p).exists() else None
+
+
+def ci_(d):
+    return f"{100 * d['rate']:.1f}% ({100 * d['ci95'][0]:.1f}-{100 * d['ci95'][1]:.1f})"
+
+
+POI_MODELS = [
+    ("M21", "v2.1 as published (features + cross-city mix)"),
+    ("M20", "v2.0 training (no features, no mix)"),
+    ("M_nofeat", "(a) mix, features masked"),
+    ("M_nomix", "(b) features, no mix"),
+    ("M_nopoihole", "fix candidate: mix without `poi_hole` rows"),
+]
+
+
+def poi_ablation(pa):
+    m = pa["models"]
+    rows = [
+        "| Model | POI ECE, shipped (95% bootstrap) | POI ECE, gate off | POI ECE, v2.0 flags | POI answered, shipped | POI answered, gate off | risk E0 wrong city, % of all (gate 0.35) | std resolved / precision (gate 0.35) |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for k, name in POI_MODELS:
+        if k not in m:
+            continue
+        p, cc = m[k]["poi"], m[k]["crosscity"]["gate_0.35"]
+        lo, hi = p["shipped"]["ece_p50_ci95"]
+        rows.append(
+            f"| {k}: {name} | {p['shipped']['ece_p50']:.3f} ({lo:.3f}-{hi:.3f}) | {p['gate_off']['ece_p50']:.3f} | {p['v20_flags']['ece_p50']:.3f} | {pc(p['shipped']['resolved_coverage'])} | {pc(p['gate_off']['resolved_coverage'])} | {ci_(cc['risk_E0']['wrong_city_of_all'])} | {pc(cc['standard']['resolved_coverage'])} / {pc(cc['standard']['resolved_precision_50m'])} |"
+        )
+    return "\n".join(rows)
+
+
+def poi_section(pa):
+    if pa is None:
+        return "Not run yet."
+    return f"""Dev split only, every model retrained on the **2026-10-15** OSM extract (gazetteer
+`{pa["gazetteer_sha256"][:12]}`; the published v2.0 and v2.1 numbers elsewhere in this document used
+the 2026-10-09 extract, which the mirror no longer offers). One training seed per model. POI
+benchmark n={pa["n_poi"]}. Source: `docs/poi_ablation.json`; predictions T1.1 to T1.8 in
+[`PREDICTIONS.md`](PREDICTIONS.md).
+
+{poi_ablation(pa)}
+
+Reading: ECE does not move with the gate or with diversification; it moves with the training mix.
+Removing the cross-city mix (or only its `poi_hole` rows) restores v2.0 POI calibration, but the
+same rows are what keep the model cautious about street names shared across cities, so address
+wrong-city exposure roughly triples. Under the rule fixed before the run, no candidate qualified
+and the published v2.1 model is kept. **Trade-off, stated plainly: better Dubai POI calibration
+currently costs about three times the wrong-city exposure on the address risk set.**"""
+
+
+def clarify_sec(c):
+    if c is None:
+        return "Not run yet."
+    rows = [
+        '| Group | E0 queries | asked "Which city?" | with the true city: resolved within 50 m | resolved beyond 50 m | resolved in another city | same status as E2 |',
+        "|---|---|---|---|---|---|---|",
+    ]
+    for k in ("non_hole", "hole"):
+        g = c["groups"][k]
+        rows.append(
+            f"| {k.replace('_', ' ')} | {g['n_e0']} | {ci_(g['asked_city'])} | {ci_(g['hint_resolved_within50'])} | {ci_(g['hint_resolved_beyond50'])} | {ci_(g['hint_resolved_wrong_city'])} | {ci_(g['same_status_as_E2'])} |"
+        )
+    return "\n".join(rows)
+
+
+def supp_sec(s):
+    if s is None:
+        return "Not run yet."
+    o, t, g = s["overture"], s["osm_dev_dubai_poi_pool"], s["geonames"]
+    med = t["median_m_of_matched"]
+    match = (
+        f"{ci_(t['overture_same_key_within_100m'])}, median {med:.0f} m"
+        if med is not None
+        else "none"
+    )
+    return "\n".join(
+        [
+            "| Measure | Value |",
+            "|---|---|",
+            f"| Overture Places rows in the Dubai bbox | {o['rows_in_bbox']} |",
+            f"| ...with only CDLA Permissive 2.0 / Apache 2.0 / CC0 source licences | {ci_(o['rows_only_permissive_licences'])} |",
+            f"| OSM dev Dubai POIs (n={t['n']}) with an Overture place of the same name key within 100 m | {match} |",
+            f"| Overture places with confidence at least 0.7 (n={o['confidence_ge_0_7']}) and no OSM POI of the same key within 500 m | {ci_(o['confident_without_osm_same_key_500m'])} |",
+            f"| GeoNames feature class S rows in the bbox | {g['class_S_rows_in_bbox']} |",
+            f"| ...without an OSM POI of the same key within 500 m | {g['without_osm_same_key_500m']} |",
+        ]
+    )
+
+
+def lastmeter_sec(lmv):
+    if lmv is None:
+        return "Not run yet."
+    rows = [
+        f"n={lmv['n_labelled_buildings']} labelled buildings, {lmv['n_entrance_labels']} mapped entrances.",
+        "",
+        "| Proposer | within 5 m | within 10 m | within 20 m | median m (where proposed) | no proposal |",
+        "|---|---|---|---|---|---|",
+    ]
+    for k, v in lmv["proposers"].items():
+        med = "-" if v["median_m"] is None else f"{v['median_m']:.1f}"
+        rows.append(
+            f"| {k} | {ci_(v['within_5m_of_all'])} | {ci_(v['within_10m_of_all'])} | {ci_(v['within_20m_of_all'])} | {med} | {v['no_proposal']} |"
+        )
+    return "\n".join(rows)
+
+
+pa = maybe("poi_ablation.json")
+clar = maybe("clarify_dev.json")
+supp = maybe("supplements_dubai.json")
+lmev = maybe("lastmeter_eval.json")
+
 ccd, ccs = load("crosscity_dev.json"), load("crosscity_sealed.json")
 
 out = f"""# Evaluation
@@ -141,6 +255,35 @@ Reading: with no city given, holes in the registry look identical to unique, pre
 wrong-city exposure falls only by giving up answers (the gate asks "which city?"). Giving the district
 (E1) or city (E2) removes almost all of it. The residual after the gate is mostly rival cities
 that are invisible to the system.
+
+## Dubai POI calibration: which v2.1 change caused the regression (Phase 2, T1)
+
+{poi_section(pa)}
+
+## Answering "Which city?" (Phase 2, T2)
+
+Cross-city dev set, model M21 above, shipped flags. Every E0 query that came back with a
+"Which city?" question is resolved again with the true city as the `city` hint. In hole strata the
+true record is hidden, so any resolved answer there is wrong. Source: `docs/clarify_dev.json`.
+
+{clarify_sec(clar)}
+
+## Dubai POI supplements: Overture Places and GeoNames (Phase 2, T4)
+
+**Mixed truth**: OSM, Overture and GeoNames are each someone's claim; agreement is not accuracy,
+and a place found only in a supplement has no independent truth here. Nothing was merged into the
+gazetteer. Source: `docs/supplements_dubai.json`.
+
+{supp_sec(supp)}
+
+## Last meter entrance proposals (EXPLORATORY, Phase 2, T6)
+
+Exploratory, not a headline claim. Labels are OSM-mapped entrance vertices on building outlines in
+the Abu Dhabi emirate (`entrance=*` or `door=*`), **not surveyed**. The query point is the outline
+centroid and mapped entrances are hidden. Shares are over all labelled buildings (no proposal
+counts as a miss), Wilson 95%. Source: `docs/lastmeter_eval.json`.
+
+{lastmeter_sec(lmev)}
 
 ## Read this first
 
@@ -186,7 +329,7 @@ Sealed: {lm(sst)}. Dev: {lm(st)}. Truth is the landmark's own point, so this tes
 ## Known failures
 
 - A street name that exists in several cities, written without the city, is still answered in the wrong city when the true record is missing from the registry (a hole looks like a unique, present record). The city gate lowers this at a coverage cost; the residual is shown in the cross-city section.
-- v2.1 regression: Dubai/Sharjah/Ajman POI calibration (ECE of P(within 50 m)) is worse than v2.0 on dev, and POI answers are fewer because chain names now trigger the city question. Not yet diagnosed which change (features, cross-city training mix, or gate) causes the ECE rise; the gate cannot change p50, so the model change is implicated.
+- v2.1 regression: Dubai/Sharjah/Ajman POI calibration (ECE of P(within 50 m)) is worse than v2.0 on dev, and POI answers are fewer because chain names now trigger the city question. Diagnosed (T1 section above): the cross-city training mix, mostly its `poi_hole` rows, causes the ECE rise; removing them would roughly triple address wrong-city exposure, so they are kept and the trade-off stands.
 - Registry holes (above).
 - Arabizi remains the weakest style.
 - Interpolation (+10 points forced top-1) assumes house numbers increase along a street and is checked only against held-out OSM addresses.

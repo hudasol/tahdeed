@@ -47,6 +47,61 @@ wrong-city exposure falls only by giving up answers (the gate asks "which city?"
 (E1) or city (E2) removes almost all of it. The residual after the gate is mostly rival cities
 that are invisible to the system.
 
+## Dubai POI calibration: which v2.1 change caused the regression (Phase 2, T1)
+
+Dev split only, every model retrained on the **2026-10-15** OSM extract (gazetteer
+`9372f78d9fae`; the published v2.0 and v2.1 numbers elsewhere in this document used
+the 2026-10-09 extract, which the mirror no longer offers). One training seed per model. POI
+benchmark n=1500. Source: `docs/poi_ablation.json`; predictions T1.1 to T1.8 in
+[`PREDICTIONS.md`](PREDICTIONS.md).
+
+| Model | POI ECE, shipped (95% bootstrap) | POI ECE, gate off | POI ECE, v2.0 flags | POI answered, shipped | POI answered, gate off | risk E0 wrong city, % of all (gate 0.35) | std resolved / precision (gate 0.35) |
+|---|---|---|---|---|---|---|---|
+| M21: v2.1 as published (features + cross-city mix) | 0.103 (0.090-0.117) | 0.103 | 0.103 | 61.7% | 69.6% | 2.2% (1.6-3.0) | 62.4% / 99.2% |
+| M20: v2.0 training (no features, no mix) | 0.066 (0.054-0.080) | 0.066 | 0.066 | 65.6% | 73.9% | 6.0% (5.0-7.3) | 61.1% / 98.9% |
+| M_nofeat: (a) mix, features masked | 0.102 (0.089-0.117) | 0.102 | 0.101 | 62.9% | 69.7% | 2.6% (1.9-3.5) | 63.2% / 99.1% |
+| M_nomix: (b) features, no mix | 0.064 (0.052-0.078) | 0.064 | 0.064 | 65.5% | 73.5% | 6.3% (5.2-7.6) | 62.4% / 99.0% |
+| M_nopoihole: fix candidate: mix without `poi_hole` rows | 0.072 (0.060-0.087) | 0.072 | 0.071 | 64.5% | 72.7% | 7.7% (6.5-9.1) | 63.3% / 99.1% |
+
+Reading: ECE does not move with the gate or with diversification; it moves with the training mix.
+Removing the cross-city mix (or only its `poi_hole` rows) restores v2.0 POI calibration, but the
+same rows are what keep the model cautious about street names shared across cities, so address
+wrong-city exposure roughly triples. Under the rule fixed before the run, no candidate qualified
+and the published v2.1 model is kept. **Trade-off, stated plainly: better Dubai POI calibration
+currently costs about three times the wrong-city exposure on the address risk set.**
+
+## Answering "Which city?" (Phase 2, T2)
+
+Cross-city dev set, model M21 above, shipped flags. Every E0 query that came back with a
+"Which city?" question is resolved again with the true city as the `city` hint. In hole strata the
+true record is hidden, so any resolved answer there is wrong. Source: `docs/clarify_dev.json`.
+
+Not run yet.
+
+## Dubai POI supplements: Overture Places and GeoNames (Phase 2, T4)
+
+**Mixed truth**: OSM, Overture and GeoNames are each someone's claim; agreement is not accuracy,
+and a place found only in a supplement has no independent truth here. Nothing was merged into the
+gazetteer. Source: `docs/supplements_dubai.json`.
+
+Not run yet.
+
+## Last meter entrance proposals (EXPLORATORY, Phase 2, T6)
+
+Exploratory, not a headline claim. Labels are OSM-mapped entrance vertices on building outlines in
+the Abu Dhabi emirate (`entrance=*` or `door=*`), **not surveyed**. The query point is the outline
+centroid and mapped entrances are hidden. Shares are over all labelled buildings (no proposal
+counts as a miss), Wilson 95%. Source: `docs/lastmeter_eval.json`.
+
+n=242 labelled buildings, 410 mapped entrances.
+
+| Proposer | within 5 m | within 10 m | within 20 m | median m (where proposed) | no proposal |
+|---|---|---|---|---|---|
+| centroid | 13.2% (9.5-18.1) | 29.8% (24.3-35.8) | 54.5% (48.2-60.7) | 16.3 | 15 |
+| nearest_road_point | 6.2% (3.8-10.0) | 11.6% (8.1-16.2) | 27.7% (22.4-33.6) | 31.9 | 20 |
+| outline_nearest_road | 15.7% (11.7-20.8) | 24.0% (19.0-29.7) | 40.5% (34.5-46.8) | 24.7 | 15 |
+| path_endpoint | 53.3% (47.0-59.5) | 59.9% (53.6-65.9) | 69.0% (62.9-74.5) | 0.0 | 30 |
+
 ## Read this first
 
 - Queries are **synthetic** (two generators, one independent of training) plus a 40-row hand-written set. No query comes from a real user. Absolute numbers are optimistic; relative comparisons and calibration are the findings.
@@ -123,7 +178,7 @@ Sealed: 75.8% within 200 m of the landmark with the landmark tier, 0.0% without 
 ## Known failures
 
 - A street name that exists in several cities, written without the city, is still answered in the wrong city when the true record is missing from the registry (a hole looks like a unique, present record). The city gate lowers this at a coverage cost; the residual is shown in the cross-city section.
-- v2.1 regression: Dubai/Sharjah/Ajman POI calibration (ECE of P(within 50 m)) is worse than v2.0 on dev, and POI answers are fewer because chain names now trigger the city question. Not yet diagnosed which change (features, cross-city training mix, or gate) causes the ECE rise; the gate cannot change p50, so the model change is implicated.
+- v2.1 regression: Dubai/Sharjah/Ajman POI calibration (ECE of P(within 50 m)) is worse than v2.0 on dev, and POI answers are fewer because chain names now trigger the city question. Diagnosed (T1 section above): the cross-city training mix, mostly its `poi_hole` rows, causes the ECE rise; removing them would roughly triple address wrong-city exposure, so they are kept and the trade-off stands.
 - Registry holes (above).
 - Arabizi remains the weakest style.
 - Interpolation (+10 points forced top-1) assumes house numbers increase along a street and is checked only against held-out OSM addresses.
