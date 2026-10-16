@@ -18,6 +18,7 @@ Given a free-text address (Arabic, English or mixed), it returns:
 - a standardized bilingual address (building / street / district / city / postcode where known),
 - a calibrated confidence: the probability that the top candidate is within a stated distance of the truth,
 - an abstain / ask decision naming the missing field (for example "add a building number"),
+- when the same name exists in several cities, the question "Which city?" with the candidate cities; passing the answer back as `city` (API, CLI `--city`, dashboard buttons) resolves the query,
 - an explanation of which parts of your text matched which gazetteer fields.
 
 It runs offline and deterministically. No LLM and no API keys are involved.
@@ -60,7 +61,7 @@ Caveats: queries are synthetic (plus 40 hand-written ones), truth is OpenStreetM
 
 ## More
 
-[`bench/`](bench/README.md) Gulf-AddressBench (datasets, split and contamination policy, scorer: `tahdeed bench score predictions.jsonl`) · [`bench/human_kit/`](bench/human_kit/README.md) human-written set collection kit (no data yet) · [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) open-data survey for Dubai addresses (nothing usable found) · [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) rate limiting, Docker, hosting limits.
+[`bench/`](bench/README.md) Gulf-AddressBench (datasets, split and contamination policy, scorer: `tahdeed bench score predictions.jsonl`) · [`bench/human_kit/`](bench/human_kit/README.md) human-written set collection kit (no data yet) · [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) open-data survey for Dubai addresses (nothing usable found) · [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) rate limiting, Docker, hosting limits. · [`docs/EDGE_PROPOSAL.md`](docs/EDGE_PROPOSAL.md) two page proposal note · [`docs/SEALED2.md`](docs/SEALED2.md) why no fresh sealed set exists yet · [`CITATION.cff`](CITATION.cff) how to cite the benchmark.
 
 ## Honest limits
 
