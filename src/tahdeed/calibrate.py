@@ -249,7 +249,12 @@ def decide(resolver, text, pq, spans, cands, ctx, notes) -> Resolution:
         best, status = fine[0], "approximate"
         alts = fine[1:3]
     asks = _asks(resolver, pq, ctx, fine, trusted)
-    return Resolution(text, status, best, alts, asks, pq, spans, notes)
+    options: list[str] = []
+    for c in ctx.get("city_gate") or []:
+        ck = candidate_city(resolver.g, c)
+        if ck and ck not in options:
+            options.append(ck)
+    return Resolution(text, status, best, alts, asks, pq, spans, notes, city_options=options)
 
 
 def _asks(resolver, pq, ctx, fine, coarse) -> list[str]:

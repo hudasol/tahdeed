@@ -26,8 +26,10 @@ from pydantic import BaseModel, Field
 
 from . import __version__
 from .audit import record
+from .geo import CITIES
 from .privacy import redact_pii
 from .ratelimit import TokenBucketLimiter, batch_cost, burst_for, client_key, parse_limit
+from .resolve import city_key
 from .service import load_resolver
 from .standardize import resolution_json
 
@@ -67,6 +69,9 @@ SECURITY_HEADERS = {
 
 class ResolveRequest(BaseModel):
     address: str = Field(..., max_length=2000)
+    # optional answer to "Which city?": a key from `city_options` in an earlier response, or a
+    # city name (English or Arabic); unknown values are rejected with 422
+    city: str | None = Field(None, max_length=40)
 
 
 def create_app(resolver=None) -> FastAPI:
@@ -163,27 +168,36 @@ def create_app(resolver=None) -> FastAPI:
             "data_offer_url": os.environ.get("TAHDEED_DATA_OFFER_URL") or None,
         }
 
-    def _one(text: str, rid: str | None = None) -> dict:
+    def _one(text: str, rid: str | None = None, city: str | None = None) -> dict:
         t0 = time.perf_counter()
-        j = resolution_json(R().resolve(text))
+        j = resolution_json(R().resolve(text, city=city or None))
         ms = (time.perf_counter() - t0) * 1000
         j["degraded"] = bool(R().degraded_reason)
         j["calibrated"] = not j["degraded"]
         # PII guard before anything is logged (the resolver redacts too; this keeps the audit
         # record independent of that). Without TAHDEED_LOG_RAW=1 only a hash of this is logged.
         safe, _ = redact_pii(text)
-        record(safe, j, ms, versions(), rid)
+        # the city hint is a validated city key (never free text), so it is logged as is
+        record(safe, j, ms, {**versions(), "city_hint": j.get("city_hint")}, rid)
         return j
+
+    def _check_city(city: str | None) -> None:
+        if city and city_key(city) is None:
+            raise HTTPException(
+                422, "unknown city; valid keys: " + ", ".join(c.key for c in CITIES)
+            )
 
     @app.post("/resolve")
     def resolve(req: ResolveRequest, request: Request):
         if not req.address.strip():
             raise HTTPException(422, "address is empty")
-        return _one(req.address, request.headers.get("x-request-id"))
+        _check_city(req.city)
+        return _one(req.address, request.headers.get("x-request-id"), req.city)
 
     @app.post("/resolve/batch")
     async def batch(request: Request, file: UploadFile = File(...)):  # noqa: B008
-        """CSV with an ``address`` column -> CSV with coordinates, status and confidence."""
+        """CSV with an ``address`` column (and optional ``city``) -> CSV with coordinates, status
+        and confidence. An unknown ``city`` value is ignored for that row and noted in ``asks``."""
         raw = (await file.read(MAX_BODY_BYTES + 1)).decode("utf-8-sig", errors="replace")
         if len(raw) > MAX_BODY_BYTES:
             raise HTTPException(413, "file too large")
@@ -203,7 +217,12 @@ def create_app(resolver=None) -> FastAPI:
         w.writerow(["address", "status", "lat", "lon", "radius_m", "p_within_50m", "p_within_1km",
                     "tier", "standard_en", "standard_ar", "asks", "calibrated"])  # fmt: skip
         for row in rows:
-            j = _one((row.get("address") or "")[:500])
+            ch = (row.get("city") or "").strip()[:40] or None
+            if ch and city_key(ch) is None:
+                j = _one((row.get("address") or "")[:500])
+                j["asks"] = ["Unknown city value ignored.", *j["asks"]]
+            else:
+                j = _one((row.get("address") or "")[:500], city=ch)
             b = j["best"]
             w.writerow([row.get("address", ""), j["status"], *(
                 [b["lat"], b["lon"], b["radius_m"], b["p_within_50m"], b["p_within_1km"],

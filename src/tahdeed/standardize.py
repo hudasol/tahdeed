@@ -6,6 +6,7 @@ Address codes. A recognised Makani is only checked for shape (10 digits).
 
 from __future__ import annotations
 
+from .geo import CITY_BY_KEY
 from .resolve import Candidate, Resolution
 
 
@@ -82,4 +83,10 @@ def resolution_json(r: Resolution) -> dict:
         "notes": r.notes,
         "makani": {"value": r.parsed.makani, "well_formed": valid_makani(r.parsed.makani)}
         if r.parsed.makani else None,
+        # answers to "Which city?": pass one back as `city` to resolve the query
+        "city_options": [
+            {"key": k, "en": CITY_BY_KEY[k].en, "ar": CITY_BY_KEY[k].ar}
+            for k in r.city_options if k in CITY_BY_KEY
+        ],
+        "city_hint": r.city_hint,
     }  # fmt: skip
