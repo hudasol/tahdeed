@@ -16,6 +16,17 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: pytest --cov=tahdeed --cov-fail-under=70
+  bench-drift:
+    # Gulf-AddressBench: the committed data, prediction files, score files and docs/BENCH_REPORT.md
+    # must reproduce exactly from each other (no gazetteer or model needed). Fails on any drift.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -c constraints.txt -e .
+      - run: python scripts/check_bench_drift.py
   audit:
     runs-on: ubuntu-latest
     steps:
