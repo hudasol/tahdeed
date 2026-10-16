@@ -112,7 +112,8 @@ def maybe(p):
 
 
 def ci_(d):
-    return f"{100 * d['rate']:.1f}% ({100 * d['ci95'][0]:.1f}-{100 * d['ci95'][1]:.1f})"
+    lo, hi = (max(0.0, x) for x in d["ci95"])  # Wilson bounds can print as -0.0
+    return f"{100 * d['rate']:.1f}% ({100 * lo:.1f}-{100 * hi:.1f})"
 
 
 POI_MODELS = [
@@ -189,12 +190,12 @@ def supp_sec(s):
         [
             "| Measure | Value |",
             "|---|---|",
-            f"| Overture Places rows in the Dubai bbox | {o['rows_in_bbox']} |",
+            f"| Overture Places rows in the Dubai bbox | {o['rows_in_bbox']:,} |",
             f"| ...with only CDLA Permissive 2.0 / Apache 2.0 / CC0 source licences | {ci_(o['rows_only_permissive_licences'])} |",
             f"| OSM dev Dubai POIs (n={t['n']}) with an Overture place of the same name key within 100 m | {match} |",
             f"| Overture places with confidence at least 0.7 (n={o['confidence_ge_0_7']}) and no OSM POI of the same key within 500 m | {ci_(o['confident_without_osm_same_key_500m'])} |",
-            f"| GeoNames feature class S rows in the bbox | {g['class_S_rows_in_bbox']} |",
-            f"| ...without an OSM POI of the same key within 500 m | {g['without_osm_same_key_500m']} |",
+            f"| GeoNames feature class S rows in the bbox | {g['class_S_rows_in_bbox']:,} |",
+            f"| ...without an OSM POI of the same key within 500 m | {g['without_osm_same_key_500m']:,} |",
         ]
     )
 
@@ -264,7 +265,8 @@ that are invisible to the system.
 
 Cross-city dev set, model M21 above, shipped flags. Every E0 query that came back with a
 "Which city?" question is resolved again with the true city as the `city` hint. In hole strata the
-true record is hidden, so any resolved answer there is wrong. Source: `docs/clarify_dev.json`.
+true record is hidden, but another OSM record (a duplicate or a neighbouring entrance) can lie
+within 50 m of it, so some answers there are close. Source: `docs/clarify_dev.json`.
 
 {clarify_sec(clar)}
 
@@ -284,6 +286,10 @@ centroid and mapped entrances are hidden. Shares are over all labelled buildings
 counts as a miss), Wilson 95%. Source: `docs/lastmeter_eval.json`.
 
 {lastmeter_sec(lmev)}
+
+`path_endpoint` partly reads the label: OSM mappers usually join a footway to the entrance node
+itself, so on these buildings the hidden entrance is encoded in the path geometry. How well it works
+where entrances are not mapped is unknown.
 
 ## Read this first
 
