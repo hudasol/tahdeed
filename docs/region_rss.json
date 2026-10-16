@@ -1,0 +1,33 @@
+{
+ "db": "gazetteer.sqlite",
+ "gazetteer_sha256": "6022f68ffb319e01d5104a1ccddc30b842e8665bada3204ab2b555d4c496f28b",
+ "gazetteer_rows": {
+  "addresses": 127705,
+  "street_segments": 46667,
+  "areas": 1798,
+  "pois": 13926,
+  "street_keys": 9575
+ },
+ "model_arrays_sha256": "5bef1ce15ecc4959871c48a29dfc9ad7fb717ec01cb804aae4513eb8952d792d",
+ "degraded": false,
+ "python": "3.12.15",
+ "baseline_mb": {
+  "VmHWM": 44.7,
+  "VmRSS": 44.7
+ },
+ "after_load_mb": {
+  "VmHWM": 369.9,
+  "VmRSS": 362.0
+ },
+ "after_queries_mb": {
+  "VmHWM": 369.9,
+  "VmRSS": 365.2
+ },
+ "load_seconds": 39.46,
+ "requests": 400,
+ "mean_ms_per_request_in_process": 55.56,
+ "statuses": {
+  "resolved": 100,
+  "approximate": 300
+ }
+}
