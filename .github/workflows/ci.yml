@@ -27,6 +27,18 @@ jobs:
           python-version: "3.12"
       - run: pip install -c constraints.txt -e .
       - run: python scripts/check_bench_drift.py
+  docs-regen:
+    # Generated documents must equal what their scripts render from the committed result files.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/make_evaluation_md.py
+      - run: python scripts/make_results_blocks.py
+      - run: python scripts/make_edge_proposal.py
+      - run: git diff --exit-code -- docs README.md
   audit:
     runs-on: ubuntu-latest
     steps:
