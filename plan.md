@@ -1,4 +1,4 @@
-# tahdeed — project plan
+# tahdeed: project plan
 
 Working name: **tahdeed** (تحديد, "pinpointing"). Status: plan v1, written before any code.
 

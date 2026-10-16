@@ -117,7 +117,7 @@ def ci_(d):
 
 
 POI_MODELS = [
-    ("M21", "v2.1 as published (features + cross-city mix)"),
+    ("M21", "v2.1 as published (features + cross city mix)"),
     ("M20", "v2.0 training (no features, no mix)"),
     ("M_nofeat", "(a) mix, features masked"),
     ("M_nomix", "(b) features, no mix"),
@@ -154,11 +154,11 @@ benchmark n={pa["n_poi"]}. Source: `docs/poi_ablation.json`; predictions T1.1 to
 {poi_ablation(pa)}
 
 Reading: ECE does not move with the gate or with diversification; it moves with the training mix.
-Removing the cross-city mix (or only its `poi_hole` rows) restores v2.0 POI calibration, but the
+Removing the cross city mix (or only its `poi_hole` rows) restores v2.0 POI calibration, but the
 same rows are what keep the model cautious about street names shared across cities, so address
-wrong-city exposure roughly triples. Under the rule fixed before the run, no candidate qualified
-and the published v2.1 model is kept. **Trade-off, stated plainly: better Dubai POI calibration
-currently costs about three times the wrong-city exposure on the address risk set.**"""
+wrong city exposure roughly triples. Under the rule fixed before the run, no candidate qualified
+and the published v2.1 model is kept. **Trade off, stated plainly: better Dubai POI calibration
+currently costs about three times the wrong city exposure on the address risk set.**"""
 
 
 def clarify_sec(c):
@@ -263,7 +263,7 @@ that are invisible to the system.
 
 ## Answering "Which city?" (Phase 2, T2)
 
-Cross-city dev set, model M21 above, shipped flags. Every E0 query that came back with a
+Cross city dev set, model M21 above, shipped flags. Every E0 query that came back with a
 "Which city?" question is resolved again with the true city as the `city` hint. In hole strata the
 true record is hidden, but another OSM record (a duplicate or a neighbouring entrance) can lie
 within 50 m of it, so some answers there are close. Source: `docs/clarify_dev.json`.
@@ -280,7 +280,7 @@ gazetteer. Source: `docs/supplements_dubai.json`.
 
 ## Last meter entrance proposals (EXPLORATORY, Phase 2, T6)
 
-Exploratory, not a headline claim. Labels are OSM-mapped entrance vertices on building outlines in
+Exploratory, not a headline claim. Labels are OSM mapped entrance vertices on building outlines in
 the Abu Dhabi emirate (`entrance=*` or `door=*`), **not surveyed**. The query point is the outline
 centroid and mapped entrances are hidden. Shares are over all labelled buildings (no proposal
 counts as a miss), Wilson 95%. Source: `docs/lastmeter_eval.json`.
@@ -335,7 +335,7 @@ Sealed: {lm(sst)}. Dev: {lm(st)}. Truth is the landmark's own point, so this tes
 ## Known failures
 
 - A street name that exists in several cities, written without the city, is still answered in the wrong city when the true record is missing from the registry (a hole looks like a unique, present record). The city gate lowers this at a coverage cost; the residual is shown in the cross-city section.
-- v2.1 regression: Dubai/Sharjah/Ajman POI calibration (ECE of P(within 50 m)) is worse than v2.0 on dev, and POI answers are fewer because chain names now trigger the city question. Diagnosed (T1 section above): the cross-city training mix, mostly its `poi_hole` rows, causes the ECE rise; removing them would roughly triple address wrong-city exposure, so they are kept and the trade-off stands.
+- v2.1 regression: Dubai/Sharjah/Ajman POI calibration (ECE of P(within 50 m)) is worse than v2.0 on dev, and POI answers are fewer because chain names now trigger the city question. Diagnosed (T1 section above): the cross city training mix, mostly its `poi_hole` rows, causes the ECE rise; removing them would roughly triple address wrong city exposure, so they are kept and the trade off stands.
 - Registry holes (above).
 - Arabizi remains the weakest style.
 - Interpolation (+10 points forced top-1) assumes house numbers increase along a street and is checked only against held-out OSM addresses.
