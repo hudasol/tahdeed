@@ -16,13 +16,14 @@ import numpy as np
 from rapidfuzz import fuzz, process
 
 from .gazetteer import Gazetteer, hn_int, norm_hn
-from .geo import CITY_BY_KEY, haversine_m, haversine_np
+from .geo import CITIES, CITY_BY_KEY, haversine_m, haversine_np
 from .normalize import (
     LATIN_ARTICLES,
     STOPWORDS,
     STREET_TYPES,
     coarse_key,
     has_arabic,
+    has_latin,
     skeleton_of_tokens,
     skeleton_tokens,
     strip_articles,
@@ -138,6 +139,8 @@ class Resolution:
     parsed: ParsedQuery
     spans: list[Span]
     notes: list[str] = field(default_factory=list)
+    city_options: list[str] = field(default_factory=list)  # city keys behind a "Which city?" ask
+    city_hint: str | None = None  # city key the caller supplied, if any
 
 
 # ----------------------------------------------------------------------------- span matching
@@ -455,8 +458,35 @@ class Resolver:
         text: str,
         hide_addr: frozenset[int] | set[int] = frozenset(),
         hide_poi: frozenset[int] | set[int] = frozenset(),
+        city: str | None = None,
     ) -> Resolution:
-        return self._resolve(text, hide_addr, hide_poi, decide=True)
+        """Resolve one free-text address.
+
+        ``city`` is an optional answer to "Which city?": a city key, English or Arabic name or
+        alias from :data:`tahdeed.geo.CITIES` (``ValueError`` otherwise). It is applied as if the
+        user had written the city at the end of the address, which is the form the ranker was
+        trained on (cross-city evidence level E2), and a confident answer outside that city is
+        downgraded to ``ambiguous``.
+        """
+        if not city:
+            return self._resolve(text, hide_addr, hide_poi, decide=True)
+        ck = city_key(city)
+        if ck is None:
+            raise ValueError(f"unknown city: choose one of {', '.join(c.key for c in CITIES)}")
+        c = CITY_BY_KEY[ck]
+        name = c.ar if (has_arabic(text or "") and not has_latin(text or "")) else c.en
+        res = self._resolve(f"{text}, {name}", hide_addr, hide_poi, decide=True)
+        res.notes.append(f"city hint applied: {c.en}")
+        res.city_hint = ck
+        if res.best is not None and res.status == "resolved":
+            bc = candidate_city(self.g, res.best)
+            if bc is not None and bc != ck:
+                res.status = "ambiguous"
+                res.asks.insert(
+                    0,
+                    f"Nothing confident in {c.en}; the closest match is in {self.g.city_name(bc)[0]}.",
+                )
+        return res
 
     def _candidates(self, text, hide_addr, hide_poi) -> list[Candidate]:
         return self._resolve(text, hide_addr, hide_poi, decide=False)
@@ -1115,6 +1145,20 @@ class Resolver:
 
 
 # ----------------------------------------------------------------------------- utilities
+
+
+def city_key(hint: str) -> str | None:
+    """Map a city hint (key, English or Arabic name, or alias; any case) to a city key."""
+    from .normalize import normalize_text
+
+    h = normalize_text(hint or "").strip()
+    if not h:
+        return None
+    for c in CITIES:
+        names = (c.key, c.en, c.ar, *c.aliases)
+        if any(h == normalize_text(n).strip() for n in names):
+            return c.key
+    return None
 
 
 def _has_ar(s: str | None) -> bool:
