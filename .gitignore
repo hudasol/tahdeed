@@ -14,3 +14,9 @@ data/gazetteer.sqlite
 data/*.sqlite
 data/models/
 .DS_Store
+
+*.log
+retrain.done
+.claude/
+smoke-logs/
+bench/results/*.cache.json

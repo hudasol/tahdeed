@@ -1,0 +1,96 @@
+{
+ "version": "1.0.0",
+ "gazetteer_sha256": "8eaba3c3ea644f14f20b1ab6cbef1a9608502edc258a04d3c9bcf05176e073a2",
+ "sets": {
+  "address_dev": {
+   "n": 1500,
+   "generator": "addr_v2",
+   "split": "dev",
+   "seed": 101,
+   "contamination": "dev-seen",
+   "description": "synthetic structured addresses, mixed noise",
+   "sha256": "21239e4cc8430755f57a1bff162decef70150a45c84e9def044a03744f7c11dc"
+  },
+  "address_sealed": {
+   "n": 600,
+   "generator": "addr_v2",
+   "split": "sealed",
+   "seed": 102,
+   "contamination": "sealed",
+   "description": "same generator, sealed districts",
+   "sha256": "4e095f2bc68717853cd4ee88e1f5e90cddd307b129863b342791cac4ad89aec6"
+  },
+  "hole_dev": {
+   "n": 600,
+   "generator": "addr_hole",
+   "split": "dev",
+   "seed": 103,
+   "contamination": "dev-seen",
+   "description": "truth record absent from the index",
+   "sha256": "bbe314237283a5eea8d91c0441501b5fad01c23e6404ca60d7593afe4f8d84eb"
+  },
+  "hole_sealed": {
+   "n": 300,
+   "generator": "addr_hole",
+   "split": "sealed",
+   "seed": 104,
+   "contamination": "sealed",
+   "description": "truth record absent, sealed districts",
+   "sha256": "e5ea018cda42c650d2527321f67d3b44e1543d7b530ffdec89f2a90dc0336846"
+  },
+  "poi_dev": {
+   "n": 600,
+   "generator": "poi",
+   "split": "dev",
+   "seed": 105,
+   "contamination": "dev-seen",
+   "description": "POI name (+ street) + city",
+   "sha256": "842ff79d9397de51896c7ed6c9fd8ab521d583db2077dd21c093f16e211c39c6"
+  },
+  "poi_sealed": {
+   "n": 300,
+   "generator": "poi",
+   "split": "sealed",
+   "seed": 106,
+   "contamination": "sealed",
+   "description": "POI, sealed districts",
+   "sha256": "56843bd0d820dfb3e47b01a9bb24c1c1476e571a09caa93e5dd22cf1839df630"
+  },
+  "landmark_dev": {
+   "n": 400,
+   "generator": "landmark",
+   "split": "dev",
+   "seed": 107,
+   "contamination": "dev-seen",
+   "description": "'near <landmark>' relational queries",
+   "sha256": "1f1bb14410dc2bbeb272654709d9ae89d3fd01739591dbe71b0ac861c59fce53"
+  },
+  "crosscity_dev": {
+   "n": 6590,
+   "generator": "crosscity",
+   "split": "dev",
+   "seed": 0,
+   "contamination": "dev-seen",
+   "description": "names present in several cities; E0/E1/E2",
+   "sha256": "d937900f66bc842911c3be3ca39e837dbe834b44a5a95e3316543a5e4271e56a"
+  },
+  "crosscity_sealed": {
+   "n": 4709,
+   "generator": "crosscity",
+   "split": "sealed",
+   "seed": 0,
+   "contamination": "sealed-used-once",
+   "description": "cross-city, sealed",
+   "sha256": "b6d06a21dda98f5966565eff61137e3291daaebebc4dbe1b7873d380023254af"
+  },
+  "gold_handwritten": {
+   "n": 40,
+   "generator": "hand-written",
+   "split": "dev",
+   "seed": null,
+   "contamination": "seen-throughout-development",
+   "description": "40 queries written by the maintainer; truth = registry coordinates; truth_city = that record's city tag",
+   "sha256": "e90f866321571cd64f6180a2d7ab5e4de320fbb78e21a55c29298f1fdf327101"
+  }
+ }
+}

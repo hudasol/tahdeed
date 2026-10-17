@@ -1,0 +1,10 @@
+# Runtime dependencies pinned to the versions in constraints.txt (no scikit-learn / osmium needed).
+# `tahdeed` is installed from the public repo at a tag; replace <TAG> (e.g. v2.0.0) before deploying.
+tahdeed @ git+https://github.com/hudasol/tahdeed@<TAG>
+fastapi==0.143.0
+numpy==2.5.3
+pydantic==2.13.5
+python-multipart==0.0.32
+RapidFuzz==3.14.6
+starlette==1.6.0
+uvicorn==0.53.0

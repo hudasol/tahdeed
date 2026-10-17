@@ -36,6 +36,7 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:14px 0;font-s
 dt{color:var(--mute)}dd{margin:0;font-variant-numeric:tabular-nums}
 .asks{margin:14px 0;padding:12px 14px;background:var(--chalk);border-inline-start:4px solid var(--mid);border-radius:4px}
 .asks p{margin:2px 0}
+.cityopt{margin:6px 6px 0 0;padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;cursor:pointer;font:inherit}
 .alts{font-size:14px;color:var(--mute);padding-inline-start:18px}
 #map{height:100vh;min-height:360px}
 @media (max-width:820px){.app{grid-template-columns:1fr}aside{max-height:none;border-right:0}#map{height:55vh}}
@@ -76,12 +77,14 @@ const STATUS = {resolved:'Resolved', approximate:'Approximate area', ambiguous:'
 const TIER = {address:'registered address', poi:'place', interpolated:'between known buildings',
   landmark:'near a landmark', street_area:'street within a district', street:'street', area:'area', city:'city'};
 
-async function resolve(text) {
+let lastText = '';
+async function resolve(text, city) {
   $('out').textContent = 'Resolving…';
+  lastText = text;
   let j;
   try {
     const r = await fetch('/resolve', {method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({address: text})});
+      body: JSON.stringify(city ? {address: text, city: city} : {address: text})});
     if (r.status === 401) throw new Error('This server needs an access token.');
     if (!r.ok) throw new Error(r.status === 422 ? 'Enter an address to resolve.' : 'The service returned an error (' + r.status + ').');
     j = await r.json();
@@ -111,10 +114,13 @@ function render(j) {
   } else {
     h += `<p>No UAE place recognised in this text.</p>`;
   }
-  if (j.asks.length) h += `<div class="asks"><b>To pin it down</b>${j.asks.map(a => `<p>${esc(a)}</p>`).join('')}</div>`;
+  if (j.asks.length) h += `<div class="asks"><b>To pin it down</b>${j.asks.map(a => `<p>${esc(a)}</p>`).join('')}${
+    (j.city_options || []).map(o => `<button class="cityopt" type="button" data-city="${esc(o.key)}">${esc(o.en)} <span lang="ar">${esc(o.ar)}</span></button>`).join('')}</div>`;
   if (j.notes.length) h += `<p style="color:var(--mute);font-size:14px">${j.notes.map(esc).join('<br>')}</p>`;
   if ((j.alternatives || []).length) h += `<p style="margin-bottom:2px;font-size:14px">Other possibilities</p><ul class="alts">${j.alternatives.map(a => `<li>${esc(a.standard.en)} (${esc(TIER[a.tier])})</li>`).join('')}</ul>`;
   $('out').innerHTML = h;
+  // answering "Which city?" re-resolves the same text with the chosen city
+  document.querySelectorAll('.cityopt').forEach(btn => btn.addEventListener('click', () => resolve(lastText, btn.dataset.city)));
 }
 
 $('f').addEventListener('submit', e => { e.preventDefault(); resolve($('q').value); });

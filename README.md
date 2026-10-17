@@ -18,6 +18,7 @@ Given a free-text address (Arabic, English or mixed), it returns:
 - a standardized bilingual address (building / street / district / city / postcode where known),
 - a calibrated confidence: the probability that the top candidate is within a stated distance of the truth,
 - an abstain / ask decision naming the missing field (for example "add a building number"),
+- when the same name exists in several cities, the question "Which city?" with the candidate cities; passing the answer back as `city` (API, CLI `--city`, dashboard buttons) resolves the query,
 - an explanation of which parts of your text matched which gazetteer fields.
 
 It runs offline and deterministically. No LLM and no API keys are involved.
@@ -33,55 +34,44 @@ It runs offline and deterministically. No LLM and no API keys are involved.
 - Code: MIT (see `LICENSE`).
 - Data: © OpenStreetMap contributors, ODbL 1.0. The full derived gazetteer is built locally by the build command and is not committed. A small attributed fixture is included for tests. See `data/NOTICE.md`.
 
-## Results (sealed split: held-out districts, run once)
+## Results
 
-| | |
-|---|---|
-| Answers it is confident about | 65.5% of queries, **98.7% of them within 50 m** |
-| Forced top-1 within 50 m | 68.3% (char n-gram TF-IDF baseline: about 25 points lower on the mixed benchmark) |
-| Calibration (ECE of P(within 50 m)) | 0.030 held-out, 0.039 with holes, 0.054 on POI queries |
-| Independent generator (Latin text produced from Arabic names) | 66.0% forced top-1, 97.2% precision of confident answers; Arabizi 53.7% |
-| When the true address is missing from the registry | confident answers are 86.6% right (calibration holds, precision cannot) |
-| Latency / load | 5.8 ms median, 156 q/s on one core; 8 s load, 490 MB RSS |
+Generated from the result files by `scripts/make_results_blocks.py`; nothing in this block is hand-written. Intervals are Wilson 95%.
 
-Caveats: queries are synthetic (plus 40 hand-written ones), truth is OpenStreetMap, Dubai is evaluated only on POI queries. Two of the seven final predictions missed (sealed top-1 4.4 points under dev; POI calibration 0.054 vs 0.04 predicted). Full tables, ablations and every known failure: [`docs/EVALUATION.md`](docs/EVALUATION.md).
+<!-- RESULTS:results BEGIN -->
+| | dev (model used to choose the gate) | sealed (run once) |
+|---|---|---|
+| Standard benchmark: answers it is confident about | 65.1% | 61.0% |
+| ...of those, within 50 m | **99.2%** | **99.0%** |
+| Forced top-1 within 50 m | 72.0% | 68.2% |
+| ECE of P(within 50 m) | 0.037 | 0.025 |
+| **Wrong-city answers, % of cross-city risk queries with no city given** (no city gate (v2.0 behaviour)) | 10.1% (8.7-11.6) | 12.0% (10.2-14.1) |
+| **Wrong-city answers, % of cross-city risk queries with no city given** (city gate on (default)) | 3.0% (2.3-3.9) | 2.8% (2.0-4.0) |
+| ...cost: answered share of those queries | 3.1% (2.4-4.1) | 3.0% (2.2-4.2) |
+| ...cost: asked "which city?" on unique names (E0) | 41.6% | 37.8% |
+| ...with the city written (E2), wrong-city rate of answers | 0.8% (0.3-2.4) | 0.4% (0.1-2.1) |
+| True address missing from the index: precision of confident answers | 87.9% | not re-run |
+| Dubai/Sharjah/Ajman POI queries: answered / ECE | 63.3% / 0.105 | not re-run |
+| Latency (median, one core) | 6.2 ms | |
 
-## How it works
+Cross-city rows use the synthetic `crosscity` set (pairs of the same record with and without district/city evidence; composition chosen to expose the failure, **not** a prevalence estimate). The standard-benchmark coverage without the gate was 64.7% on sealed. Frozen v2.0 release, sealed, for reference: 65.5% answered, 98.7% within 50 m.
+<!-- RESULTS:results END -->
 
-1. **Normalise** Arabic and Latin text (digits, diacritics, alef/ya variants) and map both scripts to a shared consonant skeleton, so `جميرا` and `Jumeirah` meet at one key.
-2. **Parse** house numbers, units, Makani, PO boxes and landmark phrases ("near", "opposite", `بجانب`).
-3. **Match** every n-gram of the text against a gazetteer built from OSM (street, district, POI, city), tolerating transliteration and typos.
-4. **Generate candidates at several levels**: exact address, POI, interpolated between neighbouring buildings, landmark-relative, street + district, street, area, city.
-5. **Score** each candidate with gradient-boosted trees, then calibrate with isotonic regression on districts the model never saw, so 0.9 means right about 9 times in 10.
-6. **Decide**: resolved, approximate (an area with an empirical 90% radius), ambiguous, or unresolved, and ask for the missing field.
+Caveats: queries are synthetic (plus 40 hand-written ones), truth is OpenStreetMap, Dubai is evaluated only on POI queries. The human-written set is **pending real data** (`bench/human_kit/`). Full tables, ablations, predictions with hits and misses ([`docs/PREDICTIONS.md`](docs/PREDICTIONS.md)) and every known failure: [`docs/EVALUATION.md`](docs/EVALUATION.md). Benchmark: [`bench/`](bench/README.md), report in [`docs/BENCH_REPORT.md`](docs/BENCH_REPORT.md).
 
-## Quick start
+## More
 
-```bash
-pip install -e ".[dev,build]"
-
-# OSM extract: https://download.openstreetmap.fr/extracts/asia/united_arab_emirates.osm.pbf
-tahdeed build united_arab_emirates.osm.pbf      # ~30 s, writes data/gazetteer.sqlite
-tahdeed train                                   # ~5 min, writes data/models/ranker.npz (no pickle)
-tahdeed resolve "29 Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah, Abu Dhabi"
-tahdeed batch addresses.csv resolved.csv        # CSV with an `address` column
-tahdeed eval                                    # regenerates the evaluation numbers
-tahdeed serve                                   # API + map dashboard at http://127.0.0.1:8000
-```
-
-API: `POST /resolve {"address": "..."}`, `POST /resolve/batch` (CSV upload), `GET /health`, docs at `/docs`.
-
-Tests run against a small committed fixture (`tests/fixtures/mini.sqlite`, an OSM excerpt around Al Khalidiyah): `pytest`.
+[`bench/`](bench/README.md) Gulf-AddressBench (datasets, split and contamination policy, scorer: `tahdeed bench score predictions.jsonl`) · [`bench/human_kit/`](bench/human_kit/README.md) human-written set collection kit (no data yet) · [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) open-data survey for Dubai addresses (nothing usable found) · [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) rate limiting, Docker, hosting limits. · [`docs/EDGE_PROPOSAL.md`](docs/EDGE_PROPOSAL.md) two page proposal note · [`docs/SEALED2.md`](docs/SEALED2.md) why no fresh sealed set exists yet · [`CITATION.cff`](CITATION.cff) how to cite the benchmark.
 
 ## Honest limits
 
 - **Synthetic queries.** No query in any benchmark came from a real user. The largest open gap; only real logs close it.
-- **OSM is not an official registry.** A missing record yields a confident wrong neighbour (86.6% precision when the address is absent). `RegistryAdapter` is an interface only and is not wired in.
-- **Common street names across cities.** Written without the city, a coarse key can merge a street word with an area word and answer confidently in the wrong place (seen once in the 40-row gold set, over 100 km off). Documented, not fixed.
+- **OSM is not an official registry.** A missing record yields a confident wrong neighbour (see the missing-address row above). `RegistryAdapter` is an interface only and is not wired in.
+- **Common street names across cities.** Without the city, a name present in several cities is answered or refused by a calibrated *city gate* (asks "which city?"). The gate cuts wrong-city answers on the risk set but cannot see a record that is missing from the registry, so some exposure remains; and it costs coverage. Numbers above; analysis in `docs/EVALUATION.md`.
 - **Arabizi** is the weakest style (about 50%).
 - **Landmark benchmark** tests finding the landmark, not the offset "near" implies.
 - Does not resolve official Makani / Onwani / National Address codes. Dubai structured addresses are thin in OSM.
-- The Dockerfile has never been built in the development environment.
+- The Docker image is built and smoke-tested in GitHub Actions (job `docker`), not in the development sandbox.
 
 ## Author
 

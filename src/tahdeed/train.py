@@ -19,6 +19,7 @@ from .calibrate import (
     Policy,
     empirical_radii,
 )
+from .crosscity import make_crosscity_queries
 from .gazetteer import Gazetteer
 from .noise import make_address_queries, make_poi_queries
 from .noise2 import make_landmark_queries
@@ -38,11 +39,57 @@ class TrainReport:
     seconds: float
 
 
-def build_queries(g: Gazetteer, n_addr: int, n_poi: int, split: str, seed: int, hole_rate: float):
+@dataclass(frozen=True)
+class MixOptions:
+    """Training-mix switches, recorded in the model manifest (ablations in docs/PREDICTIONS.md).
+
+    ``crosscity``: add the cross-city set (v2.1). ``crosscity_poi_hole``: keep its ``poi_hole``
+    stratum (a POI name in several cities with the true POI hidden). ``mask_features``: features
+    held at the missing value (-1) during training and calibration, so no tree splits on them
+    and they have no effect at inference.
+    """
+
+    crosscity: bool = True
+    crosscity_poi_hole: bool = True
+    mask_features: tuple[str, ...] = ()
+
+    def manifest(self) -> dict:
+        return {
+            "crosscity_mix": self.crosscity,
+            "crosscity_poi_hole": self.crosscity_poi_hole,
+            "masked_features": list(self.mask_features),
+        }
+
+
+def build_queries(
+    g: Gazetteer,
+    n_addr: int,
+    n_poi: int,
+    split: str,
+    seed: int,
+    hole_rate: float,
+    mix: MixOptions | None = None,
+):
+    mix = mix or MixOptions()
     qs = make_address_queries(g, n_addr, split, seed=seed, hole_rate=hole_rate)
     qs += make_poi_queries(g, n_poi, split, seed=seed)
+    # same street / POI name in several cities, with and without the true record (train and
+    # calibration districts only; dev and sealed districts are never touched)
+    if mix.crosscity:
+        cc = make_crosscity_queries(g, split, n=max(150, n_addr // 100), seed=seed)
+        if not mix.crosscity_poi_hole:
+            cc = [q for q in cc if q.extra.get("stratum") != "poi_hole"]
+        qs += cc
     qs += make_landmark_queries(g, n_poi, split, seed=seed)  # "near <landmark>, <city>"
     return qs
+
+
+def _mask(X: np.ndarray, names: tuple[str, ...]) -> np.ndarray:
+    from .calibrate import FEATURES
+
+    for nm in names:
+        X[:, FEATURES.index(nm)] = -1.0
+    return X
 
 
 def _gbm() -> HistGradientBoostingClassifier:
@@ -73,16 +120,18 @@ def train(
     workers: int = 2,
     hole_rate: float = HOLE_RATE,
     verbose: bool = True,
+    mix: MixOptions | None = None,
 ) -> tuple[GBMRanker, TrainReport]:
     t0 = time.time()
-    tr = build_queries(g, n_train, max(500, n_train // 20), "train", seed, hole_rate=hole_rate)
-    ca = build_queries(g, n_calib, max(300, n_calib // 20), "calib", seed + 1, hole_rate=hole_rate)
+    mix = mix or MixOptions()
+    tr = build_queries(g, n_train, max(500, n_train // 20), "train", seed, hole_rate, mix)
+    ca = build_queries(g, n_calib, max(300, n_calib // 20), "calib", seed + 1, hole_rate, mix)
     if verbose:
         print(f"train queries {len(tr)}, calibration queries {len(ca)}, hole rate {hole_rate}")
 
     rows = run_pool(_collect_one, tr, g, workers=workers)
     flat = [r for rs in rows for r in rs]
-    X = np.array([r[1] for r in flat])
+    X = _mask(np.array([r[1] for r in flat]), mix.mask_features)
     d = np.array([r[2] for r in flat])
     y = {"p50": (d <= 50).astype(int), "p200": (d <= 200).astype(int),
          "p1k": (d <= 1000).astype(int), "valid": np.array([r[4] for r in flat])}  # fmt: skip
@@ -94,7 +143,7 @@ def train(
 
     rows_c = run_pool(_collect_one, ca, g, workers=workers)
     flat_c = [r for rs in rows_c for r in rs]
-    Xc = np.array([r[1] for r in flat_c])
+    Xc = _mask(np.array([r[1] for r in flat_c]), mix.mask_features)
     dc = np.array([r[2] for r in flat_c])
     yc = {"p50": (dc <= 50).astype(int), "p200": (dc <= 200).astype(int),
           "p1k": (dc <= 1000).astype(int), "valid": np.array([r[4] for r in flat_c])}  # fmt: skip

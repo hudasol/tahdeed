@@ -7,6 +7,7 @@ ranker/calibrator -> decision (resolved / approximate / ambiguous / unresolved).
 
 from __future__ import annotations
 
+import os
 import time
 from collections import Counter
 from dataclasses import dataclass, field
@@ -15,13 +16,14 @@ import numpy as np
 from rapidfuzz import fuzz, process
 
 from .gazetteer import Gazetteer, hn_int, norm_hn
-from .geo import CITY_BY_KEY, haversine_m, haversine_np
+from .geo import CITIES, CITY_BY_KEY, haversine_m, haversine_np
 from .normalize import (
     LATIN_ARTICLES,
     STOPWORDS,
     STREET_TYPES,
     coarse_key,
     has_arabic,
+    has_latin,
     skeleton_of_tokens,
     skeleton_tokens,
     strip_articles,
@@ -61,6 +63,14 @@ class Flags:
     dp: bool = True  # DP span selection (False: greedy longest-first)
     interp: bool = True  # interpolate between neighbouring house numbers
     landmark: bool = True  # landmark-relative tier
+    diversify: bool = True  # with no city evidence, offer candidates from several cities
+    city_gate: bool = True  # abstain and ask which city when a rival city scores comparably
+    # rival in another city triggers the gate at >= margin x top p_valid. 0.35 was chosen on the
+    # DEV cross-city set (largest exposure cut with standard-benchmark coverage loss <= 5 points,
+    # see docs/PREDICTIONS.md); override with TAHDEED_CITY_MARGIN.
+    city_margin: float = field(
+        default_factory=lambda: float(os.environ.get("TAHDEED_CITY_MARGIN", "0.35"))
+    )
 
 
 # ----------------------------------------------------------------------------- data types
@@ -129,9 +139,38 @@ class Resolution:
     parsed: ParsedQuery
     spans: list[Span]
     notes: list[str] = field(default_factory=list)
+    city_options: list[str] = field(default_factory=list)  # city keys behind a "Which city?" ask
+    city_hint: str | None = None  # city key the caller supplied, if any
 
 
 # ----------------------------------------------------------------------------- span matching
+
+
+def _diversify(items: list, city_of, k: int) -> list:
+    """First item per city (in order), then the rest, up to k: keeps rival cities visible."""
+    seen: set = set()
+    first, rest = [], []
+    for it in items:
+        c = city_of(it)
+        if c in seen:
+            rest.append(it)
+        else:
+            seen.add(c)
+            first.append(it)
+    return (first + rest)[:k]
+
+
+def candidate_city(g: Gazetteer, c: Candidate) -> str | None:
+    """City key of a candidate (None when it cannot be told)."""
+    if c.ref:
+        kind, i = c.ref
+        if kind == "addr":
+            return g.addr[i][8]
+        if kind == "poi":
+            return g.pois[i][6]
+        if kind == "area":
+            return g.areas[i][4]
+    return c.label.get("city_key")
 
 
 def _span_keys(tokens: list[str]) -> tuple[str, str]:
@@ -419,8 +458,35 @@ class Resolver:
         text: str,
         hide_addr: frozenset[int] | set[int] = frozenset(),
         hide_poi: frozenset[int] | set[int] = frozenset(),
+        city: str | None = None,
     ) -> Resolution:
-        return self._resolve(text, hide_addr, hide_poi, decide=True)
+        """Resolve one free-text address.
+
+        ``city`` is an optional answer to "Which city?": a city key, English or Arabic name or
+        alias from :data:`tahdeed.geo.CITIES` (``ValueError`` otherwise). It is applied as if the
+        user had written the city at the end of the address, which is the form the ranker was
+        trained on (cross-city evidence level E2), and a confident answer outside that city is
+        downgraded to ``ambiguous``.
+        """
+        if not city:
+            return self._resolve(text, hide_addr, hide_poi, decide=True)
+        ck = city_key(city)
+        if ck is None:
+            raise ValueError(f"unknown city: choose one of {', '.join(c.key for c in CITIES)}")
+        c = CITY_BY_KEY[ck]
+        name = c.ar if (has_arabic(text or "") and not has_latin(text or "")) else c.en
+        res = self._resolve(f"{text}, {name}", hide_addr, hide_poi, decide=True)
+        res.notes.append(f"city hint applied: {c.en}")
+        res.city_hint = ck
+        if res.best is not None and res.status == "resolved":
+            bc = candidate_city(self.g, res.best)
+            if bc is not None and bc != ck:
+                res.status = "ambiguous"
+                res.asks.insert(
+                    0,
+                    f"Nothing confident in {c.en}; the closest match is in {self.g.city_name(bc)[0]}.",
+                )
+        return res
 
     def _candidates(self, text, hide_addr, hide_poi) -> list[Candidate]:
         return self._resolve(text, hide_addr, hide_poi, decide=False)
@@ -517,7 +583,7 @@ class Resolver:
         cands += self._city_candidates(ctx)
 
         if not decide:
-            return cands
+            return [c for c in cands if not c.evidence.get("rival_only")]
         if self.ranker:
             self.ranker.score(cands)
         res = self._decide(text, pq, spans, cands, ctx, notes)
@@ -573,11 +639,13 @@ class Resolver:
         area_keys = self._area_key_set(ctx)
         cities = ctx["cities"]
         for ss in sorted(ctx["street_spans"], key=lambda s: -(s.n * s.quality))[:2]:
+            n_before = len(out)
             keys = [k for k in dict.fromkeys(ss.street_keys) if g.has_street_key(k)]
             ids: list[int] = []
             for k in keys:
                 ids += g.addr_by_street.get(k, [])
             ids = self._filter_ids(sorted(set(ids)), ctx)
+            name_cities = Counter(g.addr[i][8] for i in ids)
             seg_ids: list[int] = []
             for k in keys:
                 seg_ids += g.street_by_key.get(k, [])
@@ -637,7 +705,12 @@ class Resolver:
 
                 pick = sorted(ex, key=lambda i: (-kex(i), -amatch(i), -cmatch(i)))
                 cluster = len({(g.addr[i][8], g.addr[i][5] or g.addr[i][4]) for i in pick})
-                for i in pick[:4]:
+                picked = (
+                    _diversify(pick, lambda i: g.addr[i][8], 4)
+                    if (self.flags.diversify and not cities)
+                    else pick[:4]
+                )
+                for i in picked:
                     a = g.addr[i]
                     f = dict(base_feat)
                     f.update(
@@ -665,6 +738,20 @@ class Resolver:
                     conflict = True
                 produced = True
             if produced and not conflict:
+                if self.flags.city_gate and not cities:
+                    # street-level candidates in every city that has this street name: never
+                    # answered, only scored, so the city gate can see rivals the exact hit hides
+                    for rc in self._street_candidates(
+                        pool,
+                        seg_ids,
+                        ss,
+                        area_spans=ctx["area_spans"],
+                        base_feat=base_feat,
+                        ctx=ctx,
+                    ):
+                        rc.evidence = {**rc.evidence, "rival_only": True}
+                        out.append(rc)
+                self._city_share(out[n_before:], name_cities)
                 continue
             # interpolation between neighbouring numbers (single district only); also offered
             # when every exact-number hit lies outside the district the query names
@@ -677,7 +764,16 @@ class Resolver:
             out += self._street_candidates(
                 pool, seg_ids, ss, area_spans=ctx["area_spans"], base_feat=base_feat, ctx=ctx
             )
+            self._city_share(out[n_before:], name_cities)
         return out
+
+    def _city_share(self, cands: list[Candidate], name_cities: Counter) -> None:
+        """How many cities share this name, and how much of it lies in each candidate's city."""
+        tot = sum(name_cities.values())
+        for c in cands:
+            ck = candidate_city(self.g, c)
+            c.features["name_n_cities"] = len(name_cities)
+            c.features["city_share"] = name_cities.get(ck, 0) / tot if tot else -1.0
 
     def _area_key_set(self, ctx: dict) -> set[str]:
         g = self.g
@@ -838,10 +934,15 @@ class Resolver:
                     st_ok = 1 if (keys_of(p[5]) & street_keys) else -1
                 scored.append((st_ok, i))
             scored.sort(key=lambda t: -t[0])
-            top = scored[:3]
+            top = (
+                _diversify(scored, lambda t: g.pois[t[1]][6], 3)
+                if (self.flags.diversify and not cities)
+                else scored[:3]
+            )
             names = Counter()
             for _, i in scored:
                 names[(g.pois[i][6])] += 1
+            n_names = sum(names.values())
             for st_ok, i in top:
                 p = g.pois[i]
                 f = {
@@ -860,6 +961,8 @@ class Resolver:
                     "n_unexplained": ctx["n_unexplained"],
                     "poi_is_whole_query": int(ps.n >= ctx["n_body"]),
                     "n_same_clusters": len(names),
+                    "name_n_cities": len(names),
+                    "city_share": names[p[6]] / n_names,
                 }
                 ck = CITY_BY_KEY.get(p[6])
                 out.append(
@@ -1042,6 +1145,20 @@ class Resolver:
 
 
 # ----------------------------------------------------------------------------- utilities
+
+
+def city_key(hint: str) -> str | None:
+    """Map a city hint (key, English or Arabic name, or alias; any case) to a city key."""
+    from .normalize import normalize_text
+
+    h = normalize_text(hint or "").strip()
+    if not h:
+        return None
+    for c in CITIES:
+        names = (c.key, c.en, c.ar, *c.aliases)
+        if any(h == normalize_text(n).strip() for n in names):
+            return c.key
+    return None
 
 
 def _has_ar(s: str | None) -> bool:
