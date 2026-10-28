@@ -419,3 +419,17 @@ Arabic name are left alone, and the earlier bare city span rule gets the same ex
 | L1 | "Dubai Airport" and "Madinat Zayed Mall" no longer return Dibba Airport or Al Dhaid Mall | **Miss**: Dibba Airport is gone, but "Dubai Airport" now returns a different wrong POI ("Euro Part", p50 0.69, which shares the skeleton of the word "airport"), and "Madinat Zayed Mall" still returns Al Dhaid Mall |
 | L2 | Resolved share and precision on the three dev sets move by less than 0.3 points | **Hit**: largest move 0.1 points (coverage hole resolved precision 91.27% to 91.17%) |
 | L3 | Forced top 1 within 1 km does not fall on any of the three sets by more than 0.3 points | **Hit**: largest fall 0.1 points (coverage hole 65.77% to 65.67%) |
+
+## Phase 3, a spelling similarity floor for Latin POI matches
+
+Written and committed before the change or its evaluation. Defect seen in use: "Dubai Airport" returns
+"Euro Part" (p50 0.69) because "airport" and "Euro Part" share a consonant skeleton. Change: a POI
+that has a Latin name is kept for a Latin span only if the best token sort similarity (rapidfuzz, 0 to
+100) between the span and its Latin names, articles removed, is at least 60. POIs with no Latin name
+are left alone. Comparison model: the one trained from the current code, as in the previous section.
+
+| # | Prediction | Result |
+|---|---|---|
+| F1 | "Dubai Airport" no longer returns Euro Part or Dibba Airport | _pending_ |
+| F2 | Resolved share and precision on the three dev sets move by less than 0.5 points | _pending_ |
+| F3 | Forced top 1 within 1 km does not fall on any set by more than 0.5 points | _pending_ |
