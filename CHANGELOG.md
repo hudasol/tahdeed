@@ -10,6 +10,18 @@ experiments behind them are in [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md).
 
 ## [Unreleased]
 
+### Changed
+
+- The model is found at `models/ranker.npz` next to the gazetteer, the layout `tahdeed fetch` writes.
+- In strict mode the API loads the model at startup and stops if it is missing or mismatched.
+- API: request ids are validated, error responses carry the security headers, batch CSV cells that
+  start like formulas are prefixed, batches run in a thread pool, `/docs` is removed.
+- Phone numbers typed with Arabic digits, dots or brackets are redacted.
+- Optional `TAHDEED_AUDIT_KEY` turns the logged query hash into an HMAC.
+- The dashboard calls results mapped addresses, shows the licence attribution and a notice that
+  results are experimental, and reports rate limits and network failures.
+- The README reports the real text results next to the public baselines.
+
 ## [2.1.0] - 2026-10-28
 
 ### Added
@@ -37,7 +49,7 @@ experiments behind them are in [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md).
   templates, editor configuration, Makefile, pre-commit configuration, release workflow and release
   guide.
 - Download helper `tahdeed.fetch.fetch_data` that fetches the gazetteer and model from a release and
-  verifies their SHA-256 values against `data/MANIFEST.json`.
+  verifies their SHA-256 values against `MANIFEST.json` on the `data` branch.
 
 ### Changed
 

@@ -13,8 +13,11 @@ tahdeed verify
 tahdeed eval --n 6000 --out docs/eval.json
 tahdeed studies --n 2500 --h0 data/models/ranker_h0.npz --out docs/studies.json
 tahdeed gold --out docs/gold.json
-TAHDEED_SPLIT=sealed tahdeed eval --n 6000 --out docs/sealed/eval.json     # run once, after predictions
-TAHDEED_SPLIT=sealed tahdeed studies --n 2500 --h0 data/models/ranker_h0.npz --out docs/sealed/studies.json
+# The sealed split is read once per release decision (docs/SEALED2.md). Set TAHDEED_ALLOW_SEALED=1 to overwrite docs/sealed.
+if [ "${TAHDEED_ALLOW_SEALED:-0}" = "1" ]; then
+  TAHDEED_SPLIT=sealed tahdeed eval --n 6000 --out docs/sealed/eval.json
+  TAHDEED_SPLIT=sealed tahdeed studies --n 2500 --h0 data/models/ranker_h0.npz --out docs/sealed/studies.json
+fi
 tahdeed figures
 python scripts/make_evaluation_md.py
 tahdeed bench --n 2000
