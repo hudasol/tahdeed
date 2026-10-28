@@ -161,6 +161,29 @@ def _diversify(items: list, city_of, k: int) -> list:
     return (first + rest)[:k]
 
 
+def _n_places(g: Gazetteer, ids: list[int], link_m: float = 300.0) -> int:
+    """Number of places among same name POI records: single linkage clusters within ``link_m``.
+
+    One venue is often several OSM features (building, car park, entrance); they count once.
+    """
+    pts = [(g.pois[i][8], g.pois[i][9]) for i in ids[:80]]  # the count saturates long before 80
+    if len(pts) <= 1:
+        return len(pts)
+    parent = list(range(len(pts)))
+
+    def find(a: int) -> int:
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    for a in range(len(pts)):
+        for b in range(a + 1, len(pts)):
+            if haversine_m(pts[a][0], pts[a][1], pts[b][0], pts[b][1]) <= link_m:
+                parent[find(a)] = find(b)
+    return len({find(a) for a in range(len(pts))})
+
+
 def _poi_named(p: tuple, text: str) -> bool:
     """Does one of the POI's names equal ``text`` once normalised (not just share its skeleton)?"""
     want = normalize_text(text)
@@ -970,7 +993,7 @@ class Resolver:
                     "poi_tokens": ps.n,
                     "poi_key_len": len(ps.key),
                     "poi_ambig": g.poi_ambig.get(ps.key, 1),
-                    "n_poi_same": len(ids),
+                    "n_poi_same": _n_places(g, ids),
                     "poi_street_consistent": st_ok,
                     "city_consistent": city_consistent,
                     "area_given": int(bool(area_keys)),

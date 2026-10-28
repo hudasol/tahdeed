@@ -56,3 +56,17 @@ def test_skeleton_only_poi_is_not_a_name_match():
     dubai = (2, "Dubai", None, None, "x", None, "dubai", None, 25.0, 55.0, "n2")
     assert not _poi_named(adib, "dubai")
     assert _poi_named(dubai, "dubai")
+
+
+def test_same_name_features_count_as_one_place():
+    from tahdeed.resolve import _n_places
+
+    def row(lat, lon):
+        return (0, "n", None, "n", "mall", None, "dubai", None, lat, lon, "x")
+
+    g = SimpleNamespace(
+        pois=[row(25.1200, 55.2000), row(25.1210, 55.2005), row(25.2000, 55.3000), row(24.4, 54.4)]
+    )
+    assert _n_places(g, [0, 1]) == 1
+    assert _n_places(g, [0, 1, 2, 3]) == 3
+    assert _n_places(g, [2]) == 1
