@@ -80,7 +80,9 @@ def _external(results: Path, data: Path) -> list[str]:
     L += ["", "Cells are percent with Wilson 95% interval, as above; *ECE* is the expected calibration error of the "
           "system's own confidence against the within 50 m indicator (only Tahdeed reports a confidence). The index "
           "baselines (TF-IDF, BM25) always answer and return a gazetteer record, so their *Answered* is 100% by "
-          "construction and *Precision* equals *End-to-end*. libpostal could not be installed in the build "
+          "construction and *Precision* equals *End-to-end*. *Wrong city* compares the city a system returns (or the nearest "
+          "city centre of its coordinate) with the nearest city centre of the truth point, so near city edges it counts "
+          "labelling differences as errors. libpostal could not be installed in the build "
           "environment (see `bench/README.md`) and has no row.", ""]  # fmt: skip
     scores = {k: _load(results / f"{k}.score.json") for k, _ in SYSTEMS}
     scores = {k: v for k, v in scores.items() if v}
