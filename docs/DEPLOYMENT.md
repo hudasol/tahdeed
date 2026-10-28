@@ -424,3 +424,45 @@ Text for the demo page (footer, and `/docs`):
 The service exposes the first sentence as `attribution`, and the offer link as `data_offer_url`,
 in `GET /config`, so the dashboard can render them. (`src/tahdeed/web/index.html` was not changed here; its
 map layer already shows "© OpenStreetMap contributors".)
+
+## 7. Data releases and `data/MANIFEST.json`
+
+The gazetteer and the model are published as assets of a GitHub Release, next to a manifest that
+lists them. `tahdeed.fetch.fetch_data(dest, base_url, manifest)` downloads the files named in the
+manifest, writes each to a temporary file, and keeps it only if its SHA-256 equals the manifest
+value (and its size, when given). On a mismatch it raises `FetchError` and removes the file.
+Remote URLs must use HTTPS. Files already present with a matching hash are not downloaded again.
+
+`base_url` is the directory that holds the assets, for example
+`https://github.com/<owner>/tahdeed/releases/download/v2.0.0`. Each file is requested at
+`<base_url>/<name>`.
+
+Manifest schema (version 1):
+
+```json
+{
+  "schema_version": 1,
+  "version": "2.0.0",
+  "source": "OpenStreetMap extract of 2026-10-09, (c) OpenStreetMap contributors, ODbL 1.0",
+  "files": [
+    {"name": "gazetteer.sqlite", "sha256": "<64 lowercase hex digits>", "size": 123456789},
+    {"name": "ranker.npz", "sha256": "<64 lowercase hex digits>", "size": 1234567}
+  ]
+}
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `schema_version` | yes | Integer, currently `1`. A different value is refused. |
+| `version` | no | Release the files belong to. Informational. |
+| `source` | no | Origin and licence statement for the data. Informational. |
+| `files[].name` | yes | A plain file name with no directory part. Names that contain a path separator or start with a dot are refused. |
+| `files[].sha256` | yes | SHA-256 of the file as published, 64 lowercase hex digits. |
+| `files[].size` | no | Size in bytes, checked in addition to the hash. |
+
+The model manifest embedded in `ranker.npz` records the SHA-256 of the gazetteer it was trained on, so
+a matching pair also passes `tahdeed verify`. To produce the manifest after a build, hash the two
+files with `sha256sum` and write the values into the JSON above.
+
+`deploy/fetch_data.py` is the older, environment variable driven variant used by hosted builds. It
+reads URLs and hashes from `TAHDEED_*` variables instead of a manifest.
