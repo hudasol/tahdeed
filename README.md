@@ -26,6 +26,8 @@ docker run --rm -p 8000:8000 --read-only --tmpfs /tmp --cap-drop ALL \
 
 The data directory must hold `gazetteer.sqlite` and the model, either as `ranker.npz` or as `models/ranker.npz` (the layout `tahdeed fetch` writes). Download them with `tahdeed fetch` (about 50 MB, from the `data` branch of this repository; every file is checked against the SHA-256 values in `MANIFEST.json`), or build them yourself (below). The manifest format and how to host the files elsewhere are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
+A demo with the Abu Dhabi region data runs at https://tahdeed-demo.onrender.com (free plan, so the first request after a pause is slow; Dubai and Sharjah places are not in that file).
+
 ## Quick start
 
 With the downloaded data:
@@ -169,7 +171,7 @@ Full tables, ablations and every known failure are in [`docs/EVALUATION.md`](doc
 - Arabizi is the weakest writing style, at about 50% top 1.
 - The landmark benchmark tests finding the landmark, not the offset that "near" implies.
 - Makani, Onwani and National Address codes are not resolved, because those registries are not open. Dubai has few structured addresses in OpenStreetMap, so Dubai is evaluated only on point of interest queries.
-- The Docker image is built and smoke tested in GitHub Actions (job `docker`).
+- The Docker image is built and smoke tested in GitHub Actions (workflow `docker.yml`, job `smoke`).
 
 ## Data and licence
 
