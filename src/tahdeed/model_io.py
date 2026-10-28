@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from typing import Any
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -153,7 +154,8 @@ def export(ranker, path: str | Path, gazetteer_sha256: str = "", extra: dict | N
         **(extra or {}),
     }
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(path, manifest=np.array(json.dumps(manifest)), **arrays)
+    payload: dict[str, Any] = {"manifest": np.array(json.dumps(manifest)), **arrays}
+    np.savez_compressed(path, **payload)
     return manifest
 
 
