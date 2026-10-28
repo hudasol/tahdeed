@@ -24,8 +24,12 @@ levels (street+number only / + district / + city) for names that exist in severa
   A *Produced Work* (a paper, a chart, aggregate scores) may use any licence but must credit OSM.
 - The code (generators, scorer) is MIT, see the repo `LICENSE`. The code licence does not relax the ODbL on the data.
 - Baseline prediction files contain coordinates taken from OSM-derived gazetteer records (Tahdeed, naive).
-  Nominatim predictions are stored only as aggregate scores plus a request cache that is not
-  redistributed (`*.cache.json` is git-ignored).
+  Nominatim and Photon predictions (coordinates and match levels for the sampled rows) are stored
+  with their aggregate scores. The raw request cache is not redistributed (`*.cache.json` is
+  git-ignored). Their output is OpenStreetMap derived and falls under the same ODbL terms.
+- One row of `poi_dev` (an OpenStreetMap business name) contains a phone number that is published
+  in OpenStreetMap itself. The query generator is deterministic, so the row is kept to keep the set
+  reproducible. The real text sets and the resolver redact such numbers.
 - Nominatim was queried at ≤1 request/second with an identifying User-Agent on a small sample, per
   https://operations.osmfoundation.org/policies/nominatim/. Its output is a competitor baseline and is
   **never** used as ground truth.
