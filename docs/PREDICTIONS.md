@@ -1,10 +1,10 @@
-# Predictions, written before each run
+# Pre-registered experiment log
 
-Rule: a prediction is committed **before** the evaluation that tests it. Results go in the table next
+This file records every prediction made for an experiment in this project. The rule is that a prediction is committed **before** the evaluation that tests it. Results go in the table next
 to it afterwards, hit or miss. `dev` is the iteration split; `sealed` is only used for the v1.0 baseline
 and the final report. (v1.0 was evaluated on the old combined test split, which is dev + sealed.)
 
-## Round 1 (after Google review upgrades), dev split, hole mix 30% in training
+## Development round 1 (retrieval and calibration under shift), dev split, hole mix 30% in training
 
 | # | Prediction | Basis | Result |
 |---|---|---|---|
@@ -16,7 +16,7 @@ and the final report. (v1.0 was evaluated on the old combined test split, which 
 | P1.6 | ECE of P(within 1 km) at or below 0.05 | new head | **Hit**: ECE 0.015 |
 | P1.7 | Median latency stays under 15 ms (was 5 ms) | wider span generation | **Hit**: median 8.7 ms, p95 15.3 ms |
 
-Hole sensitivity of the Round 1 model (dev split, 1,500 queries per row):
+Hole sensitivity of the development round 1 model (dev split, 1,500 queries per row):
 
 | Share of queries whose true address is absent | resolved | precision@50 m of resolved | forced top-1 ≤50 m | ECE P(≤50 m) |
 |---|---|---|---|---|
@@ -30,7 +30,7 @@ Reading: calibration holds across the whole range (ECE ≤ 0.05) but *precision 
 query is for an absent address, 16% of confident answers are wrong neighbours. That is a limit of
 the data, now quantified instead of hidden.
 
-## Round 2 (after Edge review upgrades)
+## Development round 2 (reliability and security)
 
 Written while the round-2 evaluation was already running but before its output was read.
 
@@ -43,7 +43,7 @@ Written while the round-2 evaluation was already running but before its output w
 | P2.5 | Hypothesis fuzzing (300 + 120 examples) and pathological inputs never raise and stay < 2 s | **Hit**: 64 tests pass |
 | P2.6 | Dashboard loads and resolves with all external hosts blocked except the tile server | **Hit**: only `tile.openstreetmap.org` was requested; page and result render |
 
-## Round 3 (after TII review): generator gap, ablations, baselines
+## Development round 3: generator gap, ablations, baselines
 
 Written before `tahdeed studies` was run.
 
@@ -58,9 +58,9 @@ Written before `tahdeed studies` was run.
 | P3.7 | Char-trigram TF-IDF baseline lands ≥ 15 points below the full system on top-1 ≤50 m | **Near miss**: TF-IDF baseline is 13.3 points below (CI −15.0..−11.5), predicted ≥15 |
 | P3.8 | At least one of the "recall aids" (siblings, fuzzy full-name, DP selection) does **not** produce a statistically significant gain on its own | **Hit**: sibling keys +0.5 (ns), consonant-class 0.0 (ns), all three recall aids together −0.36 (ns); fuzzy full-name −0.8 and DP selection −1.8 are significant but small |
 
-## Round 4 (after ATRC review): Arabic-specific matching
+## Development round 4: Arabic-specific matching
 
-Written before the Round 4 model was trained or evaluated. Round 3 baselines: v2 forced top-1 ≤50 m
+Written before the development round 4 model was trained or evaluated. Development round 3 baselines: v2 forced top-1 ≤50 m
 49.8% (arabizi 22.7%, gulf 57.8%, formal 60.5%); v2 resolved precision 97.0%.
 
 | # | Prediction | Result |
@@ -75,7 +75,7 @@ Written before the Round 4 model was trained or evaluated. Round 3 baselines: v2
 ## Final round: sealed split (10% of districts, never used for any decision)
 
 Written before the final model was trained and before any sealed query was run. Dev reference
-values are from the Round 4 model; the final model adds an interior-street-type span guard and
+values are from the development round 4 model; the final model adds an interior-street-type span guard and
 faster loading, so small movements are expected.
 
 | # | Prediction | Result |
@@ -86,7 +86,7 @@ faster loading, so small movements are expected.
 | F4 | ECE of P(≤50 m) at most 0.04 on every sealed benchmark | **Miss**: 0.030 (Abu Dhabi), 0.039 (holes), **0.054 (Dubai/Sharjah/Ajman POI)**. The POI benchmark's truth is weaker (POI points, not surveyed addresses) |
 | F5 | Landmark queries on sealed: within 200 m at least 65% | **Hit**: 75.8% (0.0% with the tier off) |
 | F6 | Load time ≤ 10 s; median latency ≤ 9 ms | **Hit**: load 8.0 s (was 18.8 s), median 5.8 ms, p99 17.5 ms, 156 q/s single core, RSS 490 MB |
-| F7 | Final model's dev numbers show no regression greater than 1 point on any Round 4 headline (interior-type guard is not a net loss) | **Near miss**: everything improved (held-out resolved 67.2% → 69.4%, top-1 70.1% → 72.7%, v2 top-1 61.0% → 64.4%, Arabizi 48.8% → 51.3%) except landmark top-1 within 200 m, 75.3% → 74.2% (−1.1) |
+| F7 | Final model's dev numbers show no regression greater than 1 point on any development round 4 headline (interior-type guard is not a net loss) | **Near miss**: everything improved (held-out resolved 67.2% → 69.4%, top-1 70.1% → 72.7%, v2 top-1 61.0% → 64.4%, Arabizi 48.8% → 51.3%) except landmark top-1 within 200 m, 75.3% → 74.2% (−1.1) |
 
 # Phase 2 (branch `phase2-crosscity-bench`)
 

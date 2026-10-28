@@ -22,7 +22,7 @@ A fixed policy then chooses `resolved` (calibrated `p50` ≥ τ and no close riv
 Standard benchmark, sealed (run once): 61.0% answered, 99.0% of those within 50 m. Cross-city risk queries with no city given: wrong-city answers 12.0% (10.2-14.1) without the gate, 2.8% (2.0-4.0) with it. True address missing (dev): 87.9% of confident answers right. Dubai/Sharjah/Ajman POI calibration (dev) ECE 0.105 (was 0.069 on v2.0: a regression, see EVALUATION.md).
 <!-- RESULTS:model_card END -->
 
-**Training data.** Also includes landmark-relative queries ("near X, city"); without them the landmark tier answered nothing (found in Round 4).
+**Training data.** Also includes landmark-relative queries ("near X, city"); without them the landmark tier answered nothing (found in development round 4).
 
 **Known limitations**
 - Trained only on noise we simulated. Real query distributions will differ.

@@ -53,7 +53,7 @@ Supported (dev split, 95% intervals in the JSON files):
 Not supported:
 - That consonant-class matching, sibling keys or full-name fuzzy spans earn their complexity: on
   the mixed benchmark their combined effect is −0.4 points (CI −1.0..+0.3). They are kept for now
-  because the mechanism is sound and the benchmark may not exercise it (Round 4 revisits this).
+  because the mechanism is sound and the benchmark may not exercise it (development round 4 revisits this).
 - That isotonic calibration improves calibration (raw boosted probabilities are at least as good).
 - Anything about real users. Both generators are ours.
 - Any claim about Dubai addresses.
