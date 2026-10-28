@@ -362,3 +362,19 @@ within 50 m of the source coordinate 36.1% of the time on Overture text and 47.4
 text. Two general purpose baselines that always answer score a higher end to end rate at 50 m, and
 Photon and Nominatim do not do well either on these full address strings. No tuning was done in
 response, per the rule above. The exact numbers are generated into `docs/BENCH_REPORT.md`.
+
+## Phase 3, city names that collide with POI names by skeleton
+
+Written and committed before the change or its evaluation. Defect seen in use: "Sheikh Zayed Road
+Dubai" resolved to the bank branch ADIB (p50 0.76), because "Dubai" and "ADIB" reduce to the same
+consonant skeleton. Change: when a span is a recognised city name, written without a street type word,
+a POI is kept as a match for that span only if one of its normalised names equals the span text. A
+skeleton only match is dropped. Evaluation: `tahdeed eval` on dev, before (the numbers recorded for the
+decision order change) and after, plus the same hand typed list of 40 queries.
+
+| # | Prediction | Result |
+|---|---|---|
+| S1 | "Sheikh Zayed Road Dubai" no longer returns a POI | _pending_ |
+| S2 | Resolved share and resolved precision at 50 m on the three dev sets each move by less than 0.3 points | _pending_ |
+| S3 | Forced top 1 within 1 km on Dubai POI does not fall by more than 0.5 points | _pending_ |
+| S4 | Wrong city of all (crosscity dev, margin 0.35) is unchanged | _pending_ |
