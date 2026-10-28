@@ -46,7 +46,7 @@ exposure on the address risk set from
 7.7%, so it was kept.
 
 A demonstration fits a free 512 MB instance: the Abu Dhabi emirate build peaks at
-369.9 MB resident [region_rss.json]. It has not been deployed.
+371.6 MB resident [region_rss.json]. It has not been deployed.
 
 Exploratory, last meter [lastmeter_eval.json]: on 242 Abu Dhabi buildings with
 entrances mapped in OpenStreetMap, the end of a footway at the outline lies within 10 m of a mapped

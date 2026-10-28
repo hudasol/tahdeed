@@ -29,7 +29,7 @@ Synthetic queries rendered from OpenStreetMap address points in *train* district
 See `docs/EVALUATION.md` (generated from the result files).
 
 <!-- RESULTS:model_card BEGIN -->
-Standard benchmark, sealed (run once): 61.0% answered, 99.0% of those within 50 m. Cross-city risk queries with no city given: wrong-city answers 12.0% (10.2-14.1) without the gate, 2.8% (2.0-4.0) with it. True address missing (dev): 87.9% of confident answers right. Dubai/Sharjah/Ajman POI calibration (dev) ECE 0.105 (was 0.069 on v2.0: a regression, see EVALUATION.md).
+Standard benchmark, sealed (run once): 61.0% answered, 99.0% of those within 50 m. Cross-city risk queries with no city given: wrong-city answers 12.0% (10.2-14.1) without the gate, 2.8% (2.0-4.0) with it. True address missing (dev): 91.3% of confident answers right. Dubai/Sharjah/Ajman POI calibration (dev) ECE 0.110 (was 0.069 on v2.0: a regression, see EVALUATION.md).
 <!-- RESULTS:model_card END -->
 
 ## Known limitations
