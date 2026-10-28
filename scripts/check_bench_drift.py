@@ -25,7 +25,7 @@ from tahdeed.bench import DATA, RESULTS, ROOT, read_predictions, score
 from tahdeed.bench_report import render
 
 TOL = 1e-9
-SAMPLED = {"nominatim"}
+SAMPLED = {"nominatim", "photon"}
 
 
 def _diff(a, b, path: str = "") -> list[str]:
@@ -92,6 +92,9 @@ def check(data: Path = DATA, results: Path = RESULTS, report: Path | None = None
 
 def main() -> int:
     problems = check(report=ROOT / "docs" / "BENCH_REPORT.md")
+    ext_data, ext_results = ROOT / "bench" / "data_external", ROOT / "bench" / "results_external"
+    if (ext_data / "MANIFEST.json").exists():  # OpenStreetMap independent sets, same rules
+        problems += [f"[external] {p}" for p in check(data=ext_data, results=ext_results)]
     for p in problems:
         print("DRIFT", p)
     print("bench drift check:", "FAIL" if problems else "OK (data, scores and report reproduce)")
