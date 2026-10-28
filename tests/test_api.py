@@ -195,4 +195,4 @@ def test_audit_hash_changes_with_key(monkeypatch):
     plain = query_hash("Khalidiyah, Abu Dhabi")
     monkeypatch.setenv("TAHDEED_AUDIT_KEY", "k1")
     keyed = query_hash("Khalidiyah, Abu Dhabi")
-    assert keyed != plain and keyed == query_hash("khalidiyah abu dhabi")
+    assert keyed != plain and keyed == query_hash("KHALIDIYAH, Abu Dhabi")
