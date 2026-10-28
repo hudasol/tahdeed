@@ -14,7 +14,7 @@ def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else list(argv)
     # `bench build|baseline|baselines|score|report|fetch-external` is Gulf-AddressBench; bare
     # `bench` stays the latency test.
-    bench_cmds = {"build", "baseline", "score", "report", "fetch-external"}
+    bench_cmds = {"build", "baseline", "baselines", "score", "report", "fetch-external"}
     if args[:1] == ["bench"] and args[1:2] and args[1] in bench_cmds:
         from .bench import main as bench_main
 
