@@ -298,3 +298,22 @@ found only in Overture has no independent truth here.
 Decision rule, fixed now: neither source is merged into the shipped gazetteer in this session. A
 merge needs a resolver evaluation whose truth is not the supplement itself; the measurement above
 only sizes the opportunity and checks the licences.
+
+## Phase 3, decision order: valid fine candidates against coarse ones
+
+Written and committed before the change or its evaluation. Defect seen in use: for "Mall of the
+Emirates Dubai" the answer was the city centroid (city p_valid 0.96) although the mall itself was a
+candidate (p_valid 0.56), because the approximate branch of `decide()` only looks at fine candidates
+when no coarse candidate is trusted. Change: in that branch, a fine candidate whose p_valid is at
+least `FINE_PREFER` (0.40) is returned as the approximate answer ahead of a coarse one. The resolved
+branch (fine p50 at or above tau) is untouched. Evaluation: `tahdeed eval` on the dev split (same
+command and sample as `docs/eval.json`), before and after, plus a fixed list of 40 landmark and street
+queries typed by hand for use, which is a dogfooding list and not a benchmark.
+
+| # | Prediction |
+|---|---|
+| D1 | Resolved precision and the resolved share on dev change by less than 0.3 points (the resolved branch is not touched) |
+| D2 | Approximate answers that are POI or address candidates rise from their current share by at least 2 points of all queries |
+| D3 | Median error of the approximate answers falls (a POI is closer than a city centroid when right) but the share of approximate answers farther than 1 km from truth rises by under 2 points |
+| D4 | Wrong city of all dev queries stays inside the interval already published (2.3 to 3.9%) |
+| D5 | "Mall of the Emirates Dubai" returns the POI, not the city |
