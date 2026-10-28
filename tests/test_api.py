@@ -167,3 +167,22 @@ def test_strict_mode_fails_at_startup(tmp_path, monkeypatch):
     monkeypatch.setattr(api, "load_resolver", boom)
     with pytest.raises(service.ModelMismatch), TestClient(api.create_app()):
         pass
+
+
+def test_request_id_is_validated_and_headers_on_errors(resolver):
+    client = _client(resolver)
+    r = client.get("/health", headers={"x-request-id": "bad id\twith spaces"})
+    assert r.headers["x-request-id"] != "bad id\twith spaces"
+    ok = client.get("/health", headers={"x-request-id": "abc-123"})
+    assert ok.headers["x-request-id"] == "abc-123"
+    big = client.post("/resolve", content=b"x", headers={"content-length": "99999999"})
+    assert big.status_code == 413
+    assert "x-content-type-options" in big.headers and "x-request-id" in big.headers
+
+
+def test_batch_csv_neutralises_formulas(resolver):
+    client = _client(resolver)
+    body = b'address\n=HYPERLINK("http://x")\n'
+    r = client.post("/resolve/batch", files={"file": ("a.csv", body, "text/csv")})
+    assert r.status_code == 200
+    assert "\n\"'=HYPERLINK" in r.text
