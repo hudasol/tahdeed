@@ -39,6 +39,9 @@ FEATURES = [
 ]  # fmt: skip
 
 MIN_VALID = 0.15  # below this, even the best coarse candidate is not trusted
+# A fine candidate at or above this p_valid is offered as the approximate answer even when a
+# coarse candidate (a city, say) is more likely to be "valid" in the loose sense.
+FINE_PREFER = 0.40
 
 
 def featurize(c: Candidate) -> list[float]:
@@ -238,6 +241,9 @@ def decide(resolver, text, pq, spans, cands, ctx, notes) -> Resolution:
             ctx["city_gate"] = [top, *city_rivals]
         else:
             status = "resolved"
+    elif fine and (fine[0].p_valid or 0.0) >= FINE_PREFER:
+        best, status = fine[0], "approximate"
+        alts = [c for c in (fine[1:3] + trusted) if c is not best][:3]
     elif trusted:
         # most specific trusted tier, best p_valid within it
         tier0 = trusted[0].tier
