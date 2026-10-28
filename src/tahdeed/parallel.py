@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import multiprocessing as mp
 import time
 
@@ -86,6 +87,10 @@ def _eval_one(q: Query):
 
 
 def _pool(g, ranker, radii, workers, flags=None):
+    # Move the loaded gazetteer (millions of tuples) out of the collector's reach: otherwise each
+    # full collection while results stream in rescans it, and the parent's result thread can
+    # fall far behind the workers. Pure performance; no effect on any result.
+    gc.freeze()
     ctx = mp.get_context("fork")
     return ctx.Pool(workers, initializer=_init_worker, initargs=(g, ranker, radii, flags))
 
@@ -96,3 +101,60 @@ def run_pool(fn, queries, g, ranker=None, radii=None, workers=2, flags=None):
         return [fn(q) for q in queries]
     with _pool(g, ranker, radii, workers, flags) as p:
         return p.map(fn, queries, chunksize=64)
+
+
+def _cc_one(q: Query):
+    """Cross-city outcome for one query (see ``crosscity.summarize_cc``)."""
+    from .resolve import candidate_city
+
+    assert _R is not None and _G is not None
+    ha, hp = _hide(q)
+    res = _R.resolve(q.text, ha, hp)
+    b = res.best
+    t = truth_of(_G, q)
+    out = {
+        "stratum": q.extra["stratum"],
+        "evidence": q.extra["evidence"],
+        "status": res.status,
+        "truth_majority": q.extra.get("truth_majority"),
+        "pair": q.extra["pair"],
+        "city_gate": any(a.startswith("Which city?") for a in res.asks),
+        "answer_city": None,
+        "wrong_city": False,
+        "within50": False,
+        "p50": None,
+        "tier": None,
+        "text": q.text,
+    }
+    if b is not None:
+        ac = candidate_city(_G, b)
+        out.update(answer_city=ac, wrong_city=bool(ac and ac != t.city), tier=b.tier, p50=b.p50,
+                   within50=haversine_m(b.lat, b.lon, t.lat, t.lon) <= 50.0)  # fmt: skip
+    return out
+
+
+def _clarify_one(q: Query):
+    """E0 query: status as asked, then (if the city gate asked) status with the true city given."""
+    from .resolve import candidate_city
+
+    assert _R is not None and _G is not None
+    ha, hp = _hide(q)
+    t = truth_of(_G, q)
+    res = _R.resolve(q.text, ha, hp)
+    out = {
+        "stratum": q.extra["stratum"],
+        "evidence": q.extra["evidence"],
+        "pair": q.extra["pair"],
+        "status": res.status,
+        "asked_city": bool(res.city_options),
+        "hinted": None,
+    }
+    if res.city_options and q.extra["evidence"] == "E0":
+        r2 = _R.resolve(q.text, ha, hp, city=t.city)
+        b = r2.best
+        out["hinted"] = {
+            "status": r2.status,
+            "within50": bool(b and haversine_m(b.lat, b.lon, t.lat, t.lon) <= 50.0),
+            "wrong_city": bool(b and candidate_city(_G, b) not in (None, t.city)),
+        }
+    return out

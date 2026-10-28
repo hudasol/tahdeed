@@ -1,0 +1,575 @@
+{
+ "split": "dev",
+ "gazetteer_sha256": "9372f78d9faeeffa0fe4313cb7117b4b90c64b72a8809d4fa907dc815196e0d1",
+ "model_arrays_sha256": "75c07ebea7258c0b2e8734c838e0c8bf44df81e06559320faee26ce2623f07d9",
+ "n_queries": 6590,
+ "groups": {
+  "non_hole": {
+   "n_e0": 1498,
+   "asked_city": {
+    "k": 248,
+    "n": 1498,
+    "rate": 0.16555407209612816,
+    "ci95": [
+     0.14759204343891574,
+     0.1852270767665707
+    ]
+   },
+   "hint_resolved": {
+    "k": 247,
+    "n": 248,
+    "rate": 0.9959677419354839,
+    "ci95": [
+     0.9775165967803217,
+     0.9992878707897703
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 247,
+    "n": 248,
+    "rate": 0.9959677419354839,
+    "ci95": [
+     0.9775165967803217,
+     0.9992878707897703
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 0,
+    "n": 248,
+    "rate": 0.0,
+    "ci95": [
+     -1.734723475976807e-18,
+     0.015254032693566115
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 248,
+    "rate": 0.0,
+    "ci95": [
+     -1.734723475976807e-18,
+     0.015254032693566115
+    ]
+   },
+   "hint_status": {
+    "resolved": 247,
+    "approximate": 1,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 248,
+    "n": 248,
+    "rate": 1.0,
+    "ci95": [
+     0.9847459673064339,
+     1.0
+    ]
+   }
+  },
+  "hole": {
+   "n_e0": 1048,
+   "asked_city": {
+    "k": 128,
+    "n": 1048,
+    "rate": 0.12213740458015267,
+    "ci95": [
+     0.10368063682892172,
+     0.1433542779339095
+    ]
+   },
+   "hint_resolved": {
+    "k": 43,
+    "n": 128,
+    "rate": 0.3359375,
+    "ci95": [
+     0.25995249746191124,
+     0.42148340744215546
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 41,
+    "n": 128,
+    "rate": 0.3203125,
+    "ci95": [
+     0.24572896282451612,
+     0.40536750445136643
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 2,
+    "n": 128,
+    "rate": 0.015625,
+    "ci95": [
+     0.004295359707748747,
+     0.055182073818543405
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 128,
+    "rate": 0.0,
+    "ci95": [
+     0.0,
+     0.02913799589810803
+    ]
+   },
+   "hint_status": {
+    "resolved": 43,
+    "approximate": 85,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 128,
+    "n": 128,
+    "rate": 1.0,
+    "ci95": [
+     0.9708620041018919,
+     0.9999999999999999
+    ]
+   }
+  },
+  "named_collision": {
+   "n_e0": 450,
+   "asked_city": {
+    "k": 1,
+    "n": 450,
+    "rate": 0.0022222222222222222,
+    "ci95": [
+     0.00039237445876736613,
+     0.012479076725963167
+    ]
+   },
+   "hint_resolved": {
+    "k": 1,
+    "n": 1,
+    "rate": 1.0,
+    "ci95": [
+     0.20654329147389294,
+     1.0
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 1,
+    "n": 1,
+    "rate": 1.0,
+    "ci95": [
+     0.20654329147389294,
+     1.0
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 0,
+    "n": 1,
+    "rate": 0.0,
+    "ci95": [
+     0.0,
+     0.7934567085261071
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 1,
+    "rate": 0.0,
+    "ci95": [
+     0.0,
+     0.7934567085261071
+    ]
+   },
+   "hint_status": {
+    "resolved": 1,
+    "approximate": 0,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 1,
+    "n": 1,
+    "rate": 1.0,
+    "ci95": [
+     0.20654329147389294,
+     1.0
+    ]
+   }
+  },
+  "named_hole": {
+   "n_e0": 450,
+   "asked_city": {
+    "k": 101,
+    "n": 450,
+    "rate": 0.22444444444444445,
+    "ci95": [
+     0.18832083027882257,
+     0.26523300876986755
+    ]
+   },
+   "hint_resolved": {
+    "k": 34,
+    "n": 101,
+    "rate": 0.33663366336633666,
+    "ci95": [
+     0.2519643423829841,
+     0.4332751045541095
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 33,
+    "n": 101,
+    "rate": 0.32673267326732675,
+    "ci95": [
+     0.2430773845289514,
+     0.4230856652528146
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 1,
+    "n": 101,
+    "rate": 0.009900990099009901,
+    "ci95": [
+     0.001749866201761846,
+     0.05396847460951917
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 101,
+    "rate": 0.0,
+    "ci95": [
+     -3.469446951953614e-18,
+     0.03664194365595336
+    ]
+   },
+   "hint_status": {
+    "resolved": 34,
+    "approximate": 67,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 101,
+    "n": 101,
+    "rate": 1.0,
+    "ci95": [
+     0.9633580563440465,
+     0.9999999999999998
+    ]
+   }
+  },
+  "named_unique": {
+   "n_e0": 450,
+   "asked_city": {
+    "k": 247,
+    "n": 450,
+    "rate": 0.5488888888888889,
+    "ci95": [
+     0.502691915390203,
+     0.5942582099398681
+    ]
+   },
+   "hint_resolved": {
+    "k": 246,
+    "n": 247,
+    "rate": 0.9959514170040485,
+    "ci95": [
+     0.9774270105030037,
+     0.9992849862311902
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 246,
+    "n": 247,
+    "rate": 0.9959514170040485,
+    "ci95": [
+     0.9774270105030037,
+     0.9992849862311902
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 0,
+    "n": 247,
+    "rate": 0.0,
+    "ci95": [
+     -8.673617379884035e-19,
+     0.01531484410879216
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 247,
+    "rate": 0.0,
+    "ci95": [
+     -8.673617379884035e-19,
+     0.01531484410879216
+    ]
+   },
+   "hint_status": {
+    "resolved": 246,
+    "approximate": 1,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 247,
+    "n": 247,
+    "rate": 1.0,
+    "ci95": [
+     0.984685155891208,
+     1.0000000000000002
+    ]
+   }
+  },
+  "numbered_collision": {
+   "n_e0": 148,
+   "asked_city": {
+    "k": 0,
+    "n": 148,
+    "rate": 0.0,
+    "ci95": [
+     0.0,
+     0.02530004952529478
+    ]
+   },
+   "hint_resolved": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_status": {
+    "resolved": 0,
+    "approximate": 0,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   }
+  },
+  "numbered_hole": {
+   "n_e0": 148,
+   "asked_city": {
+    "k": 27,
+    "n": 148,
+    "rate": 0.18243243243243243,
+    "ci95": [
+     0.1285146967549306,
+     0.252419118484108
+    ]
+   },
+   "hint_resolved": {
+    "k": 9,
+    "n": 27,
+    "rate": 0.3333333333333333,
+    "ci95": [
+     0.1864305444359335,
+     0.5217558012789452
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 8,
+    "n": 27,
+    "rate": 0.2962962962962963,
+    "ci95": [
+     0.15852853317647564,
+     0.4848103338083759
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 1,
+    "n": 27,
+    "rate": 0.037037037037037035,
+    "ci95": [
+     0.006567976533097597,
+     0.1828385393415652
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 27,
+    "rate": 0.0,
+    "ci95": [
+     6.938893903907228e-18,
+     0.12455903714463581
+    ]
+   },
+   "hint_status": {
+    "resolved": 9,
+    "approximate": 18,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 27,
+    "n": 27,
+    "rate": 1.0,
+    "ci95": [
+     0.8754409628553641,
+     1.0
+    ]
+   }
+  },
+  "poi": {
+   "n_e0": 450,
+   "asked_city": {
+    "k": 0,
+    "n": 450,
+    "rate": 0.0,
+    "ci95": [
+     8.673617379884035e-19,
+     0.008464627306090936
+    ]
+   },
+   "hint_resolved": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_status": {
+    "resolved": 0,
+    "approximate": 0,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   }
+  },
+  "poi_hole": {
+   "n_e0": 450,
+   "asked_city": {
+    "k": 0,
+    "n": 450,
+    "rate": 0.0,
+    "ci95": [
+     8.673617379884035e-19,
+     0.008464627306090936
+    ]
+   },
+   "hint_resolved": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_within50": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_beyond50": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_resolved_wrong_city": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   },
+   "hint_status": {
+    "resolved": 0,
+    "approximate": 0,
+    "ambiguous": 0,
+    "unresolved": 0
+   },
+   "same_status_as_E2": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci95": [
+     NaN,
+     NaN
+    ]
+   }
+  }
+ }
+}

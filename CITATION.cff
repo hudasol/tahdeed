@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: >-
+  If you use Gulf-AddressBench or the tahdeed resolver, please cite it as below.
+  The benchmark data are derived from OpenStreetMap (ODbL 1.0, "© OpenStreetMap contributors");
+  the code is MIT. No DOI has been minted.
+type: dataset
+title: "Gulf-AddressBench: UAE free text address resolution with abstention, and the tahdeed resolver"
+version: "1.0.0"
+authors:
+  - family-names: Mueen
+    given-names: Huda
+repository-code: "https://github.com/hudasol/tahdeed"
+url: "https://github.com/hudasol/tahdeed/tree/main/bench"
+license:
+  - ODbL-1.0
+  - MIT
+abstract: >-
+  A versioned benchmark for resolving free text UAE addresses (English, Arabic, Arabizi or mixed)
+  to coordinates, where a system may abstain and a confident answer in the wrong place or the
+  wrong city counts against it. All sets except a 40 row hand written set are synthetic, rendered
+  from OpenStreetMap records; truth is the OpenStreetMap point. Includes a cross city set (the same
+  street or POI name in several cities, with and without the true record), a scorer with Wilson
+  intervals, and baseline predictions (tahdeed, a naive fuzzy matcher, a rate limited Nominatim
+  sample) whose scores are checked again in CI.
+keywords:
+  - geocoding
+  - address resolution
+  - Arabic
+  - United Arab Emirates
+  - calibration
+  - abstention
+  - benchmark

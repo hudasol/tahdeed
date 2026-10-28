@@ -1,0 +1,49 @@
+
+address_dev  (n=1500, missing predictions: 0)
+  answered           91.3% [90-93]
+  precision@50m      11.8% [10-14]   (among answered)
+  conf.wrong city    30.8% [28-33]   (among answered)
+  end-to-end@50m     10.7% [9-12]   (abstain = miss)
+  forced@50m/1km     10.7% [9-12] / 11.6% [10-13]
+
+address_sealed  (n=600, missing predictions: 0)
+  answered           93.5% [91-95]
+  precision@50m      11.1% [9-14]   (among answered)
+  conf.wrong city    38.5% [35-43]   (among answered)
+  end-to-end@50m     10.3% [8-13]   (abstain = miss)
+  forced@50m/1km     10.3% [8-13] / 10.7% [8-13]
+
+crosscity_dev  (n=6590, missing predictions: 1800)
+  answered           72.7% [72-74]
+  precision@50m      44.8% [43-46]   (among answered)
+  conf.wrong city    19.7% [19-21]   (among answered)
+  end-to-end@50m     32.5% [31-34]   (abstain = miss)
+  forced@50m/1km     32.5% [31-34] / 36.2% [35-37]
+
+crosscity_sealed  (n=4709, missing predictions: 738)
+  answered           84.3% [83-85]
+  precision@50m      48.8% [47-50]   (among answered)
+  conf.wrong city    19.2% [18-20]   (among answered)
+  end-to-end@50m     41.1% [40-43]   (abstain = miss)
+  forced@50m/1km     41.1% [40-43] / 44.3% [43-46]
+
+gold_handwritten  (n=40, missing predictions: 0)
+  answered           100.0% [91-100]
+  precision@50m      80.0% [65-90]   (among answered)
+  conf.wrong city    0.0% [0-9]   (among answered)
+  end-to-end@50m     80.0% [65-90]   (abstain = miss)
+  forced@50m/1km     80.0% [65-90] / 82.5% [68-91]
+
+hole_dev  (n=600, missing predictions: 0)
+  answered           83.8% [81-87]
+  precision@50m      63.6% [59-68]   (among answered)
+  conf.wrong city    13.3% [11-17]   (among answered)
+  end-to-end@50m     53.3% [49-57]   (abstain = miss)
+  forced@50m/1km     53.3% [49-57] / 55.5% [52-59]
+
+hole_sealed  (n=300, missing predictions: 0)
+  answered           83.7% [79-87]
+  precision@50m      64.9% [59-71]   (among answered)
+  conf.wrong city    10.8% [7-15]   (among answered)
+  end-to-end@50m     54.3% [49-60]   (abstain = miss)
+  forced@50m/1km     54.3% [49-60] / 56.0% [50-62]

@@ -16,6 +16,29 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: pytest --cov=tahdeed --cov-fail-under=70
+  bench-drift:
+    # Gulf-AddressBench: the committed data, prediction files, score files and docs/BENCH_REPORT.md
+    # must reproduce exactly from each other (no gazetteer or model needed). Fails on any drift.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -c constraints.txt -e .
+      - run: python scripts/check_bench_drift.py
+  docs-regen:
+    # Generated documents must equal what their scripts render from the committed result files.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/make_evaluation_md.py
+      - run: python scripts/make_results_blocks.py
+      - run: python scripts/make_edge_proposal.py
+      - run: git diff --exit-code -- docs README.md
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -24,8 +47,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pip-audit && pip-audit -r constraints.txt --no-deps || true
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t tahdeed:ci .
+  # The image build + smoke test lives in docker.yml (it builds the image as its first step).
