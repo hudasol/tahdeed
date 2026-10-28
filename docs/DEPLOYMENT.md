@@ -433,9 +433,11 @@ manifest, writes each to a temporary file, and keeps it only if its SHA-256 equa
 value (and its size, when given). On a mismatch it raises `FetchError` and removes the file.
 Remote URLs must use HTTPS. Files already present with a matching hash are not downloaded again.
 
-`base_url` is the directory that holds the assets, for example
-`https://github.com/<owner>/tahdeed/releases/download/v2.0.0`. Each file is requested at
-`<base_url>/<name>`.
+`base_url` is the directory that holds the assets. The default, used by `tahdeed fetch`, is the
+`data` branch of the repository, `https://raw.githubusercontent.com/hudasol/tahdeed/data`, which is an
+orphan branch with no shared history (the gazetteer is 50 MB, below GitHub's 100 MB file limit). A
+release works the same way, for example `https://github.com/<owner>/tahdeed/releases/download/v2.1.0`.
+Each file is requested at `<base_url>/<name>`.
 
 Manifest schema (version 1):
 
