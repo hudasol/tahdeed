@@ -374,7 +374,7 @@ decision order change) and after, plus the same hand typed list of 40 queries.
 
 | # | Prediction | Result |
 |---|---|---|
-| S1 | "Sheikh Zayed Road Dubai" no longer returns a POI | _pending_ |
-| S2 | Resolved share and resolved precision at 50 m on the three dev sets each move by less than 0.3 points | _pending_ |
-| S3 | Forced top 1 within 1 km on Dubai POI does not fall by more than 0.5 points | _pending_ |
-| S4 | Wrong city of all (crosscity dev, margin 0.35) is unchanged | _pending_ |
+| S1 | "Sheikh Zayed Road Dubai" no longer returns a POI | **Hit**: the answer is now the city of Dubai (approximate); no POI is returned |
+| S2 | Resolved share and resolved precision at 50 m on the three dev sets each move by less than 0.3 points | **Hit**: largest move is 0.1 points (coverage hole resolved precision 87.83% to 87.92%) |
+| S3 | Forced top 1 within 1 km on Dubai POI does not fall by more than 0.5 points | **Hit**: it rose, 79.00% to 79.07% |
+| S4 | Wrong city of all (crosscity dev, margin 0.35) is unchanged | **Hit** on wrong city counts (identical). Coverage at E2 fell by 13 of 2,546 queries (888 to 875), a cost of 0.5 points that I did not predict |

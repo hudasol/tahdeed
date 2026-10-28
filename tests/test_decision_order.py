@@ -47,3 +47,12 @@ def test_approximate_poi_radius_is_not_a_door():
     c.radius_m = 25.0
     Resolver._apply_radius(rs, c, "resolved")
     assert c.radius_m == 25.0
+
+
+def test_skeleton_only_poi_is_not_a_name_match():
+    from tahdeed.resolve import _poi_named
+
+    adib = (1, "ADIB", None, "ADIB", "bank", None, "dubai", None, 25.0, 55.0, "n1")
+    dubai = (2, "Dubai", None, None, "x", None, "dubai", None, 25.0, 55.0, "n2")
+    assert not _poi_named(adib, "dubai")
+    assert _poi_named(dubai, "dubai")
