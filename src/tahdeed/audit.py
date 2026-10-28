@@ -1,13 +1,15 @@
 """Privacy-preserving audit logging.
 
-Addresses are personal data. By default only a salted-free SHA-256 of the *normalised* query is
-logged (enough to correlate repeats and debug, not to read the address). Raw text is logged only
-when ``TAHDEED_LOG_RAW=1`` is set explicitly.
+Addresses are personal data. By default only a hash of the *normalised* query is logged, enough to
+correlate repeats and debug. Without ``TAHDEED_AUDIT_KEY`` this is a plain SHA-256, which someone
+holding the log could test guesses against; with the key set it is an HMAC-SHA-256 and cannot be
+tested without the key. Raw text is logged only when ``TAHDEED_LOG_RAW=1`` is set explicitly.
 """
 
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import logging
 import os
@@ -20,7 +22,11 @@ log = logging.getLogger("tahdeed.audit")
 
 
 def query_hash(text: str) -> str:
-    return hashlib.sha256(normalize_text(text or "").encode("utf-8")).hexdigest()[:16]
+    data = normalize_text(text or "").encode("utf-8")
+    key = os.environ.get("TAHDEED_AUDIT_KEY")
+    if key:
+        return hmac.new(key.encode("utf-8"), data, hashlib.sha256).hexdigest()[:16]
+    return hashlib.sha256(data).hexdigest()[:16]
 
 
 def record(

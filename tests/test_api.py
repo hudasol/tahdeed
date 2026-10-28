@@ -186,3 +186,13 @@ def test_batch_csv_neutralises_formulas(resolver):
     r = client.post("/resolve/batch", files={"file": ("a.csv", body, "text/csv")})
     assert r.status_code == 200
     assert "\n\"'=HYPERLINK" in r.text
+
+
+def test_audit_hash_changes_with_key(monkeypatch):
+    from tahdeed.audit import query_hash
+
+    monkeypatch.delenv("TAHDEED_AUDIT_KEY", raising=False)
+    plain = query_hash("Khalidiyah, Abu Dhabi")
+    monkeypatch.setenv("TAHDEED_AUDIT_KEY", "k1")
+    keyed = query_hash("Khalidiyah, Abu Dhabi")
+    assert keyed != plain and keyed == query_hash("khalidiyah abu dhabi")
