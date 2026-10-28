@@ -1,0 +1,32 @@
+name: docker
+# Builds the image and smoke-tests it (scripts/docker_smoke.sh): strict-mode start from a read-only
+# /data mount, /health, /resolve (English + Arabic), no PII in container logs, non-root, no
+# capabilities, read-only root filesystem, and HTTP 429 from the rate limiter.
+on: [push, pull_request]
+permissions:
+  contents: read
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # the smoke data (tiny gazetteer + model) is trained from tests/fixtures/mini.sqlite
+      - run: pip install -e ".[train]"
+      - run: scripts/docker_smoke.sh
+        env:
+          SMOKE_LOG_DIR: smoke-logs
+      - name: Upload container logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-smoke-logs
+          path: smoke-logs/
+          if-no-files-found: ignore
+          retention-days: 7

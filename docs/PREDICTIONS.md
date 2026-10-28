@@ -87,3 +87,214 @@ faster loading, so small movements are expected.
 | F5 | Landmark queries on sealed: within 200 m at least 65% | **Hit**: 75.8% (0.0% with the tier off) |
 | F6 | Load time ≤ 10 s; median latency ≤ 9 ms | **Hit**: load 8.0 s (was 18.8 s), median 5.8 ms, p99 17.5 ms, 156 q/s single core, RSS 490 MB |
 | F7 | Final model's dev numbers show no regression greater than 1 point on any Round 4 headline (interior-type guard is not a net loss) | **Near miss**: everything improved (held-out resolved 67.2% → 69.4%, top-1 70.1% → 72.7%, v2 top-1 61.0% → 64.4%, Arabizi 48.8% → 51.3%) except landmark top-1 within 200 m, 75.3% → 74.2% (−1.1) |
+
+# Phase 2 (branch `phase2-crosscity-bench`)
+
+## Goal 1: cross-city confident-wrong answers
+
+Written and committed **before any query of the cross-city set was run**. The set
+(`src/tahdeed/crosscity.py`) is synthetic, rendered from OSM records, paired across evidence levels
+(E0 street only, E1 + district, E2 + city). Dev split is used to choose the gate margin; the sealed
+split is run once for the chosen margin. "Confident" means status `resolved`. Metrics: coverage
+(share resolved), confident-wrong-city rate (wrong city among resolved), wrong-city-of-all
+(resolved and wrong city, over all queries). All with Wilson 95% intervals.
+
+| # | Prediction | Result |
+|---|---|---|
+| C1 | Before the gate (v2.0 behaviour), named streets at E0: confident-wrong-city rate among resolved is at least 10% | **Miss**: 0.0% (Wilson 95% CI 0-1%), 48% of queries resolved |
+| C2 | Numbered streets at E0 ("Street 5") have a confident-wrong-city rate at least twice that of named streets at E0 | **Miss**: 0.0% (CI 0-3%) vs 0.0%: nothing to compare |
+| C3 | E2 (city given) control: confident-wrong-city rate at most 2% for named streets | **Hit**: 0.0% (CI 0-1%) |
+| C4 | A city-evidence gate (abstain and ask which city when a rival in another city scores at least `margin` × the top) at the best margin cuts named-street E0 confident-wrong-city by at least 60% relative | **Untestable**: baseline rate was already 0 |
+| C5 | The same gate costs at least 20% of E0 coverage (relative) on named streets: the cut is not free | **Miss**: the gate changed named-street E0 coverage by under 1 point at every margin down to 0.05 (it fired on 1% of queries at 0.05) |
+| C6 | E2 control outcomes change by no more than 0.5 points of coverage under the gate | **Hit**: unchanged |
+| C7 | Standard held-out dev benchmark: resolved share drops by at most 2 points and resolved precision moves by at most ±0.3 points | **Hit** (trivially): 69.7% / 98.7% at margins 0.9-0.1; 69.2% / 98.8% at 0.05 |
+| C8 | Candidate diversification alone (gate off) moves the standard held-out headline by at most 0.5 points | **Hit**: identical to baseline |
+| C9 | The margin chosen on dev transfers to sealed: the wrong-city-rate difference between dev and sealed is inside the combined interval | **Not run**: no margin was worth choosing on this set |
+| C10 | POI chain names at E0 (no city): the gate lowers confident-wrong-city by a smaller relative amount than for streets (POIs often have several instances in one city, so the ambiguity is not only about city) | **Untestable**: POI E0 resolved only 2% of the time, 0 wrong |
+
+**What this first run (set v1, `docs/crosscity_v1_dev.json`) actually showed.** On queries whose street
+*name* exists in several cities, the v2.0 system already made no confident wrong-city answers (0%,
+upper bound 1%). Reason found by reading the set, not by tuning: a house number almost always
+identifies one city, because the same (street, number) pair rarely exists in two cities. My set did
+not exercise the real failure. The real exposures are (a) the same (street, number) in two cities
+(collision), and (b) the true address missing from the registry while another city has that
+(street, number) (hole with rival). The gold-set failure ("6 شارع الديرة الطوية" answered in Abu Dhabi
+instead of Al Ain) is neither: it is a fuzzy span matching a different street. It is kept as a
+regression case. Set v2 below is therefore designed **after** seeing v1's result; v1 stays in the
+record as a null result.
+
+### Goal 1, set v2: collisions and registry holes with a rival city
+
+Written and committed before any v2 query is run. Strata: `*_collision` (the same street and number
+exist in at least two cities, truth present), `*_hole` (truth hidden from the index, another city has
+the same street and number), `named_unique` (control: number exists in one city only), `poi` and
+`poi_hole` (same name in several cities). Evidence levels E0/E1/E2 as before. "Risk cells" =
+collision + hole strata at E0.
+
+| # | Prediction | Result |
+|---|---|---|
+| D1 | Baseline (v2.0 behaviour): confident-wrong-city among resolved in the risk cells at E0 is at least 15% | **Hit, far past it**: 97.6% (Wilson 95-99%) of the 15.1% of risk queries that were resolved were in the wrong city; that is 14.7% of all risk queries (n=1,646, dev) |
+| D2 | Hole strata have a higher confident-wrong-city rate than collision strata at E0 (a hidden truth leaves only the rival to answer) | **Hit**: named holes 98.4% (27% resolved) vs named collisions 33% (1% resolved, n=6 resolved: wide interval). The system already abstains on collisions; the exposure is holes |
+| D3 | Control (`named_unique`, E0) confident-wrong-city is at most 1% | **Hit**: 0.3% (CI 0-2%), 76.4% resolved |
+| D4 | E2 (city given) confident-wrong-city in the risk strata is at most 3% | **Hit**: 1.6% (CI 1-3%) |
+| D5 | There is a gate margin that cuts risk-cell E0 confident-wrong-city by at least 50% relative while losing at most 25% of risk-cell E0 coverage (relative) | **Miss**: the rate among resolved barely moves (97.6% → 95-96%) because the gate removes correct and wrong answers alike; in absolute exposure (wrong-city-of-all) margin 0.5 cuts 14.7% → 7.6% (-48%) at -48% coverage, margin 0.25 cuts to 6.0% (-59%) at -58% coverage. It never goes below 5.4%: those rivals are invisible |
+| D6 | The same margin changes the control stratum (`named_unique`) E0 coverage by at most 3 points | **Miss, badly**: 76.4% → 33.3% at margin 0.5, 15.6% at 0.25. An exact hit whose record is present is indistinguishable from one whose record is missing |
+| D7 | The same margin changes standard held-out dev coverage by at most 1.5 points and precision by at most ±0.3 | **Miss**: 69.7% → 65.5% resolved at margin 0.5 (62.1% at 0.25, 51.8% at 0.02); precision 98.7% → 98.8-99.1% |
+| D8 | Diversification alone (gate off) changes the standard held-out headline by at most 0.5 points | **Hit**: identical to baseline on every cell |
+| D9 | At the margin chosen on dev, the sealed risk-cell wrong-city rate is not significantly different from dev (intervals overlap) | **Hit** (sealed run once, after the final model): risk-cell wrong-city-of-all 2.8% (CI 2.0-4.0%) vs dev 3.0% (2.3-3.9%); baseline 12.0% (10.2-14.1%); standard-benchmark coverage 64.7%→61.0% (−3.6 pts), precision 98.9%→99.0%. Sealed numbered strata remain tiny (n=3), so only the pooled risk cell is quoted. |
+| D10 | Hole strata at E0 remain the hardest: even with the gate, confident-wrong-city in them stays above 3% (a gate cannot see a rival that scores low) | **Hit**: 75-98% at every margin down to 0.02 |
+
+### Goal 1, round 2: the calibrated alternative to a heuristic gate
+
+Written and committed **before the retrain**. First dev run of set v2 (recorded in the table above as the
+D-results) showed the heuristic city gate trades coverage for exposure almost one for one, because an
+exact hit whose true record is missing looks identical to one whose record is present. The principled fix
+is to give the ranker the evidence and the training examples so that its calibrated probability falls
+where the evidence is thin, and abstention then comes from the ordinary threshold `tau`. Changes:
+two new candidate features (`name_n_cities`, the number of cities the street or POI name occurs in; and
+`city_share`, the share of the name's instances in the candidate's city) and cross-city queries from the
+*train* and *calibration* districts added to the training mix. Dev and sealed districts are untouched.
+
+| # | Prediction (model retrained; gate **off** unless stated) | Result |
+|---|---|---|
+| E1 | Risk cells at E0: confident-wrong-city among resolved falls from 97.6% to at most 60% | **Miss**: 98.2% (CI 95-99%) of resolved risk-E0 answers are still wrong-city. The model learned to answer less (coverage 14.8%→10.3%) but not to answer *differently*: when it resolves, it is on holes. |
+| E2 | Risk cells at E0: wrong-city-of-all falls by at least 50% relative to the v2.0 baseline | **Miss**: 14.7%→10.1% wrong-of-all, a 31% relative cut (target 50%). |
+| E3 | Control `named_unique` at E0 keeps at least 45% coverage (baseline 76%); i.e. cheaper than heuristic gate at margin 0.5 (33%) for a similar exposure cut | **Hit**: 72.4% coverage (CI in JSON) vs 76.4% baseline. Caveat: the retrained model barely moved this control; the heuristic gate at 0.35 costs far more (30.9%). |
+| E4 | Standard held-out dev benchmark: resolved share within ±2 points of 69.7%, precision within ±0.3 | **Partial**: coverage 69.2% (within ±2 of 69.7%) hit; precision 99.08% vs 98.71% is +0.37, outside the ±0.3 band (in the good direction), so strictly a miss. |
+| E5 | E2 (city given) risk-stratum confident-wrong-city stays at most 2% and coverage within 1 point of baseline | **Miss**: confident-wrong-city 0.8% (hit) but coverage fell 26.1%→22.2% (−3.9 points; target ≤1). |
+| E6 | Adding the heuristic gate at margin 0.35 on top of the retrained model reduces risk-cell wrong-city-of-all by at most 20% further (relative): the model has absorbed most of it | **Miss** (in the informative direction): the gate still cuts risk wrong-of-all 10.1%→3.0% (−70% relative). The model did NOT absorb the gate's job; the gate remains the main protection. |
+| E7 | Hole strata at E0 still have more than 50% wrong-city among resolved: the registry does not contain the evidence | **Hit**: named holes at E0 are 99.1% wrong-city among resolved. Missing registry evidence cannot be recovered by a calibrator. |
+| E8 | ECE of P(within 50 m) on risk cells at E0 (resolved-tier candidates) at most 0.10 | **Miss**: ECE 0.222 on risk-E0 (named holes 0.398). The cell is selected on a hidden variable (record missing), so per-cell ECE is expected to be large; the mixture cell `all/E0` has ECE 0.083 and the standard benchmark 0.037. |
+
+## Phase 2, T1: Dubai POI calibration regression (v2.0 to v2.1)
+
+Written and committed **before any model below was trained or scored**. Observation that prompted it
+(dev, published files): Dubai/Sharjah/Ajman POI ECE of P(within 50 m) rose from 0.069 (v2.0) to 0.105
+(v2.1) and the answered (resolved) share fell from 72.8% to 63.3%. The published reliability table
+shows the v2.1 model *underconfident* in the middle: bins 0.3 to 0.9 hold 364 queries whose
+accuracy is 68% to 98%, against 302 in v2.0. Four things changed between the two: the features
+`name_n_cities` and `city_share`, the cross city training mix, diversification of candidates across
+cities, and the city gate.
+
+**Data snapshot changes here.** The OSM extract used for every published number (2026-10-09, sha256
+`875a1a23...`) is no longer offered by the mirror, which keeps only the latest file. Everything in
+this section is run on the 2026-10-15 extract (sha256 `a0d00fee...`), with every model retrained on
+it, so comparisons inside this section are like for like. Published sealed numbers stay on the old
+snapshot and are labelled as such.
+
+**Hypothesis H1.** The ECE rise comes from the cross city training mix, specifically its `poi_hole`
+stratum: a POI name present in several cities with the true POI hidden, at E0 and at E2. Those rows
+label multi city chain names as wrong, so the model lowers P(within 50 m) for correct Dubai chain
+POIs. The features alone carry little signal without those rows. The gate cannot move the top fine
+candidate's p50, so it does not move ECE, but it does cut the answered share (more "ambiguous").
+
+**Models** (dev split only; one training seed, 0, for each, as for every published model; intervals
+are bootstrap or Wilson over queries and do not include training variance):
+
+| Model | features `name_n_cities`, `city_share` | cross city mix | `poi_hole` rows |
+|---|---|---|---|
+| M21 | on | on | on (v2.1 as published) |
+| M_nofeat (ablation a) | masked | on | on |
+| M_nomix (ablation b) | on | off | off |
+| M20 | masked | off | off (v2.0 training) |
+| M_nopoihole (fix candidate) | on | on | **off** |
+
+Resolver flags: `shipped` (diversification on, gate on), `gate_off` (ablation c), `v20_flags`
+(diversification off, gate off). Δ = ECE(M21, shipped) minus ECE(M20, v20_flags). Driver:
+`tahdeed ablate-poi`, output `docs/poi_ablation.json`.
+
+| # | Prediction | Result |
+|---|---|---|
+| T1.1 | The regression reproduces on the new snapshot: M21 shipped has POI ECE at least 0.085 and answered share at most 68% | **Hit**: ECE 0.103 (bootstrap 0.090 to 0.117), answered 61.7% |
+| T1.2 | M20 with v20_flags has POI ECE at most 0.080 and answered share at least 69% (v2.0 behaviour reproduces) | **Hit**: ECE 0.066, answered 73.7%. Δ = 0.0375 |
+| T1.3 | Ablation (b), M_nomix shipped, recovers at least 60% of Δ | **Hit**: ECE 0.064, recovers 104% of Δ. The cross city training mix is the cause |
+| T1.4 | Ablation (a), M_nofeat shipped, recovers at most 40% of Δ (features are not the main cause) | **Hit**: ECE 0.102, recovers 2% |
+| T1.5 | Ablation (c), M21 gate_off vs shipped: ECE moves by at most 0.01, answered share rises by at least 3 points | **Hit**: ECE moves by 0.0001; answered 61.7% to 69.6% (+7.9 points) |
+| T1.6 | M21 v20_flags vs gate_off (diversification alone): ECE moves by at most 0.015 | **Hit**: 0.0007 |
+| T1.7 | Fix candidate M_nopoihole shipped: POI ECE at most 0.080 and answered share at least 66%; cross city risk E0 wrong city, % of all (gate 0.35) at most 3.9% (the upper end of the published dev interval) and inside the Wilson interval of M21 on the new snapshot | **Miss**: ECE 0.072 (hit; 83% of Δ recovered) but answered 64.5% (below 66%) and risk E0 wrong city 7.7% (6.5 to 9.1) against M21's 2.2% (1.6 to 3.0): more than three times the exposure |
+| T1.8 | M_nopoihole standard benchmark (crosscity driver, n=3000, gate 0.35): resolved share within ±1.5 points of M21, precision at least 98.8% | **Hit**: 63.3% vs 62.4%, precision 99.1% |
+
+**Adoption rule, fixed now.** Candidates in order: M_nopoihole, then M_nomix. Adopt the first whose
+shipped POI ECE is at least 0.02 below M21's, whose risk E0 wrong city, % of all at gate 0.35 is at
+most 3.9% and inside M21's Wilson interval, and whose standard benchmark precision is at least 98.8%.
+If none qualifies, keep M21 and document the trade off. If time allows, M21 and the adopted model
+are retrained with seeds 1 and 2; the conclusion stands only if the sign of the ECE difference holds
+for every seed.
+
+**Outcome (recorded after the run; `docs/poi_ablation.json`).** H1 holds: the cross city training
+mix causes the POI calibration rise (removing it recovers all of Δ), and its `poi_hole` rows cause
+most of it (83%); the two features and the gate do not move ECE. But the same rows are what make the
+model cautious about names shared across cities for *addresses*: without them, risk E0 wrong city
+exposure at gate 0.35 rises from 2.2% to 7.7% (M_nopoihole) or 6.3% (M_nomix). By the adoption
+rule neither candidate qualifies, so **M21 stays** and the trade off is documented in
+`docs/EVALUATION.md`: better Dubai POI calibration costs roughly three times the wrong city
+exposure on the address risk set. The second and third training seeds were not run (each training
+took about 1.5 hours on the shared machine), so training variance is unmeasured. A fix that leaves
+the address model alone (a separate calibration map for the POI tier, fitted on calibration
+district POI queries) is the next experiment; it was not registered in advance here and was not run.
+
+## Phase 2, T2: answering "Which city?"
+
+Written and committed before the measurement below was run. The resolver, API (`city` field),
+batch (`city` column), CLI (`--city`) and dashboard accept an optional city. It is applied as if
+the user had written the city after the address (the form the ranker saw in training as evidence
+level E2), and a confident answer outside the given city is downgraded to "ambiguous". Measurement
+(`tahdeed clarify`, output `docs/clarify_dev.json`): the cross city dev set (same generator and seed
+as `crosscity_dev`), the model chosen in T1, shipped flags. Take every E0 query that came back
+"ambiguous" with a "Which city?" question; resolve it again with the true city as the hint.
+Hole strata (truth hidden) are reported separately: there the right outcome is *not* to answer.
+
+| # | Prediction | Result |
+|---|---|---|
+| T2.1 | Non hole strata, E0 queries asked "Which city?": with the true city supplied, at least 60% become resolved within 50 m (Wilson interval reported) | **Hit**: 247 of 248, 99.6% (97.8 to 99.9). Asked share 16.6% of 1,498 E0 queries, almost all `named_unique` (247) |
+| T2.2 | Same queries: at most 2% become resolved but more than 50 m away | **Hit**: 0 of 248 (0 to 1.5%) |
+| T2.3 | Hole strata asked "Which city?": with the true city supplied, at most 5% become resolved (any resolved answer there is wrong) | **Miss**: 43 of 128 resolved (33.6%). My premise was wrong too: 41 of the 43 are within 50 m of the hidden record, because another OSM record (a duplicate or a neighbouring entrance) sits that close; 2 are beyond 50 m (1.6%, 0.4 to 5.5). None was in another city |
+| T2.4 | The hinted status equals the status of the same record written with the city in the text (E2) for at least 95% of the asked queries | **Hit**: 376 of 376 (248 non hole, 128 hole). Expected by construction; the downgrade guard never fired |
+
+## Phase 2, T6 (exploratory): last meter entrance proposals
+
+Written and committed before the extraction or the evaluation was run. **Exploratory**: not part of
+any headline claim. Question: given a resolved building point, can open map geometry alone propose
+where a delivery robot or courier should stop? Labels: entrance nodes that OpenStreetMap
+contributors mapped as vertices of a building outline (`entrance=*` or `door=*`), inside the Abu
+Dhabi emirate bounding box. Labels are **OSM derived**, not surveyed and not drawn by me; the
+selection rule is fixed in code. The query point is the outline's centroid, and the mapped
+entrances are hidden from the proposers. Metric: distance from the proposal to the nearest mapped
+entrance of that building, share within 10 m with a Wilson interval. Baselines: the centroid itself
+(simple) and the point of the nearest road closest to the centroid (what a geocoder returns).
+
+| # | Prediction | Result |
+|---|---|---|
+| T6.1 | At least 100 buildings carry a mapped entrance vertex (n is reported) | **Hit**: 242 buildings, 410 entrances (of 587 entrance nodes in the bbox; 199,773 building outlines) |
+| T6.2 | The outline point nearest to the nearest road is within 10 m of a mapped entrance for at least 35% of buildings | **Miss**: 24.0% (19.0 to 29.7) |
+| T6.3 | The centroid is within 10 m for at most 20% | **Miss**: 29.8% (24.3 to 35.8); the labelled buildings are small |
+| T6.4 | The outline proposal's median distance is at least 30% lower than the centroid's | **Miss, reversed**: 24.7 m against 16.3 m for the centroid. Facing the nearest road is not where doors are on these buildings |
+| T6.5 | The nearest road point is within 10 m for at most 25% (a road is not a door) | **Hit**: 11.6% (8.1 to 16.2), median 31.9 m |
+
+**Not predicted, and partly leakage.** The `path_endpoint` proposer (a footway or service way ending
+within 15 m of the outline) is within 10 m of a mapped entrance for 59.9% (53.6 to 65.9) of
+buildings, median 0 m. OSM mappers usually join the footway to the entrance node itself, so on these
+buildings the proposer partly reads the hidden label. It is a real signal in OSM data, but this
+evaluation cannot say how well it works on buildings whose entrances are not mapped.
+
+## Phase 2, T4: Overture Places and GeoNames as Dubai POI supplements
+
+Written and committed before any Overture or GeoNames row was downloaded for this task. Sources:
+Overture Places (latest release on the public bucket; per source licences CDLA Permissive 2.0,
+Apache 2.0, CC0 1.0) and GeoNames `AE` (CC BY 4.0), Dubai bounding box 54.9 to 55.65 E, 24.75 to
+25.45 N. Driver: `scripts/eval_supplements.py`, output `docs/supplements_dubai.json`. "Same name" means
+a shared tahdeed name key (`keys_of`, the matcher the resolver uses). **Mixed truth caveat**: OSM,
+Overture and GeoNames are each someone's claim; agreement between them is not accuracy, and a place
+found only in Overture has no independent truth here.
+
+| # | Prediction | Result |
+|---|---|---|
+| T4.1 | At least 95% of Overture Places rows in the bbox carry only CDLA Permissive 2.0, Apache 2.0 or CC0 1.0 source licences (so they could be added to an ODbL database as contents) | **Hit**: 104,442 of 104,442 |
+| T4.2 | Of OSM Dubai POIs (dev split, named, the truth pool of the POI benchmark), between 30% and 70% have an Overture place with the same name key within 100 m | **Miss**: 185 of 2,034, 9.1% (7.9 to 10.4). Exact name key agreement is rare; names differ in form between the sources, so this understates overlap |
+| T4.3 | For those matched pairs, the median distance is at most 40 m | **Hit**: 17.8 m |
+| T4.4 | At least 50% of Overture Dubai places with confidence at least 0.7 have no OSM POI with the same name key within 500 m (potential coverage gain) | **Hit**: 45,603 of 49,912, 91.4%. Inflated by the same naming mismatch as T4.2: an upper bound on new places, not a count |
+| T4.5 | GeoNames adds little: fewer than 1,000 feature class S rows in the bbox, and fewer than 500 of them without an OSM POI of the same name key within 500 m | **Miss**: 1,890 rows, 1,633 without a same key OSM POI within 500 m |
+
+Decision rule, fixed now: neither source is merged into the shipped gazetteer in this session. A
+merge needs a resolver evaluation whose truth is not the supplement itself; the measurement above
+only sizes the opportunity and checks the licences.

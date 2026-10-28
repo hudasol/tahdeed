@@ -6,10 +6,21 @@ import argparse
 import csv
 import json
 import sys
+from json import dump as json_dump
 from pathlib import Path
 
 
 def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else list(argv)
+    # `bench build|baseline|score|report` is Gulf-AddressBench; bare `bench` stays the latency test.
+    if args[:1] == ["bench"] and args[1:2] and args[1] in {"build", "baseline", "score", "report"}:
+        from .bench import main as bench_main
+
+        return bench_main(args[1:])
+    if args[:1] == ["human"]:
+        from .human import main as human_main
+
+        return human_main(args[1:])
     ap = argparse.ArgumentParser(prog="tahdeed", description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -21,12 +32,21 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--db", default="data/gazetteer.sqlite")
     t.add_argument("--out", default="data/models/ranker.npz")
     t.add_argument("--n-train", type=int, default=30000)
+    t.add_argument("--seed", type=int, default=0, help="query-generation seed (default 0)")
     t.add_argument("--workers", type=int, default=2)
     t.add_argument("--hole-rate", type=float, default=0.30)
+    t.add_argument("--no-crosscity-mix", action="store_true", help="ablation: v2.0 training mix")
+    t.add_argument(
+        "--no-poi-hole", action="store_true", help="cross-city mix without its poi_hole stratum"
+    )
+    t.add_argument(
+        "--mask-features", default="", help="comma list of features held at -1 (ablation)"
+    )
 
     r = sub.add_parser("resolve", help="resolve one address")
     r.add_argument("address")
     r.add_argument("--json", action="store_true")
+    r.add_argument("--city", default=None, help='answer to "Which city?" (key or name)')
 
     ba = sub.add_parser("batch", help="resolve a CSV with an 'address' column")
     ba.add_argument("infile")
@@ -47,9 +67,28 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("verify", help="check gazetteer / model provenance and integrity")
 
+    cc = sub.add_parser("crosscity", help="cross-city confident-wrong-city experiment")
+    cc.add_argument("--split", default="dev")
+    cc.add_argument("--out", default="docs/crosscity_dev.json")
+    cc.add_argument("--margins", default=None, help="comma list; default: the full sweep")
+    ab = sub.add_parser("ablate-poi", help="POI calibration ablation over trained models (dev)")
+    ab.add_argument("models", help="comma list name=path.npz")
+    ab.add_argument("--db", default="data/gazetteer.sqlite")
+    ab.add_argument("--out", default="docs/poi_ablation.json")
+    ab.add_argument("--workers", type=int, default=2)
+    ab.add_argument("--no-crosscity", action="store_true")
+    cl = sub.add_parser("clarify", help='T2: answer "Which city?" with the true city (dev)')
+    cl.add_argument("--db", default="data/gazetteer.sqlite")
+    cl.add_argument("--model", default="data/models/ranker.npz")
+    cl.add_argument("--out", default="docs/clarify_dev.json")
+    cl.add_argument("--workers", type=int, default=2)
     go = sub.add_parser("gold", help="evaluate on the hand-written gold set")
     go.add_argument("--out", default=None)
-    be = sub.add_parser("bench", help="latency, throughput, load time and memory")
+    sub.add_parser("human", help="human-written query set: ingest | evaluate (see bench/human_kit)")
+    be = sub.add_parser(
+        "bench",
+        help="latency, throughput, memory; or `bench build|baseline|score|report` (Gulf-AddressBench)",
+    )
     be.add_argument("--n", type=int, default=2000)
     be.add_argument("--json", action="store_true")
 
@@ -72,21 +111,38 @@ def main(argv: list[str] | None = None) -> int:
         build(a.pbf, a.out)
     elif a.cmd == "train":
         from .gazetteer import Gazetteer
-        from .train import train
+        from .train import MixOptions, train
 
         g = Gazetteer.load(a.db)
+        masked = tuple(x.strip() for x in a.mask_features.split(",") if x.strip())
+        mix = MixOptions(
+            crosscity=not a.no_crosscity_mix,
+            crosscity_poi_hole=not a.no_poi_hole,
+            mask_features=masked,
+        )
         ranker, _ = train(
-            g, n_train=a.n_train, n_calib=a.n_train // 3, workers=a.workers, hole_rate=a.hole_rate
+            g,
+            n_train=a.n_train,
+            n_calib=a.n_train // 3,
+            workers=a.workers,
+            hole_rate=a.hole_rate,
+            mix=mix,
+            seed=a.seed,
         )
         from .model_io import export
 
-        export(ranker, a.out, g.sha256, {"n_train": a.n_train, "hole_rate": a.hole_rate})
+        meta = {"n_train": a.n_train, "hole_rate": a.hole_rate, "seed": a.seed, **mix.manifest()}
+        export(ranker, a.out, g.sha256, meta)
         print(f"saved {a.out}")
     elif a.cmd == "resolve":
         from .service import load_resolver
         from .standardize import resolution_json
 
-        j = resolution_json(load_resolver().resolve(a.address))
+        try:
+            j = resolution_json(load_resolver().resolve(a.address, city=a.city))
+        except ValueError as ex:
+            print(ex, file=sys.stderr)
+            return 2
         if a.json:
             print(json.dumps(j, ensure_ascii=False, indent=2))
         else:
@@ -109,6 +165,30 @@ def main(argv: list[str] | None = None) -> int:
         print("figures:", ", ".join(make_all(a.eval, a.studies, a.out)))
     elif a.cmd == "verify":
         return _verify()
+    elif a.cmd == "crosscity":
+        from .crosscity import MARGINS, run_crosscity
+        from .gazetteer import Gazetteer
+        from .model_io import load as load_model
+
+        g = Gazetteer.load("data/gazetteer.sqlite")
+        rk = load_model("data/models/ranker.npz", gazetteer_sha256=g.sha256)
+        ms = tuple(float(x) for x in a.margins.split(",")) if a.margins else MARGINS
+        res = run_crosscity(g, rk, a.split, margins=ms)
+        with open(a.out, "w") as fh:
+            json_dump(res, fh, indent=1, default=float)
+        print("wrote", a.out)
+    elif a.cmd == "ablate-poi":
+        from .poi_ablation import run as run_ablation
+
+        models = dict(x.split("=", 1) for x in a.models.split(",") if x)
+        run_ablation(models, a.db, a.out, workers=a.workers, crosscity=not a.no_crosscity)
+        print("wrote", a.out)
+    elif a.cmd == "clarify":
+        from .clarify import run as run_clarify
+
+        res = run_clarify(a.db, a.model, a.out, workers=a.workers)
+        print(json.dumps(res["groups"]["non_hole"], default=float)[:400])
+        print("wrote", a.out)
     elif a.cmd == "gold":
         return _gold(a.out)
     elif a.cmd == "bench":
@@ -246,6 +326,9 @@ def _pretty(j: dict) -> None:
         print(f"en    : {b['standard']['en']}\nar    : {b['standard']['ar']}")
     for q in j["asks"]:
         print(f"ask   : {q}")
+    if j.get("city_options"):
+        keys = ", ".join(o["key"] for o in j["city_options"])
+        print(f"retry : add --city with one of: {keys}")
     for n in j["notes"]:
         print(f"note  : {n}")
 

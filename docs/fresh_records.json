@@ -1,0 +1,10 @@
+{
+ "extract": "united_arab_emirates.osm.pbf from download.openstreetmap.fr, Last-Modified 2026-10-15T00:57:57Z, sha256 a0d00feea9f4a928a6e08c50b38eec7019aaaa3fb2f8029b98a588463141c115",
+ "command": "python scripts/fresh_records.py uae.osm.pbf --after 2026-10-09T00:00:00Z",
+ "cutoff": "2026-10-09T00:00:00+00:00",
+ "address_records": 152359,
+ "without_timestamp": 0,
+ "edited_after_cutoff": 10,
+ "created_after_cutoff": 3,
+ "edited_after_cutoff_abu_dhabi_bbox": 3
+}

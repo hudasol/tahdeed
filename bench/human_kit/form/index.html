@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Describe the way - Tahdeed benchmark / صف الطريق</title>
+<style>
+:root{--bg:#f7f5f0;--card:#fff;--ink:#1c1b19;--muted:#615d55;--line:#d9d4c8;--accent:#8a3b1d;--warn:#8a5a00;--warnbg:#fff4d6;--ok:#1f6b3a;--bad:#a1281b}
+@media (prefers-color-scheme:dark){:root{--bg:#171614;--card:#211f1c;--ink:#efece4;--muted:#a8a296;--line:#3a3731;--accent:#e08a5e;--warn:#f0c36a;--warnbg:#3a2f12;--ok:#6fcf93;--bad:#ff8d7e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Tahoma,"Noto Naskh Arabic","Noto Sans Arabic",sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1rem}
+h1{font-size:1.45rem;margin:.2rem 0 .3rem}
+h2{font-size:1.1rem;margin:0 0 .5rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem;margin:0 0 1rem}
+.muted{color:var(--muted);font-size:.92rem}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+button{font:inherit;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:.55rem 1rem;cursor:pointer}
+button.ghost{background:transparent;color:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+label{display:block;margin:.5rem 0 .2rem}
+select,textarea,input[type=file]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.5rem}
+textarea{min-height:6.5rem;resize:vertical}
+.place h3{margin:0;font-size:1.05rem}
+.place .names{display:flex;gap:.8rem;flex-wrap:wrap;align-items:baseline}
+.place .ar{font-size:1.1rem}
+.tag{font-size:.8rem;border:1px solid var(--line);border-radius:99px;padding:.05rem .6rem;color:var(--muted)}
+.row{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.row>*{flex:1 1 12rem}
+.inline{display:flex;align-items:center;gap:.5rem;margin:.4rem 0}
+.inline input{width:auto}
+.warn{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:.5rem .7rem;margin:.4rem 0;font-size:.92rem}
+.draft{border:1px dashed var(--bad);color:var(--bad);border-radius:8px;padding:.4rem .7rem;margin:0 0 1rem;font-size:.88rem}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+[hidden]{display:none!important}
+.consent p{margin:.4rem 0}
+</style>
+</head>
+<body>
+<main>
+<div class="bar">
+  <h1 id="t_title"></h1>
+  <button class="ghost" id="langBtn" type="button" aria-label="Language / اللغة">العربية</button>
+</div>
+<p class="muted" id="t_offline"></p>
+<div class="draft" id="t_draft"></div>
+
+<section class="card consent" id="consentCard">
+  <h2 id="t_consent_h"></h2>
+  <div id="t_consent_body"></div>
+  <div class="inline"><input type="checkbox" id="consent"><label for="consent" id="t_consent_cb" style="margin:0"></label></div>
+</section>
+
+<section class="card" id="demoCard">
+  <h2 id="t_demo_h"></h2>
+  <p class="muted" id="t_demo_note"></p>
+  <div class="row">
+    <div><label for="emirate" id="t_emirate"></label><select id="emirate"></select></div>
+    <div><label for="years" id="t_years"></label><select id="years"></select></div>
+  </div>
+</section>
+
+<section class="card" id="howCard">
+  <h2 id="t_how_h"></h2>
+  <div id="t_how_body"></div>
+</section>
+
+<section id="sheet"></section>
+
+<section class="card" id="loadCard" hidden>
+  <h2 id="t_load_h"></h2>
+  <p class="muted" id="t_load_p"></p>
+  <input type="file" id="sheetFile" accept=".json,application/json">
+</section>
+
+<section class="card" id="doneCard">
+  <div id="issues" aria-live="polite"></div>
+  <button type="button" id="dl" disabled></button>
+  <p class="muted" id="t_dl_help"></p>
+  <p id="status" aria-live="polite"></p>
+</section>
+</main>
+
+<!-- Organiser: assign.py (--form) replaces the JSON below with {"<code>": {...5 places...}}. No coordinates or addresses are ever embedded. -->
+<script id="assignments" type="application/json">{}</script>
+
+<script>
+"use strict";
+(function(){
+var CONSENT_VERSION="1";
+var EMIRATES=[["","Choose|اختر"],["abu_dhabi","Abu Dhabi|أبوظبي"],["dubai","Dubai|دبي"],["sharjah","Sharjah|الشارقة"],["ajman","Ajman|عجمان"],["umm_al_quwain","Umm Al Quwain|أم القيوين"],["ras_al_khaimah","Ras Al Khaimah|رأس الخيمة"],["fujairah","Fujairah|الفجيرة"],["outside_uae","Outside the UAE|خارج الإمارات"],["prefer_not_to_say","Prefer not to say|أفضل عدم الإجابة"]];
+var YEARS=[["","Choose|اختر"],["lt1","Less than 1 year|أقل من سنة"],["1-5","1 to 5 years|من 1 إلى 5 سنوات"],["6-10","6 to 10 years|من 6 إلى 10 سنوات"],["gt10","More than 10 years|أكثر من 10 سنوات"],["born_here","I was born here|وُلدتُ هنا"],["prefer_not_to_say","Prefer not to say|أفضل عدم الإجابة"]];
+var CATS={mall:["Shopping mall","مركز تسوق"],hospital:["Hospital","مستشفى"],metro:["Metro station","محطة مترو"],university:["University","جامعة"],public_building:["Public building","مبنى عام"],park:["Park","حديقة"]};
+var SCRIPTS=[["","Choose|اختر"],["en","English|إنجليزي"],["ar","Arabic script|عربي"],["arabizi","Arabizi (Arabic in Latin letters)|عربيزي (عربي بحروف لاتينية)"],["mixed","A mix|خليط"]];
+var T={
+en:{title:"Describe the way to a place",
+offline:"This page works offline. It sends nothing anywhere, uses no cookies and no analytics. Your answers stay on your device until you send the downloaded file to the organiser.",
+draft:"TEMPLATE: the organiser must review the consent text, fill in <OWNER_CONTACT> and (if the institution requires it) obtain ethics approval before using this form.",
+consent_h:"Consent",
+consent_body:"<p><b>Purpose.</b> To build an open benchmark of how people in the UAE describe the way to public places, so that address-finding software can be tested on real wording.</p><p><b>What is collected.</b> The free text you write, the language/script you used, and (optional) your emirate of residence and years in the UAE as coarse groups. <b>Not collected:</b> your name, email, phone number or IP address.</p><p><b>Public places only.</b> Never write a home address, a personal phone number, or anything that identifies a person.</p><p><b>Voluntary.</b> You can stop at any time, and you can withdraw before you send your file by simply not sending it. Once sent, the file contains only your code, so it can be removed only if you tell the organiser your code.</p><p><b>Publication.</b> After removing personal details, the descriptions will be published as an anonymised dataset under the CC BY-SA 4.0 licence. Questions: &lt;OWNER_CONTACT&gt;. Full text: CONSENT.md.</p>",
+consent_cb:"I have read this, I am 18 or over, and I agree to take part.",
+demo_h:"About you (optional)",demo_note:"Coarse groups only. You may leave both blank.",emirate:"Emirate where you live",years:"Time living in the UAE",
+how_h:"What to do",
+how_body:"<p>For each place below, write <b>how you would tell a taxi or delivery driver to get there</b>, in your own words, as you would say it on the phone. Use Arabic, English, Arabizi (Arabic in Latin letters) or a mix.</p><ul><li>Write what you would really say: landmarks, which gate, what is opposite or next to it, the area.</li><li>You do <b>not</b> need a perfect address or a map. Do not look anything up.</li><li>If you do not know a place, tick <i>I don't know this place</i>.</li><li>Do not write phone numbers, emails or home addresses.</li></ul>",
+place:"Place",skip:"I don't know this place",ph:"Write what you would tell the driver…",script:"How did you write this? (optional)",
+dl:"Download my responses",dl_help:"This saves a small file on your device. Send that file to the organiser (email, messaging app or USB, as they told you).",
+load_h:"Load your sheet",load_p:"No places are embedded in this page. Choose the sheet file (<code>.json</code>) the organiser gave you.",
+need_consent:"Please tick the consent box.",need_text:"Write at least one description.",
+warn_title:"Please check before downloading:",warn_again:"Press the button again to download anyway (only if each text describes a public landmark, not a person or a home).",
+w_phone:"looks like a phone number or ID",w_email:"looks like an email",w_handle:"looks like a social media handle",w_url:"looks like a web link",w_addr:"may be a home/personal address (villa, flat, my house…)",
+saved:"Saved. Now send the file to the organiser. Thank you!",noplaces:"No places were found in this page or file.",loaded:"Sheet loaded."},
+ar:{title:"صف الطريق إلى مكان",
+offline:"تعمل هذه الصفحة دون اتصال بالإنترنت. لا ترسل أي شيء، ولا تستخدم ملفات تعريف الارتباط ولا أدوات تحليل. تبقى إجاباتك على جهازك حتى ترسل الملف الذي نزّلته إلى المنظّم.",
+draft:"نموذج قابل للتعديل: على المنظّم مراجعة نص الموافقة وتعبئة <OWNER_CONTACT> والحصول على موافقة لجنة الأخلاقيات إن كانت مؤسسته تشترط ذلك قبل استخدام هذا النموذج.",
+consent_h:"الموافقة",
+consent_body:"<p><b>الغرض.</b> بناء مجموعة اختبار مفتوحة توضّح كيف يصف الناس في الإمارات الطريق إلى الأماكن العامة، لاختبار برامج تحديد العناوين على صياغة حقيقية.</p><p><b>ما الذي يُجمع.</b> النص الذي تكتبه، واللغة/الخط الذي استخدمته، و(اختياريًا) إمارة إقامتك ومدة إقامتك في الإمارات ضمن فئات عامة. <b>لا يُجمع:</b> اسمك أو بريدك الإلكتروني أو رقم هاتفك أو عنوان IP.</p><p><b>أماكن عامة فقط.</b> لا تكتب عنوان منزل أو رقم هاتف شخصي أو أي شيء يدل على شخص.</p><p><b>المشاركة طوعية.</b> يمكنك التوقف في أي وقت، ويمكنك الانسحاب قبل إرسال ملفك بعدم إرساله. بعد الإرسال يحتوي الملف على رمزك فقط، ولا يمكن حذفه إلا إذا أخبرت المنظّم برمزك.</p><p><b>النشر.</b> بعد حذف أي بيانات شخصية، ستُنشر الأوصاف كمجموعة بيانات مجهولة المصدر بترخيص CC BY-SA 4.0. للاستفسار: &lt;OWNER_CONTACT&gt;. النص الكامل: CONSENT.ar.md.</p>",
+consent_cb:"قرأت ما سبق، وعمري 18 سنة أو أكثر، وأوافق على المشاركة.",
+demo_h:"عنك (اختياري)",demo_note:"فئات عامة فقط. يمكنك ترك الحقلين فارغين.",emirate:"الإمارة التي تسكن فيها",years:"مدة الإقامة في الإمارات",
+how_h:"المطلوب",
+how_body:"<p>لكل مكان أدناه، اكتب <b>كيف ستشرح لسائق تاكسي أو موصّل طلبات كيف يصل إليه</b>، بكلماتك أنت، كما تقولها في مكالمة هاتفية. يمكنك الكتابة بالعربية أو الإنجليزية أو العربيزي (عربي بحروف لاتينية) أو بخليط منها.</p><ul><li>اكتب ما ستقوله فعلًا: معالم قريبة، أي بوابة، ما المقابل أو المجاور، المنطقة.</li><li><b>لا</b> تحتاج إلى عنوان دقيق ولا إلى خريطة. لا تبحث عن شيء.</li><li>إن كنت لا تعرف المكان فاختر <i>لا أعرف هذا المكان</i>.</li><li>لا تكتب أرقام هواتف أو بريدًا إلكترونيًا أو عناوين منازل.</li></ul>",
+place:"المكان",skip:"لا أعرف هذا المكان",ph:"اكتب ما ستقوله للسائق…",script:"بأي طريقة كتبت؟ (اختياري)",
+dl:"تنزيل إجاباتي",dl_help:"يحفظ هذا ملفًا صغيرًا على جهازك. أرسل الملف إلى المنظّم (بريد أو تطبيق مراسلة أو USB كما أخبرك).",
+load_h:"حمّل ورقة الأماكن",load_p:"لا توجد أماكن مضمّنة في هذه الصفحة. اختر ملف الأماكن (<code>.json</code>) الذي أعطاك إياه المنظّم.",
+need_consent:"يرجى تأشير خانة الموافقة.",need_text:"اكتب وصفًا واحدًا على الأقل.",
+warn_title:"يرجى المراجعة قبل التنزيل:",warn_again:"اضغط الزر مرة أخرى للتنزيل على أي حال (فقط إذا كان كل نص يصف معلمًا عامًا وليس شخصًا أو منزلًا).",
+w_phone:"يشبه رقم هاتف أو هوية",w_email:"يشبه بريدًا إلكترونيًا",w_handle:"يشبه حسابًا على وسائل التواصل",w_url:"يشبه رابطًا إلكترونيًا",w_addr:"قد يكون عنوان منزل/عنوانًا شخصيًا (فيلا، شقة، بيتي…)",
+saved:"تم الحفظ. أرسل الملف الآن إلى المنظّم. شكرًا لك!",noplaces:"لم يتم العثور على أماكن في هذه الصفحة أو الملف.",loaded:"تم تحميل الورقة."}
+};
+var lang=(navigator.language||"en").slice(0,2)==="ar"?"ar":"en";
+var sheet=null, armed=false;
+function $(id){return document.getElementById(id)}
+function pick(s){var p=s.split("|");return lang==="ar"&&p[1]?p[1]:p[0]}
+function fillSelect(el,opts){var cur=el.value;el.innerHTML="";opts.forEach(function(o){var op=document.createElement("option");op.value=o[0];op.textContent=pick(o[1]);el.appendChild(op)});el.value=cur}
+function digits(s){return s.replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-1632}).replace(/[۰-۹]/g,function(c){return c.charCodeAt(0)-1776})}
+var RX={
+ phone:/(?:\+|00)?971[\s-]?\d[\s\d-]{6,}|(?<!\d)(?:\d[\s-]?){7,}\d(?!\d)/,
+ email:/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/,
+ handle:/(?:^|[^\w@])@[\w.]{2,}/,
+ url:/(?:https?:\/\/|www\.)\S+|\b[\w-]+\.(?:com|net|org|ae|me|co|io)\b/i,
+ addr:/\b(?:villa|flat|apt|apartment|my\s+(?:house|home|flat|apartment|villa)|our\s+(?:house|home|villa)|house\s*(?:no|number|#)|bldg\s*(?:no|#)?\s*\d+|bayti|manzili)\b|فيلا|بيتي|بيتنا|منزلي|منزلنا|شقتي|شقة|بيت رقم|منزل رقم/i
+};
+function check(text){var t=digits(text),out=[];Object.keys(RX).forEach(function(k){if(RX[k].test(t))out.push(k)});return out}
+function render(){
+  var d=T[lang];
+  document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+  $("langBtn").textContent=lang==="ar"?"English":"العربية";
+  ["title","offline","draft","consent_h","consent_cb","demo_h","demo_note","emirate","years","how_h","load_h","dl_help"].forEach(function(k){var e=$("t_"+k);if(e)e.textContent=d[k]});
+  $("t_consent_body").innerHTML=d.consent_body;$("t_how_body").innerHTML=d.how_body;$("t_load_p").innerHTML=d.load_p;
+  $("dl").textContent=d.dl;
+  fillSelect($("emirate"),EMIRATES);fillSelect($("years"),YEARS);
+  renderSheet();
+}
+function renderSheet(){
+  var d=T[lang],root=$("sheet");
+  var saved={};document.querySelectorAll("[data-pid]").forEach(function(c){saved[c.dataset.pid]={t:c.querySelector("textarea").value,s:c.querySelector("select").value,k:c.querySelector("input").checked}});
+  root.innerHTML="";
+  if(!sheet||!sheet.places||!sheet.places.length){$("loadCard").hidden=false;return}
+  $("loadCard").hidden=true;
+  sheet.places.forEach(function(p,i){
+    var c=document.createElement("div");c.className="card place";c.dataset.pid=p.place_id;
+    var cat=CATS[p.category]||[p.category,p.category];
+    var h=document.createElement("div");h.className="names";
+    var n=document.createElement("h3");n.textContent=(i+1)+". "+p.name_en;h.appendChild(n);
+    if(p.name_ar){var a=document.createElement("span");a.className="ar";a.lang="ar";a.dir="rtl";a.textContent=p.name_ar;h.appendChild(a)}
+    var tag=document.createElement("span");tag.className="tag";tag.textContent=lang==="ar"?cat[1]:cat[0];h.appendChild(tag);
+    c.appendChild(h);
+    var ta=document.createElement("textarea");ta.placeholder=d.ph;ta.maxLength=600;ta.setAttribute("aria-label",d.place+" "+(i+1));ta.dir="auto";
+    c.appendChild(ta);
+    var w=document.createElement("div");w.className="warn";w.hidden=true;w.setAttribute("role","alert");c.appendChild(w);
+    var ib=document.createElement("div");ib.className="inline";
+    var cb=document.createElement("input");cb.type="checkbox";cb.id="sk"+i;
+    var lb=document.createElement("label");lb.htmlFor=cb.id;lb.style.margin=0;lb.textContent=d.skip;
+    ib.appendChild(cb);ib.appendChild(lb);c.appendChild(ib);
+    var sl=document.createElement("label");sl.textContent=d.script;sl.htmlFor="sc"+i;c.appendChild(sl);
+    var sel=document.createElement("select");sel.id="sc"+i;fillSelect(sel,SCRIPTS);c.appendChild(sel);
+    var s=saved[p.place_id];if(s){ta.value=s.t;sel.value=s.s;cb.checked=s.k}
+    function upd(){ta.disabled=cb.checked;var f=check(ta.value);armed=false;
+      w.hidden=!f.length;w.textContent=f.length?f.map(function(k){return d["w_"+(k==="phone"?"phone":k==="email"?"email":k==="handle"?"handle":k==="url"?"url":"addr")]}).join("; "):"";refresh()}
+    ta.addEventListener("input",upd);cb.addEventListener("change",upd);upd();
+    root.appendChild(c);
+  });
+}
+function collect(){
+  var res=[],flagged=[];
+  document.querySelectorAll("[data-pid]").forEach(function(c){
+    var ta=c.querySelector("textarea"),sk=c.querySelector("input").checked,sc=c.querySelector("select").value,pid=c.dataset.pid;
+    var f=check(ta.value);
+    var r={place_id:pid};
+    if(sk){r.skipped=true}else{r.text=ta.value.trim();if(sc)r.script_self=sc;if(f.length){r.pii_warning_acknowledged=true;flagged.push(pid)}}
+    res.push(r);
+  });
+  return {res:res,flagged:flagged};
+}
+function refresh(){
+  var ok=$("consent").checked&&sheet&&sheet.places&&sheet.places.length;
+  var any=false;document.querySelectorAll("[data-pid]").forEach(function(c){var ta=c.querySelector("textarea");if(!c.querySelector("input").checked&&ta.value.trim().length>=3)any=true});
+  $("dl").disabled=!(ok&&any);
+}
+function download(){
+  var d=T[lang],st=$("status");st.textContent="";st.className="";$("issues").innerHTML="";
+  if(!$("consent").checked){st.textContent=d.need_consent;st.className="bad";return}
+  var c=collect();
+  if(!c.res.some(function(r){return r.text&&r.text.length>=3})){st.textContent=d.need_text;st.className="bad";return}
+  if(c.flagged.length&&!armed){armed=true;$("issues").innerHTML="<div class='warn'><b>"+d.warn_title+"</b> "+d.warn_again+"</div>";return}
+  var doc={schema_version:"1",kit:"tahdeed-human-kit",created:new Date().toISOString().slice(0,10),volunteer_code:sheet.volunteer_code,
+    consent:{agreed:true,version:CONSENT_VERSION},demographics:{emirate_residence:$("emirate").value,years_in_uae:$("years").value},responses:c.res};
+  var blob=new Blob([JSON.stringify(doc,null,2)],{type:"application/json"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tahdeed_responses_"+sheet.volunteer_code+".json";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
+  st.textContent=d.saved;st.className="ok";
+}
+function setSheet(obj){
+  if(obj&&obj.volunteer_code&&Array.isArray(obj.places)&&obj.places.length){sheet=obj;renderSheet();refresh();return true}
+  return false;
+}
+function init(){
+  var emb={};try{emb=JSON.parse($("assignments").textContent||"{}")}catch(e){}
+  var codes=Object.keys(emb);
+  if(codes.length===1)sheet=emb[codes[0]];
+  $("langBtn").addEventListener("click",function(){lang=lang==="ar"?"en":"ar";render()});
+  $("consent").addEventListener("change",refresh);
+  $("dl").addEventListener("click",download);
+  $("sheetFile").addEventListener("change",function(ev){
+    var f=ev.target.files[0];if(!f)return;var r=new FileReader();
+    r.onload=function(){var o=null;try{o=JSON.parse(r.result)}catch(e){}
+      var s=$("status");if(setSheet(o)){s.textContent=T[lang].loaded;s.className="ok"}else{s.textContent=T[lang].noplaces;s.className="bad"}};
+    r.readAsText(f);
+  });
+  render();refresh();
+}
+init();
+})();
+</script>
+</body>
+</html>

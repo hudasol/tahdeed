@@ -1,0 +1,500 @@
+{"id": "address_dev-00000", "abstain": true}
+{"id": "address_dev-00015", "abstain": true}
+{"id": "address_dev-00030", "abstain": true}
+{"id": "address_dev-00045", "abstain": true}
+{"id": "address_dev-00060", "abstain": true}
+{"id": "address_dev-00075", "abstain": true}
+{"id": "address_dev-00090", "abstain": true}
+{"id": "address_dev-00105", "abstain": true}
+{"id": "address_dev-00120", "abstain": true}
+{"id": "address_dev-00135", "abstain": true}
+{"id": "address_dev-00150", "abstain": true}
+{"id": "address_dev-00165", "abstain": true}
+{"id": "address_dev-00180", "abstain": true}
+{"id": "address_dev-00195", "abstain": true}
+{"id": "address_dev-00210", "abstain": true}
+{"id": "address_dev-00225", "abstain": true}
+{"id": "address_dev-00240", "abstain": true}
+{"id": "address_dev-00255", "abstain": true}
+{"id": "address_dev-00270", "abstain": true}
+{"id": "address_dev-00285", "abstain": true}
+{"id": "address_dev-00300", "abstain": true}
+{"id": "address_dev-00315", "abstain": true}
+{"id": "address_dev-00330", "abstain": true}
+{"id": "address_dev-00345", "abstain": true}
+{"id": "address_dev-00360", "abstain": true}
+{"id": "address_dev-00375", "abstain": true}
+{"id": "address_dev-00390", "abstain": true}
+{"id": "address_dev-00405", "abstain": true}
+{"id": "address_dev-00420", "abstain": true}
+{"id": "address_dev-00435", "abstain": true}
+{"id": "address_dev-00450", "abstain": true}
+{"id": "address_dev-00465", "abstain": true}
+{"id": "address_dev-00480", "abstain": true}
+{"id": "address_dev-00495", "abstain": true}
+{"id": "address_dev-00510", "abstain": true}
+{"id": "address_dev-00525", "abstain": true}
+{"id": "address_dev-00540", "abstain": true}
+{"id": "address_dev-00555", "abstain": true}
+{"id": "address_dev-00570", "abstain": true}
+{"id": "address_dev-00585", "abstain": true}
+{"id": "address_dev-00600", "abstain": true}
+{"id": "address_dev-00615", "abstain": true}
+{"id": "address_dev-00630", "abstain": true}
+{"id": "address_dev-00645", "abstain": true}
+{"id": "address_dev-00660", "abstain": true}
+{"id": "address_dev-00675", "abstain": true}
+{"id": "address_dev-00690", "abstain": true}
+{"id": "address_dev-00705", "abstain": true}
+{"id": "address_dev-00720", "abstain": true}
+{"id": "address_dev-00735", "abstain": true}
+{"id": "address_dev-00750", "abstain": true}
+{"id": "address_dev-00765", "abstain": true}
+{"id": "address_dev-00780", "abstain": true}
+{"id": "address_dev-00795", "abstain": true}
+{"id": "address_dev-00810", "abstain": true}
+{"id": "address_dev-00825", "abstain": true}
+{"id": "address_dev-00840", "abstain": true}
+{"id": "address_dev-00855", "abstain": true}
+{"id": "address_dev-00870", "abstain": true}
+{"id": "address_dev-00885", "abstain": true}
+{"id": "address_dev-00900", "abstain": true}
+{"id": "address_dev-00915", "abstain": true}
+{"id": "address_dev-00930", "abstain": true}
+{"id": "address_dev-00945", "abstain": true}
+{"id": "address_dev-00960", "abstain": true}
+{"id": "address_dev-00975", "abstain": true}
+{"id": "address_dev-00990", "abstain": true}
+{"id": "address_dev-01005", "abstain": true}
+{"id": "address_dev-01020", "abstain": true}
+{"id": "address_dev-01035", "abstain": true}
+{"id": "address_dev-01050", "abstain": true}
+{"id": "address_dev-01065", "abstain": true}
+{"id": "address_dev-01080", "abstain": true}
+{"id": "address_dev-01095", "abstain": true}
+{"id": "address_dev-01110", "abstain": true}
+{"id": "address_dev-01125", "abstain": true}
+{"id": "address_dev-01140", "abstain": true}
+{"id": "address_dev-01155", "abstain": true}
+{"id": "address_dev-01170", "abstain": true}
+{"id": "address_dev-01185", "abstain": true}
+{"id": "address_dev-01200", "abstain": true}
+{"id": "address_dev-01215", "abstain": true}
+{"id": "address_dev-01230", "abstain": true}
+{"id": "address_dev-01245", "abstain": true}
+{"id": "address_dev-01260", "abstain": true}
+{"id": "address_dev-01275", "abstain": true}
+{"id": "address_dev-01290", "abstain": true}
+{"id": "address_dev-01305", "abstain": true}
+{"id": "address_dev-01320", "abstain": true}
+{"id": "address_dev-01335", "abstain": true}
+{"id": "address_dev-01350", "abstain": true}
+{"id": "address_dev-01365", "abstain": true}
+{"id": "address_dev-01380", "abstain": true}
+{"id": "address_dev-01395", "abstain": true}
+{"id": "address_dev-01410", "abstain": true}
+{"id": "address_dev-01425", "abstain": true}
+{"id": "address_dev-01440", "abstain": true}
+{"id": "address_dev-01455", "abstain": true}
+{"id": "address_dev-01470", "abstain": true}
+{"id": "address_dev-01485", "abstain": true}
+{"id": "address_sealed-00000", "abstain": true}
+{"id": "address_sealed-00006", "abstain": true}
+{"id": "address_sealed-00012", "abstain": true}
+{"id": "address_sealed-00018", "abstain": true}
+{"id": "address_sealed-00024", "abstain": true}
+{"id": "address_sealed-00030", "abstain": true}
+{"id": "address_sealed-00036", "abstain": true}
+{"id": "address_sealed-00042", "abstain": true}
+{"id": "address_sealed-00048", "abstain": true}
+{"id": "address_sealed-00054", "abstain": true}
+{"id": "address_sealed-00060", "abstain": true}
+{"id": "address_sealed-00066", "abstain": true}
+{"id": "address_sealed-00072", "abstain": true}
+{"id": "address_sealed-00078", "abstain": true}
+{"id": "address_sealed-00084", "abstain": true}
+{"id": "address_sealed-00090", "abstain": true}
+{"id": "address_sealed-00096", "abstain": true}
+{"id": "address_sealed-00102", "abstain": true}
+{"id": "address_sealed-00108", "abstain": true}
+{"id": "address_sealed-00114", "abstain": true}
+{"id": "address_sealed-00120", "abstain": true}
+{"id": "address_sealed-00126", "abstain": true}
+{"id": "address_sealed-00132", "abstain": true}
+{"id": "address_sealed-00138", "abstain": true}
+{"id": "address_sealed-00144", "abstain": true}
+{"id": "address_sealed-00150", "abstain": true}
+{"id": "address_sealed-00156", "abstain": true}
+{"id": "address_sealed-00162", "abstain": true}
+{"id": "address_sealed-00168", "abstain": true}
+{"id": "address_sealed-00174", "abstain": true}
+{"id": "address_sealed-00180", "abstain": true}
+{"id": "address_sealed-00186", "abstain": true}
+{"id": "address_sealed-00192", "abstain": true}
+{"id": "address_sealed-00198", "abstain": true}
+{"id": "address_sealed-00204", "abstain": true}
+{"id": "address_sealed-00210", "abstain": true}
+{"id": "address_sealed-00216", "abstain": true}
+{"id": "address_sealed-00222", "abstain": true}
+{"id": "address_sealed-00228", "abstain": true}
+{"id": "address_sealed-00234", "abstain": true}
+{"id": "address_sealed-00240", "abstain": true}
+{"id": "address_sealed-00246", "abstain": true}
+{"id": "address_sealed-00252", "abstain": true}
+{"id": "address_sealed-00258", "abstain": true}
+{"id": "address_sealed-00264", "abstain": true}
+{"id": "address_sealed-00270", "abstain": true}
+{"id": "address_sealed-00276", "abstain": true}
+{"id": "address_sealed-00282", "abstain": true}
+{"id": "address_sealed-00288", "abstain": true}
+{"id": "address_sealed-00294", "abstain": true}
+{"id": "address_sealed-00300", "abstain": true}
+{"id": "address_sealed-00306", "abstain": true}
+{"id": "address_sealed-00312", "abstain": true}
+{"id": "address_sealed-00318", "abstain": true}
+{"id": "address_sealed-00324", "abstain": true}
+{"id": "address_sealed-00330", "abstain": true}
+{"id": "address_sealed-00336", "abstain": true}
+{"id": "address_sealed-00342", "abstain": true}
+{"id": "address_sealed-00348", "abstain": true}
+{"id": "address_sealed-00354", "abstain": true}
+{"id": "address_sealed-00360", "abstain": true}
+{"id": "address_sealed-00366", "abstain": true}
+{"id": "address_sealed-00372", "abstain": true}
+{"id": "address_sealed-00378", "abstain": true}
+{"id": "address_sealed-00384", "abstain": true}
+{"id": "address_sealed-00390", "abstain": true}
+{"id": "address_sealed-00396", "abstain": true}
+{"id": "address_sealed-00402", "abstain": true}
+{"id": "address_sealed-00408", "abstain": true}
+{"id": "address_sealed-00414", "abstain": true}
+{"id": "address_sealed-00420", "abstain": true}
+{"id": "address_sealed-00426", "abstain": true}
+{"id": "address_sealed-00432", "abstain": true}
+{"id": "address_sealed-00438", "abstain": true}
+{"id": "address_sealed-00444", "abstain": true}
+{"id": "address_sealed-00450", "abstain": true}
+{"id": "address_sealed-00456", "abstain": true}
+{"id": "address_sealed-00462", "abstain": true}
+{"id": "address_sealed-00468", "abstain": true}
+{"id": "address_sealed-00474", "abstain": true}
+{"id": "address_sealed-00480", "abstain": true}
+{"id": "address_sealed-00486", "abstain": true}
+{"id": "address_sealed-00492", "abstain": true}
+{"id": "address_sealed-00498", "abstain": true}
+{"id": "address_sealed-00504", "abstain": true}
+{"id": "address_sealed-00510", "abstain": true}
+{"id": "address_sealed-00516", "abstain": true}
+{"id": "address_sealed-00522", "abstain": true}
+{"id": "address_sealed-00528", "abstain": true}
+{"id": "address_sealed-00534", "abstain": true}
+{"id": "address_sealed-00540", "abstain": true}
+{"id": "address_sealed-00546", "abstain": true}
+{"id": "address_sealed-00552", "abstain": true}
+{"id": "address_sealed-00558", "abstain": true}
+{"id": "address_sealed-00564", "abstain": true}
+{"id": "address_sealed-00570", "abstain": true}
+{"id": "address_sealed-00576", "abstain": true}
+{"id": "address_sealed-00582", "abstain": true}
+{"id": "address_sealed-00588", "abstain": true}
+{"id": "address_sealed-00594", "abstain": true}
+{"id": "crosscity_dev-00000", "lat": 24.4958067, "lon": 54.5799165}
+{"id": "crosscity_dev-00039", "lat": 24.4549354, "lon": 54.3778956}
+{"id": "crosscity_dev-00078", "lat": 24.4257792, "lon": 54.7324855}
+{"id": "crosscity_dev-00117", "lat": 24.4438039, "lon": 54.7445581}
+{"id": "crosscity_dev-00156", "abstain": true}
+{"id": "crosscity_dev-00195", "lat": 24.4817566, "lon": 54.3647172}
+{"id": "crosscity_dev-00234", "lat": 23.7862191, "lon": 52.5676414}
+{"id": "crosscity_dev-00273", "lat": 24.4418556, "lon": 54.4025617}
+{"id": "crosscity_dev-00312", "abstain": true}
+{"id": "crosscity_dev-00351", "lat": 24.1716253, "lon": 52.573471}
+{"id": "crosscity_dev-00390", "lat": 24.1042794, "lon": 55.8321012}
+{"id": "crosscity_dev-00429", "lat": 24.4986819, "lon": 54.5826381}
+{"id": "crosscity_dev-00468", "abstain": true}
+{"id": "crosscity_dev-00507", "abstain": true}
+{"id": "crosscity_dev-00546", "lat": 24.2640256, "lon": 54.6994332}
+{"id": "crosscity_dev-00585", "lat": 24.1085918, "lon": 55.8521776}
+{"id": "crosscity_dev-00624", "lat": 24.429077, "lon": 54.7324443}
+{"id": "crosscity_dev-00663", "lat": 24.2746494, "lon": 55.7472641}
+{"id": "crosscity_dev-00702", "lat": 25.0402075, "lon": 55.2726562}
+{"id": "crosscity_dev-00741", "abstain": true}
+{"id": "crosscity_dev-00780", "lat": 24.2087562, "lon": 55.7304654}
+{"id": "crosscity_dev-00819", "lat": 24.4427387, "lon": 54.4009456}
+{"id": "crosscity_dev-00858", "lat": 23.1063258, "lon": 53.7277781}
+{"id": "crosscity_dev-00897", "lat": 24.3117907, "lon": 54.6459247}
+{"id": "crosscity_dev-00936", "lat": 24.0896254, "lon": 55.864646}
+{"id": "crosscity_dev-00975", "lat": 24.2340713, "lon": 55.6969423}
+{"id": "crosscity_dev-01014", "abstain": true}
+{"id": "crosscity_dev-01053", "lat": 24.333344, "lon": 54.7455364}
+{"id": "crosscity_dev-01092", "abstain": true}
+{"id": "crosscity_dev-01131", "lat": 24.475978, "lon": 52.3149138}
+{"id": "crosscity_dev-01170", "abstain": true}
+{"id": "crosscity_dev-01209", "lat": 24.0929285, "lon": 55.8404942}
+{"id": "crosscity_dev-01248", "lat": 24.4484843, "lon": 54.716322}
+{"id": "crosscity_dev-01287", "lat": 25.6100371, "lon": 56.2828017}
+{"id": "crosscity_dev-01326", "lat": 24.4866208, "lon": 52.3166795}
+{"id": "crosscity_dev-01365", "lat": 24.4859756, "lon": 52.3210924}
+{"id": "crosscity_dev-01404", "lat": 24.4789863, "lon": 52.3155343}
+{"id": "crosscity_dev-01443", "lat": 24.4779193, "lon": 52.3172703}
+{"id": "crosscity_dev-01482", "lat": 24.4852915, "lon": 52.3145982}
+{"id": "crosscity_dev-01521", "lat": 24.4841754, "lon": 52.3147703}
+{"id": "crosscity_dev-01560", "lat": 23.1090793, "lon": 53.8765769}
+{"id": "crosscity_dev-01599", "abstain": true}
+{"id": "crosscity_dev-01638", "lat": 24.4821569, "lon": 52.3194557}
+{"id": "crosscity_dev-01677", "abstain": true}
+{"id": "crosscity_dev-01716", "lat": 24.4846283, "lon": 52.3139769}
+{"id": "crosscity_dev-03491", "lat": 24.4828592, "lon": 54.3717841}
+{"id": "crosscity_dev-03530", "lat": 24.457028, "lon": 54.7254185}
+{"id": "crosscity_dev-03569", "lat": 24.3034973, "lon": 54.6199279}
+{"id": "crosscity_dev-03608", "lat": 24.3548689, "lon": 54.7487505}
+{"id": "crosscity_dev-03647", "lat": 24.10059, "lon": 55.8512709}
+{"id": "crosscity_dev-03686", "lat": 24.4929858, "lon": 54.3618884}
+{"id": "crosscity_dev-03725", "lat": 23.1341889, "lon": 53.8251138}
+{"id": "crosscity_dev-03764", "lat": 24.0751241, "lon": 55.852618}
+{"id": "crosscity_dev-03803", "abstain": true}
+{"id": "crosscity_dev-03842", "lat": 24.4418656, "lon": 54.7165466}
+{"id": "crosscity_dev-03881", "lat": 24.4365799, "lon": 54.7171173}
+{"id": "crosscity_dev-03920", "lat": 24.4420787, "lon": 54.4103747}
+{"id": "crosscity_dev-03959", "lat": 24.4728103, "lon": 54.3700212}
+{"id": "crosscity_dev-03998", "lat": 24.2980781, "lon": 54.6221767}
+{"id": "crosscity_dev-04037", "lat": 24.4871848, "lon": 54.3587669}
+{"id": "crosscity_dev-04076", "abstain": true}
+{"id": "crosscity_dev-04115", "lat": 24.502667, "lon": 54.6021139}
+{"id": "crosscity_dev-04154", "lat": 24.3252381, "lon": 54.7479163}
+{"id": "crosscity_dev-04193", "lat": 24.4039427, "lon": 54.5061079}
+{"id": "crosscity_dev-04232", "lat": 25.1903973, "lon": 55.2406335}
+{"id": "crosscity_dev-04271", "lat": 24.2925379, "lon": 54.6303466}
+{"id": "crosscity_dev-04310", "abstain": true}
+{"id": "crosscity_dev-04349", "lat": 24.4558317, "lon": 54.7280178}
+{"id": "crosscity_dev-04388", "lat": 24.4936554, "lon": 54.5842671}
+{"id": "crosscity_dev-04427", "lat": 24.3696603, "lon": 54.5427685}
+{"id": "crosscity_dev-04466", "abstain": true}
+{"id": "crosscity_dev-04505", "lat": 24.3271058, "lon": 54.7386823}
+{"id": "crosscity_dev-04544", "lat": 25.427154, "lon": 55.513985}
+{"id": "crosscity_dev-04583", "lat": 24.459826, "lon": 54.7356978}
+{"id": "crosscity_dev-04622", "lat": 24.2531003, "lon": 54.7246339}
+{"id": "crosscity_dev-04661", "lat": 24.4437252, "lon": 54.7125446}
+{"id": "crosscity_dev-04700", "abstain": true}
+{"id": "crosscity_dev-04739", "lat": 24.0976477, "lon": 55.8486114}
+{"id": "crosscity_dev-04778", "lat": 24.2691571, "lon": 55.7296192}
+{"id": "crosscity_dev-04843", "lat": 24.2255875, "lon": 55.7568772}
+{"id": "crosscity_dev-04922", "lat": 25.2903079, "lon": 55.3698172}
+{"id": "crosscity_dev-04999", "lat": 25.0766006, "lon": 55.1322126}
+{"id": "crosscity_dev-05078", "lat": 25.2457264, "lon": 55.3027739}
+{"id": "crosscity_dev-05155", "lat": 25.4311025, "lon": 55.5220588}
+{"id": "crosscity_dev-05234", "lat": 25.3595196, "lon": 55.3991937}
+{"id": "crosscity_dev-05311", "lat": 24.1836147, "lon": 55.6276759}
+{"id": "crosscity_dev-05390", "lat": 25.3111537, "lon": 55.4067381}
+{"id": "crosscity_dev-05467", "lat": 24.2251173, "lon": 55.741407}
+{"id": "crosscity_dev-05546", "lat": 25.2897429, "lon": 55.4299496}
+{"id": "crosscity_dev-05623", "lat": 25.2710239, "lon": 55.2979198}
+{"id": "crosscity_dev-05702", "lat": 25.2423775, "lon": 55.3058599}
+{"id": "crosscity_dev-05779", "abstain": true}
+{"id": "crosscity_dev-05858", "lat": 25.3165473, "lon": 55.3806813}
+{"id": "crosscity_dev-05935", "lat": 25.3029945, "lon": 55.399747}
+{"id": "crosscity_dev-06014", "lat": 25.2551578, "lon": 55.3971281}
+{"id": "crosscity_dev-06091", "lat": 24.4244842, "lon": 54.4551775}
+{"id": "crosscity_dev-06170", "lat": 25.3171047, "lon": 55.3800549}
+{"id": "crosscity_dev-06247", "abstain": true}
+{"id": "crosscity_dev-06326", "lat": 25.2824321, "lon": 55.3496481}
+{"id": "crosscity_dev-06403", "lat": 24.0998172, "lon": 55.6015029}
+{"id": "landmark_dev-00000", "abstain": true}
+{"id": "landmark_dev-00004", "abstain": true}
+{"id": "landmark_dev-00008", "abstain": true}
+{"id": "landmark_dev-00012", "abstain": true}
+{"id": "landmark_dev-00016", "abstain": true}
+{"id": "landmark_dev-00020", "abstain": true}
+{"id": "landmark_dev-00024", "abstain": true}
+{"id": "landmark_dev-00028", "abstain": true}
+{"id": "landmark_dev-00032", "abstain": true}
+{"id": "landmark_dev-00036", "abstain": true}
+{"id": "landmark_dev-00040", "abstain": true}
+{"id": "landmark_dev-00044", "abstain": true}
+{"id": "landmark_dev-00048", "abstain": true}
+{"id": "landmark_dev-00052", "abstain": true}
+{"id": "landmark_dev-00056", "abstain": true}
+{"id": "landmark_dev-00060", "abstain": true}
+{"id": "landmark_dev-00064", "abstain": true}
+{"id": "landmark_dev-00068", "abstain": true}
+{"id": "landmark_dev-00072", "abstain": true}
+{"id": "landmark_dev-00076", "abstain": true}
+{"id": "landmark_dev-00080", "abstain": true}
+{"id": "landmark_dev-00084", "abstain": true}
+{"id": "landmark_dev-00088", "abstain": true}
+{"id": "landmark_dev-00092", "abstain": true}
+{"id": "landmark_dev-00096", "abstain": true}
+{"id": "landmark_dev-00100", "abstain": true}
+{"id": "landmark_dev-00104", "abstain": true}
+{"id": "landmark_dev-00108", "abstain": true}
+{"id": "landmark_dev-00112", "abstain": true}
+{"id": "landmark_dev-00116", "abstain": true}
+{"id": "landmark_dev-00120", "abstain": true}
+{"id": "landmark_dev-00124", "abstain": true}
+{"id": "landmark_dev-00128", "abstain": true}
+{"id": "landmark_dev-00132", "abstain": true}
+{"id": "landmark_dev-00136", "abstain": true}
+{"id": "landmark_dev-00140", "abstain": true}
+{"id": "landmark_dev-00144", "abstain": true}
+{"id": "landmark_dev-00148", "abstain": true}
+{"id": "landmark_dev-00152", "abstain": true}
+{"id": "landmark_dev-00156", "abstain": true}
+{"id": "landmark_dev-00160", "abstain": true}
+{"id": "landmark_dev-00164", "abstain": true}
+{"id": "landmark_dev-00168", "abstain": true}
+{"id": "landmark_dev-00172", "abstain": true}
+{"id": "landmark_dev-00176", "abstain": true}
+{"id": "landmark_dev-00180", "abstain": true}
+{"id": "landmark_dev-00184", "abstain": true}
+{"id": "landmark_dev-00188", "abstain": true}
+{"id": "landmark_dev-00192", "abstain": true}
+{"id": "landmark_dev-00196", "abstain": true}
+{"id": "landmark_dev-00200", "abstain": true}
+{"id": "landmark_dev-00204", "abstain": true}
+{"id": "landmark_dev-00208", "abstain": true}
+{"id": "landmark_dev-00212", "abstain": true}
+{"id": "landmark_dev-00216", "abstain": true}
+{"id": "landmark_dev-00220", "abstain": true}
+{"id": "landmark_dev-00224", "abstain": true}
+{"id": "landmark_dev-00228", "abstain": true}
+{"id": "landmark_dev-00232", "abstain": true}
+{"id": "landmark_dev-00236", "abstain": true}
+{"id": "landmark_dev-00240", "abstain": true}
+{"id": "landmark_dev-00244", "abstain": true}
+{"id": "landmark_dev-00248", "abstain": true}
+{"id": "landmark_dev-00252", "abstain": true}
+{"id": "landmark_dev-00256", "abstain": true}
+{"id": "landmark_dev-00260", "abstain": true}
+{"id": "landmark_dev-00264", "abstain": true}
+{"id": "landmark_dev-00268", "abstain": true}
+{"id": "landmark_dev-00272", "abstain": true}
+{"id": "landmark_dev-00276", "abstain": true}
+{"id": "landmark_dev-00280", "abstain": true}
+{"id": "landmark_dev-00284", "abstain": true}
+{"id": "landmark_dev-00288", "abstain": true}
+{"id": "landmark_dev-00292", "abstain": true}
+{"id": "landmark_dev-00296", "abstain": true}
+{"id": "landmark_dev-00300", "abstain": true}
+{"id": "landmark_dev-00304", "abstain": true}
+{"id": "landmark_dev-00308", "abstain": true}
+{"id": "landmark_dev-00312", "abstain": true}
+{"id": "landmark_dev-00316", "abstain": true}
+{"id": "landmark_dev-00320", "abstain": true}
+{"id": "landmark_dev-00324", "abstain": true}
+{"id": "landmark_dev-00328", "abstain": true}
+{"id": "landmark_dev-00332", "abstain": true}
+{"id": "landmark_dev-00336", "abstain": true}
+{"id": "landmark_dev-00340", "abstain": true}
+{"id": "landmark_dev-00344", "abstain": true}
+{"id": "landmark_dev-00348", "abstain": true}
+{"id": "landmark_dev-00352", "abstain": true}
+{"id": "landmark_dev-00356", "abstain": true}
+{"id": "landmark_dev-00360", "abstain": true}
+{"id": "landmark_dev-00364", "abstain": true}
+{"id": "landmark_dev-00368", "abstain": true}
+{"id": "landmark_dev-00372", "abstain": true}
+{"id": "landmark_dev-00376", "abstain": true}
+{"id": "landmark_dev-00380", "abstain": true}
+{"id": "landmark_dev-00384", "abstain": true}
+{"id": "landmark_dev-00388", "abstain": true}
+{"id": "landmark_dev-00392", "abstain": true}
+{"id": "landmark_dev-00396", "abstain": true}
+{"id": "poi_dev-00000", "lat": 25.3054684, "lon": 55.3883859}
+{"id": "poi_dev-00006", "lat": 25.2721336, "lon": 55.2997835}
+{"id": "poi_dev-00012", "lat": 25.3424198, "lon": 55.3927507}
+{"id": "poi_dev-00018", "lat": 25.3470826, "lon": 55.3993212}
+{"id": "poi_dev-00024", "lat": 25.275666, "lon": 55.3078108}
+{"id": "poi_dev-00030", "abstain": true}
+{"id": "poi_dev-00036", "lat": 25.2744111, "lon": 55.3007799}
+{"id": "poi_dev-00042", "lat": 25.3611193, "lon": 55.3932214}
+{"id": "poi_dev-00048", "lat": 25.3184938, "lon": 55.3846484}
+{"id": "poi_dev-00054", "lat": 25.3497317, "lon": 55.4003965}
+{"id": "poi_dev-00060", "abstain": true}
+{"id": "poi_dev-00066", "lat": 24.9727073, "lon": 55.1819367}
+{"id": "poi_dev-00072", "lat": 25.2737824, "lon": 55.2998217}
+{"id": "poi_dev-00078", "lat": 25.2611334, "lon": 55.2984}
+{"id": "poi_dev-00084", "lat": 25.3504426, "lon": 55.3925966}
+{"id": "poi_dev-00090", "lat": 24.9765177, "lon": 55.1903264}
+{"id": "poi_dev-00096", "lat": 25.3263266, "lon": 55.3769414}
+{"id": "poi_dev-00102", "abstain": true}
+{"id": "poi_dev-00108", "lat": 25.1849929, "lon": 55.3499231}
+{"id": "poi_dev-00114", "lat": 25.2773463, "lon": 55.3092607}
+{"id": "poi_dev-00120", "lat": 25.3207154, "lon": 55.3849197}
+{"id": "poi_dev-00126", "lat": 25.3106997, "lon": 55.3873622}
+{"id": "poi_dev-00132", "abstain": true}
+{"id": "poi_dev-00138", "lat": 25.3078414, "lon": 55.4043277}
+{"id": "poi_dev-00144", "lat": 24.9868924, "lon": 55.212619}
+{"id": "poi_dev-00150", "lat": 25.1510147, "lon": 55.2135881}
+{"id": "poi_dev-00156", "lat": 25.2655802, "lon": 55.3313113}
+{"id": "poi_dev-00162", "lat": 25.2751583, "lon": 55.3343575}
+{"id": "poi_dev-00168", "lat": 25.1480633, "lon": 55.2102747}
+{"id": "poi_dev-00174", "lat": 25.3210026, "lon": 55.3855791}
+{"id": "poi_dev-00180", "lat": 25.3464757, "lon": 55.4002868}
+{"id": "poi_dev-00186", "lat": 25.3207074, "lon": 55.3860966}
+{"id": "poi_dev-00192", "lat": 25.2719591, "lon": 55.3118826}
+{"id": "poi_dev-00198", "abstain": true}
+{"id": "poi_dev-00204", "abstain": true}
+{"id": "poi_dev-00210", "lat": 25.2784297, "lon": 55.3126318}
+{"id": "poi_dev-00216", "lat": 25.3486767, "lon": 55.3960998}
+{"id": "poi_dev-00222", "lat": 25.3186006, "lon": 55.3848019}
+{"id": "poi_dev-00228", "lat": 25.1450308, "lon": 55.2298698}
+{"id": "poi_dev-00234", "lat": 25.2696701, "lon": 55.3010835}
+{"id": "poi_dev-00240", "lat": 25.3939184, "lon": 55.5375224}
+{"id": "poi_dev-00246", "lat": 25.3079349, "lon": 55.3567668}
+{"id": "poi_dev-00252", "lat": 25.3101458, "lon": 55.3798149}
+{"id": "poi_dev-00258", "lat": 25.2410908, "lon": 55.3040077}
+{"id": "poi_dev-00264", "abstain": true}
+{"id": "poi_dev-00270", "abstain": true}
+{"id": "poi_dev-00276", "abstain": true}
+{"id": "poi_dev-00282", "abstain": true}
+{"id": "poi_dev-00288", "lat": 25.2696434, "lon": 55.3008871}
+{"id": "poi_dev-00294", "lat": 25.1370662, "lon": 55.223182}
+{"id": "poi_dev-00300", "lat": 25.3450966, "lon": 55.3948827}
+{"id": "poi_dev-00306", "lat": 25.0074867, "lon": 55.2495822}
+{"id": "poi_dev-00312", "lat": 25.3353526, "lon": 55.3920042}
+{"id": "poi_dev-00318", "lat": 25.2750761, "lon": 55.3337574}
+{"id": "poi_dev-00324", "lat": 25.3238143, "lon": 55.417376}
+{"id": "poi_dev-00330", "lat": 25.3425331, "lon": 55.4022556}
+{"id": "poi_dev-00336", "lat": 25.2554367, "lon": 55.3348817}
+{"id": "poi_dev-00342", "abstain": true}
+{"id": "poi_dev-00348", "abstain": true}
+{"id": "poi_dev-00354", "lat": 25.1981658, "lon": 55.2483308}
+{"id": "poi_dev-00360", "lat": 25.2171767, "lon": 55.2609804}
+{"id": "poi_dev-00366", "lat": 25.4117942, "lon": 55.4397184}
+{"id": "poi_dev-00372", "abstain": true}
+{"id": "poi_dev-00378", "abstain": true}
+{"id": "poi_dev-00384", "abstain": true}
+{"id": "poi_dev-00390", "lat": 25.3014616, "lon": 55.3975612}
+{"id": "poi_dev-00396", "lat": 25.4122321, "lon": 55.4521709}
+{"id": "poi_dev-00402", "lat": 24.9599055, "lon": 55.1033967}
+{"id": "poi_dev-00408", "lat": 25.275973, "lon": 55.3070143}
+{"id": "poi_dev-00414", "abstain": true}
+{"id": "poi_dev-00420", "abstain": true}
+{"id": "poi_dev-00426", "lat": 25.3543455, "lon": 55.3893511}
+{"id": "poi_dev-00432", "lat": 25.3349788, "lon": 55.3743726}
+{"id": "poi_dev-00438", "lat": 25.2679439, "lon": 55.299956}
+{"id": "poi_dev-00444", "abstain": true}
+{"id": "poi_dev-00450", "lat": 25.2775402, "lon": 55.310795}
+{"id": "poi_dev-00456", "lat": 25.2637153, "lon": 55.3289288}
+{"id": "poi_dev-00462", "lat": 24.9625094, "lon": 55.10548}
+{"id": "poi_dev-00468", "lat": 25.309103, "lon": 55.4054429}
+{"id": "poi_dev-00474", "lat": 25.3259676, "lon": 55.4336618}
+{"id": "poi_dev-00480", "lat": 25.2758225, "lon": 55.3107828}
+{"id": "poi_dev-00486", "lat": 25.309461, "lon": 55.4057197}
+{"id": "poi_dev-00492", "abstain": true}
+{"id": "poi_dev-00498", "lat": 25.2753437, "lon": 55.3344065}
+{"id": "poi_dev-00504", "lat": 25.3173218, "lon": 55.3800306}
+{"id": "poi_dev-00510", "lat": 25.2774916, "lon": 55.3500625}
+{"id": "poi_dev-00516", "abstain": true}
+{"id": "poi_dev-00522", "lat": 25.2721762, "lon": 55.2998748}
+{"id": "poi_dev-00528", "lat": 25.3497948, "lon": 55.3941282}
+{"id": "poi_dev-00534", "abstain": true}
+{"id": "poi_dev-00540", "lat": 25.3527827, "lon": 55.3864137}
+{"id": "poi_dev-00546", "lat": 25.3457314, "lon": 55.4015731}
+{"id": "poi_dev-00552", "lat": 24.9869918, "lon": 55.2093118}
+{"id": "poi_dev-00558", "lat": 25.3341187, "lon": 55.3938129}
+{"id": "poi_dev-00564", "abstain": true}
+{"id": "poi_dev-00570", "abstain": true}
+{"id": "poi_dev-00576", "lat": 25.2777177, "lon": 55.3111532}
+{"id": "poi_dev-00582", "lat": 25.3264907, "lon": 55.3767337}
+{"id": "poi_dev-00588", "lat": 25.3132084, "lon": 55.3841153}
+{"id": "poi_dev-00594", "lat": 25.0544282, "lon": 55.2193926}
