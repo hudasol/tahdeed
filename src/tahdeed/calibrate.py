@@ -175,8 +175,8 @@ class GBMRanker:
         for c, a, b, d, e in zip(cands, p50, p200, p1k, pv, strict=True):
             fine = c.tier in FINE_TIERS
             c.p50 = float(a) if fine else 0.0
-            c.p200 = float(b)
-            c.p1k = float(d)
+            c.p200 = max(float(b), c.p50)
+            c.p1k = max(float(d), c.p200)
             c.p_valid = float(e)
 
 

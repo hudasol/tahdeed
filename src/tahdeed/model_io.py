@@ -111,8 +111,9 @@ class NumpyRanker:
         out = {h: iso(f.proba(X)) for h, (f, iso) in self.heads.items()}
         for i, c in enumerate(cands):
             c.p50 = float(out["p50"][i]) if c.tier in FINE_TIERS else 0.0
-            c.p200 = float(out["p200"][i])
-            c.p1k = float(out["p1k"][i])
+            # separately calibrated heads need not be ordered; a larger radius cannot be less likely
+            c.p200 = max(float(out["p200"][i]), c.p50)
+            c.p1k = max(float(out["p1k"][i]), c.p200)
             c.p_valid = float(out["valid"][i])
 
 
