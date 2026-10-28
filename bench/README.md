@@ -39,7 +39,7 @@ Scoring needs only the data directory; it does not need the gazetteer or any Tah
 ## Independent real text sets and real baselines
 
 ```
-tahdeed bench fetch-external                     # rebuild bench/data_external (Overture release pinned in the code)
+tahdeed bench fetch-external                     # rebuild bench/data_external (Overture release pinned in the code; needs `pip install -e .[external]`)
 tahdeed bench baselines tfidf --data bench/data_external --out preds.jsonl      # also: bm25, libpostal, photon, nominatim
 tahdeed bench baseline tahdeed --data bench/data_external --out preds.jsonl
 tahdeed bench score preds.jsonl --data bench/data_external
