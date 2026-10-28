@@ -392,8 +392,14 @@ numbers of the previous commit; sealed is not touched.
 
 | # | Prediction | Result |
 |---|---|---|
-| N1 | Dubai POI resolved share rises by at least 2 points, and resolved precision at 50 m stays above 99% | _pending_ |
-| N2 | Abu Dhabi structured and coverage hole resolved precision move by less than 0.5 points | _pending_ |
-| N3 | Wrong city of all (crosscity dev, margin 0.35) stays within the published interval 2.3 to 3.9% | _pending_ |
-| N4 | The POI expected calibration error (ECE of p50) on Dubai POI does not get worse than 0.105 | _pending_ |
-| N5 | Mall of the Emirates and Dubai Mall queries without a city rise in p50 | _pending_ |
+| N1 | Dubai POI resolved share rises by at least 2 points, and resolved precision at 50 m stays above 99% | **Miss**: Dubai POI resolved share fell from 56.6% to 55.2% against a control retrained on the same code with the old count. Precision stayed above 99% (99.4% to 99.5%) |
+| N2 | Abu Dhabi structured and coverage hole resolved precision move by less than 0.5 points | **Hit**: resolved precision moved by 0.1 points or less on Abu Dhabi structured (99.45% to 99.55%) and coverage hole (91.18% to 91.20%) |
+| N3 | Wrong city of all (crosscity dev, margin 0.35) stays within the published interval 2.3 to 3.9% | **Not run**: the change was reverted after N1, so the cross-city evaluation was not repeated |
+| N4 | The POI expected calibration error (ECE of p50) on Dubai POI does not get worse than 0.105 | **Hit by 0.0002 only, and worse than the control**: 0.1048 against 0.0988 for the control retrain |
+| N5 | Mall of the Emirates and Dubai Mall queries without a city rise in p50 | **Not measured**: reverted before the hand typed list was rerun |
+
+Decision: reverted (commit c4a6738). Forced top 1 within 1 km also fell by about one point on Dubai
+POI (80.1% to 79.1%). **Method note.** The first comparison, against the model file on disk, was
+misleading: that file chooses tau 0.54, while a retrain from the current code chooses 0.69 with or
+without this change, so the resolved share fell by 4 points for a reason unrelated to the feature. A
+control retrain with only the feature reverted is what made the comparison fair.
