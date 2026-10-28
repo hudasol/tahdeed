@@ -2,7 +2,7 @@
 
 **Bilingual Arabic/English address resolver for the UAE.** It turns messy free-text addresses into coordinates, an Onwani-style standard form and a calibrated confidence score, and it abstains when an address is too ambiguous.
 
-> **Status: v2.0.** Five review rounds (Google, Edge, TII, ATRC, senior) each produced a critique, a checklist and measured results: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/reviews/`](docs/reviews/). Predictions were written before each run: [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md). Results: [`docs/EVALUATION.md`](docs/EVALUATION.md).
+> **Status: v2.0.** Engineering history: [`docs/DESIGN_NOTES.md`](docs/DESIGN_NOTES.md). Predictions were written before each run: [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md). Results: [`docs/EVALUATION.md`](docs/EVALUATION.md).
 
 ## The problem
 
