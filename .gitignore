@@ -26,7 +26,6 @@ bench/results/*.cache.json
 .DS_Store
 .idea/
 .vscode/
-.claude/
 
 # Locally built data (ODbL derived; rebuilt by `tahdeed build`)
 data/raw/

@@ -160,8 +160,7 @@ matching understates overlap between differently written names.
 
 **Decision: nothing merged.** The terms allow it, but a merge needs (a) name matching that tolerates
 the naming differences seen above and (b) a resolver evaluation whose truth is not the supplement
-itself, otherwise the gain cannot be measured honestly. Both are listed as next steps in
-`docs/OVERNIGHT_REPORT.md`. The downloaded rows are local working data and are not committed.
+itself, otherwise the gain cannot be measured honestly. Both are open work items. The downloaded rows are local working data and are not committed.
 
 ## 5. Use as evaluation data, not as gazetteer data (added 2026-10-28)
 
