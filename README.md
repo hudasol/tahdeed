@@ -2,7 +2,7 @@
 
 tahdeed resolves free text UAE addresses, written in Arabic, English or a mix, to coordinates, a standard bilingual address form and a calibrated confidence. When an address is too ambiguous to answer reliably, it abstains and says which detail is missing.
 
-The resolver runs offline and deterministically. It uses no language model and no API keys. Version 2.0.0; the change history is in [`CHANGELOG.md`](CHANGELOG.md).
+The resolver runs offline and deterministically. It uses no language model and no API keys. Version 2.1.0; the change history is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Installation
 
