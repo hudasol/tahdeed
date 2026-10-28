@@ -80,6 +80,7 @@ run where the PII redaction was disabled and the script failed as it should. The
 | `TAHDEED_PROXY_HOPS` | `1` | With `TAHDEED_TRUST_PROXY=1`: how many trusted proxies append to `X-Forwarded-For`. The client is the Nth entry from the right. |
 | `TAHDEED_API_TOKEN` | unset | If set, `/resolve*` requires `Authorization: Bearer <token>` (constant-time compare). `/health`, `/config` and the dashboard stay open. |
 | `TAHDEED_LOG_RAW` | unset | `1`: also log the query text in the audit line. PII (phone numbers, e-mails, Emirates IDs) is redacted first even then. Off by default; leave it off. |
+| `TAHDEED_AUDIT_KEY` | unset | Secret for an HMAC of the logged query hash. Without it the hash is a plain SHA-256 that can be tested against guessed addresses. |
 | `TAHDEED_TILE_URL` | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` | Tile URL template the dashboard map uses. For a public demo use a provider whose terms allow your traffic (the OSM community tile servers are not meant for production sites). |
 | `TAHDEED_DATA_OFFER_URL` | unset | Where the public can obtain the database (ODbL). Returned by `/config` as `data_offer_url` for the dashboard to show. |
 | `TAHDEED_WEB` | auto (the `web` directory inside the installed package) | Directory of the static dashboard. Set it only to serve a modified copy. |

@@ -70,7 +70,7 @@ def test_build_report_and_baselines_on_fixture(tmp_path):
 
     db = Path(__file__).parent / "fixtures" / "mini.sqlite"
     man = bench.build(str(db), tmp_path / "d")
-    assert "gold_handwritten" in man["sets"] and man["sets"]["address_dev"]["n"] >= 0
+    assert "gold_handwritten" in man["sets"] and man["sets"]["address_dev"]["n"] > 0
     rows = bench.load_rows(tmp_path / "d", ["gold_handwritten"])
     assert len(rows) == 40 and all(r["synthetic"] is False for r in rows)
     preds = bench.baseline_naive(rows, str(db))
