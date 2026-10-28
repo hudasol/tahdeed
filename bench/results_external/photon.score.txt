@@ -1,0 +1,14 @@
+
+overture_places  (n=150, missing predictions: 0)
+  answered           22.7% [17-30]
+  precision@50m      26.5% [15-43]   (among answered)
+  conf.wrong city    14.7% [6-30]   (among answered)
+  end-to-end@50m     6.0% [3-11]   (abstain = miss)
+  forced@50m/1km     6.0% [3-11] / 13.3% [9-20]
+
+wikidata_addresses  (n=110, missing predictions: 0)
+  answered           70.0% [61-78]
+  precision@50m      51.9% [41-63]   (among answered)
+  conf.wrong city    3.9% [1-11]   (among answered)
+  end-to-end@50m     36.4% [28-46]   (abstain = miss)
+  forced@50m/1km     36.4% [28-46] / 56.4% [47-65]

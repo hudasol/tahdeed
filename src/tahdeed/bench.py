@@ -482,12 +482,20 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument(
         "--only-ids-of", default=None, help="score only the ids present in this prediction file"
     )
+    from . import baselines, bench_external
+
+    bench_external.add_parser(sub)
+    baselines.add_parser(sub)
     r = sub.add_parser("report", help="render docs/BENCH_REPORT.md from bench/results/*.json")
     r.add_argument("--results", default=str(RESULTS))
     r.add_argument("--data", default=str(DATA))
     r.add_argument("--out", default=str(ROOT / "docs" / "BENCH_REPORT.md"))
     a = ap.parse_args(argv)
 
+    if a.cmd == "fetch-external":
+        return bench_external.run(a)
+    if a.cmd == "baselines":
+        return baselines.run(a)
     if a.cmd == "build":
         build(a.db, Path(a.out))
     elif a.cmd == "baseline":

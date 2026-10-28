@@ -1,0 +1,49 @@
+{
+ "version": "1.0.0",
+ "kind": "external text, not OpenStreetMap",
+ "sets": {
+  "overture_places": {
+   "n": 3000,
+   "generator": "overture_places",
+   "split": "external",
+   "seed": 20261028,
+   "release": "2026-10-21.0",
+   "min_confidence": 0.7,
+   "targets": {
+    "dubai": 1000,
+    "abu dhabi": 1000,
+    "sharjah": 500,
+    "other": 500
+   },
+   "strata": {
+    "dubai": 1000,
+    "abu dhabi": 1000,
+    "sharjah": 500,
+    "other": 500
+   },
+   "licenses_seen_per_row": {
+    "CC0-1.0": 141,
+    "CDLA-Permissive-2.0": 3000,
+    "Apache-2.0": 261
+   },
+   "contamination": "never seen by developers",
+   "description": "business written name + free-text address; truth = source coordinate",
+   "sha256": "ba2238bf03c84de733dd11fb7caa4f1f9b0d4c6530c9abcc6387efc4377ac08f"
+  },
+  "wikidata_addresses": {
+   "n": 110,
+   "generator": "wikidata_sparql",
+   "split": "external",
+   "seed": null,
+   "retrieved": "2026-10-28",
+   "raw_bindings": 250,
+   "strata": {
+    "address_statement": 100,
+    "street_statement": 10
+   },
+   "contamination": "never seen by developers",
+   "description": "human edited address statements (P6375, P669/P670); truth = P625",
+   "sha256": "e4ea5fb532e18b701fb4337b3d7f8eb2840e389734da15d266ddf44b5a3f16f6"
+  }
+ }
+}

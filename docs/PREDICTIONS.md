@@ -317,3 +317,48 @@ queries typed by hand for use, which is a dogfooding list and not a benchmark.
 | D3 | Median error of the approximate answers falls (a POI is closer than a city centroid when right) but the share of approximate answers farther than 1 km from truth rises by under 2 points | **Not measured as stated.** Instead the stated radius was checked: it first fell (a fine answer kept a 25 m radius), so approximate fine answers now take the first radius whose calibrated probability reaches 0.9. Within radius: Abu Dhabi structured 64.8% to 65.3%, Dubai POI 49.9% to 56.5%, coverage hole 73.8% to 71.3% (a 2.6 point loss) |
 | D4 | Wrong city of all dev queries stays inside the interval already published (2.3 to 3.9%) | **Hit**: every wrong city count in `crosscity` dev at margin 0.35 is identical to the published run; only coverage at E2 rose by one query |
 | D5 | "Mall of the Emirates Dubai" returns the POI, not the city | **Hit**: Mall of the Emirates, approximate, p_valid 0.56 |
+
+## G. Independent real-text sets
+
+Written and committed before any system, Tahdeed or baseline, was run on `overture_places` (n=3,000)
+or `wikidata_addresses` (n=110). Both sets are built by `tahdeed bench fetch-external` from sources
+that are not OpenStreetMap (Overture Maps Places release 2026-10-21.0, Wikidata). The text is
+written by businesses or editors; it is neither synthetic nor driver direction style. The truth is
+the source's own coordinate and can be wrong. Nothing in Tahdeed (ranker, calibration, gate, gazetteer)
+was tuned on these rows and nothing will be after the run. Disclosure: task T4 above downloaded
+Overture Places rows in a Dubai box to size coverage against OSM; that measured overlap and changed
+no model or gazetteer, and the 3,000 rows here were drawn afresh from the whole UAE.
+
+Protocol, fixed now. Tahdeed (`tahdeed bench baseline tahdeed`, shipped model, no flags) runs on all
+rows of both sets, once. Photon and Nominatim run on an even stride sample of at most 150 rows per
+set (all 110 for Wikidata), the same ids for both, at most one request per second. Metrics are those
+of `bench/PREDICTION_FORMAT.md`; "answered", "precision" and "end to end" are as defined there, at
+50 m unless stated. A prediction is a hit only if the stated threshold holds on the point estimate.
+Comparisons between systems use identical ids (`--only-ids-of`).
+
+| # | Prediction | Result |
+|---|---|---|
+| G1 | Tahdeed answers between 15% and 45% of `overture_places` (OSM holds few of these places under the same name: T4.2 found 9% name key agreement) | **Miss**: 5.5% answered (4.8 to 6.4), far below the predicted 15% to 45%. Tahdeed abstains on almost all of this text |
+| G2 | Tahdeed's precision at 50 m among answered on `overture_places` is between 25% and 60%, at least 30 points below its 100% on `poi_sealed` (synthetic text overstates accuracy) | **Hit**: 36.1% (29.2 to 43.7) among 166 answered, 63.9 points below the 100.0% of `poi_sealed`. Synthetic text overstates precision by a large margin |
+| G3 | Tahdeed's end to end at 50 m on `overture_places` is at most 20% | **Hit**: 2.0% (1.6 to 2.6). Hit for the wrong reason: the system is silent, not accurate |
+| G4 | Tahdeed's forced at 1 km on `overture_places` is between 35% and 65% | **Miss**: 17.5% (16.2 to 18.9), under the predicted 35% to 65%. Even ignoring abstention, the top candidate is within 1 km of the truth for only about one row in six |
+| G5 | Tahdeed's wrong city rate among answered on `overture_places` is at most 12% | **Miss**: 21.7% (16.1 to 28.6) of answered rows have the wrong city, against a predicted ceiling of 12% |
+| G6 | Tahdeed's ECE of confidence against within 50 m on `overture_places` is above 0.10 (calibration learned on OSM text does not transfer) | **Hit**: ECE 0.463 (n=166 answered with confidence), against 0.063 on `poi_sealed`. The calibration learned on OSM derived text does not transfer to this text |
+| G7 | On `wikidata_addresses` Tahdeed answers between 30% and 80% of rows and its precision at 200 m among answered is at least 50% (n=110, intervals are wide) | **Miss, half hit**: answers 17.3% (11.3 to 25.4) of 110 rows, outside the predicted 30% to 80%; precision at 200 m among the 19 answered is 84.2% (62.4 to 94.5), above the predicted 50% |
+| G8 | On identical ids of `overture_places`, Tahdeed's end to end at 50 m exceeds both the TF-IDF and the BM25 baseline by at least 3 points | **Miss, reversed**: on the 150 shared ids Tahdeed's end to end at 50 m is 3.3% (1.4 to 7.6), TF-IDF 12.0% and BM25 13.3%. The same order holds on all 3,000 rows (Tahdeed 2.0%, TF-IDF 11.7%, BM25 12.6%). Both index baselines always answer and win on the end to end measure; Tahdeed's precision when it does answer (36.1%) is higher than theirs (11.7% and 12.6%) |
+| G9 | On the same sample, Photon answers at least 60% of rows and its end to end at 50 m is at least Tahdeed's (Photon holds the whole current OSM and does not abstain) | **Miss, half hit**: Photon answers 22.7% (17 to 30) of the 150 ids, under the predicted 60%. Its end to end at 50 m (6.0%) is above Tahdeed's 3.3% on the same ids, as predicted. Photon, asked for one result inside a UAE bounding box, returns nothing for about three in four of these full strings |
+| G10 | On the same sample, public Nominatim answers fewer rows than Photon | **Hit**: Nominatim answers 0.7% (1 of 150) of the Overture ids against Photon's 22.7%; on the Wikidata ids 26.4% against 70.0%. A direct check of three Nominatim queries returned empty for the full string and an answer only for the bare name, so this is the service's behaviour, not a client fault |
+| G11 | Per stratum on `overture_places`, Tahdeed's end to end at 50 m is lowest in `other` (northern emirates and Al Ain, thinnest OSM POI coverage) | **Miss**: Tahdeed's end to end at 50 m by stratum is Abu Dhabi 2.2%, Dubai 1.6%, Sharjah 1.2%, other 3.2%. The lowest is Sharjah, and `other` is the highest. All four are near zero, so the ordering is within noise |
+
+Not predicted: libpostal (installation is attempted; if the library or its model cannot be obtained
+here it is reported as blocked, not simulated). Decision rule: whatever the result, the numbers are
+reported as they come and the sets are not used for tuning.
+
+**Summary of section G.** Of eleven predictions, four are hits (G2, G3, G6, G10; G3 only because the system is silent),
+two are half hits (G7, G9) and five are misses (G1, G4, G5, G8, G11). The
+pattern is one finding rather than eleven: on text written by businesses and editors, Tahdeed
+resolves very few rows (5.5% of Overture text, 17.3% of Wikidata text), and when it does answer it is
+within 50 m of the source coordinate 36.1% of the time on Overture text and 47.4% on Wikidata text. Its confidence is badly calibrated on this
+text. Two general purpose baselines that always answer score a higher end to end rate at 50 m, and
+Photon and Nominatim do not do well either on these full address strings. No tuning was done in
+response, per the rule above. The exact numbers are generated into `docs/BENCH_REPORT.md`.
