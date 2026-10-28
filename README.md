@@ -24,11 +24,19 @@ docker run --rm -p 8000:8000 --read-only --tmpfs /tmp --cap-drop ALL \
     --security-opt no-new-privileges -v "$PWD/data:/data:ro" tahdeed
 ```
 
-The data directory must hold `gazetteer.sqlite` and `ranker.npz`. Build them yourself (below), or download them from a release with `tahdeed.fetch.fetch_data`, which checks SHA-256 values against `data/MANIFEST.json` (see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)).
+The data directory must hold `gazetteer.sqlite` and `ranker.npz`. Download them with `tahdeed fetch` (about 50 MB, from the `data` branch of this repository; every file is checked against the SHA-256 values in `MANIFEST.json`), or build them yourself (below). The manifest format and how to host the files elsewhere are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Quick start
 
-To build the full data from OpenStreetMap:
+With the downloaded data:
+
+```bash
+tahdeed fetch                                # writes data/gazetteer.sqlite and data/models/ranker.npz
+tahdeed resolve "29 Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah, Abu Dhabi"
+tahdeed serve                                # API and dashboard at http://127.0.0.1:8000
+```
+
+To build the full data from OpenStreetMap instead:
 
 ```bash
 # Extract: https://download.openstreetmap.fr/extracts/asia/united_arab_emirates.osm.pbf
