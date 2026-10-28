@@ -1,0 +1,35 @@
+
+address_dev  (n=100, missing predictions: 0)
+  answered           100.0% [96-100]
+  precision@50m      8.0% [4-15]   (among answered)
+  conf.wrong city    64.0% [54-73]   (among answered)
+  end-to-end@50m     8.0% [4-15]   (abstain = miss)
+  forced@50m/1km     8.0% [4-15] / 9.0% [5-16]
+
+address_sealed  (n=100, missing predictions: 0)
+  answered           100.0% [96-100]
+  precision@50m      3.0% [1-8]   (among answered)
+  conf.wrong city    77.0% [68-84]   (among answered)
+  end-to-end@50m     3.0% [1-8]   (abstain = miss)
+  forced@50m/1km     3.0% [1-8] / 3.0% [1-8]
+
+crosscity_dev  (n=100, missing predictions: 0)
+  answered           100.0% [96-100]
+  precision@50m      48.0% [38-58]   (among answered)
+  conf.wrong city    36.0% [27-46]   (among answered)
+  end-to-end@50m     48.0% [38-58]   (abstain = miss)
+  forced@50m/1km     48.0% [38-58] / 50.0% [40-60]
+
+landmark_dev  (n=100, missing predictions: 0)
+  answered           100.0% [96-100]
+  precision@50m      83.0% [74-89]   (among answered)
+  conf.wrong city    5.0% [2-11]   (among answered)
+  end-to-end@50m     83.0% [74-89]   (abstain = miss)
+  forced@50m/1km     83.0% [74-89] / 85.0% [77-91]
+
+poi_dev  (n=100, missing predictions: 0)
+  answered           100.0% [96-100]
+  precision@50m      93.0% [86-97]   (among answered)
+  conf.wrong city    0.0% [0-4]   (among answered)
+  end-to-end@50m     93.0% [86-97]   (abstain = miss)
+  forced@50m/1km     93.0% [86-97] / 95.0% [89-98]
