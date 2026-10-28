@@ -7,7 +7,6 @@ scripts
 deploy
 .git
 .github
-.claude
 .venv
 .pytest_cache
 .ruff_cache
