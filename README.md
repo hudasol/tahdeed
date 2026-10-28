@@ -1,42 +1,117 @@
 # tahdeed · تحديد
 
-**Bilingual Arabic/English address resolver for the UAE.** It turns messy free-text addresses into coordinates, an Onwani-style standard form and a calibrated confidence score, and it abstains when an address is too ambiguous.
+tahdeed resolves free text UAE addresses, written in Arabic, English or a mix, to coordinates, a standard bilingual address form and a calibrated confidence. When an address is too ambiguous to answer reliably, it abstains and says which detail is missing.
 
-> **Status: v2.0.** Engineering history: [`docs/DESIGN_NOTES.md`](docs/DESIGN_NOTES.md). Predictions were written before each run: [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md). Results: [`docs/EVALUATION.md`](docs/EVALUATION.md).
+The resolver runs offline and deterministically. It uses no language model and no API keys. Version 2.0.0; the change history is in [`CHANGELOG.md`](CHANGELOG.md).
 
-## The problem
+## Installation
 
-The UAE has no single address a program can rely on. Dubai uses Makani (a 10-digit code per building entrance, Dubai only). Abu Dhabi uses Onwani (building number, street, city). The federal National Address is a specification that aggregates the emirates' systems, not an open layer an app can call. Meanwhile people write "Villa 14, near the Spinneys, Jumeira 3" or "شارع الأسد بجانب المطعم", and every place has several spellings because Arabic names are transliterated in many ways.
+From source, with Python 3.11 or newer:
 
-tahdeed is a **translation layer** between how people write addresses and the keys official systems use, and it is explicit about when it cannot tell.
+```bash
+git clone https://github.com/hudasol/tahdeed.git
+cd tahdeed
+pip install -e .            # resolver and API
+pip install -e ".[train]"   # adds scikit-learn, needed only to train a model
+pip install -e ".[build]"   # adds osmium, needed only to build a gazetteer from an OSM extract
+```
 
-## What it does
+With Docker, the image contains the code and the dashboard but no data. The gazetteer and model are mounted at `/data`:
 
-Given a free-text address (Arabic, English or mixed), it returns:
+```bash
+docker build -t tahdeed .
+docker run --rm -p 8000:8000 --read-only --tmpfs /tmp --cap-drop ALL \
+    --security-opt no-new-privileges -v "$PWD/data:/data:ro" tahdeed
+```
 
-- ranked candidate locations with an uncertainty radius,
-- a standardized bilingual address (building / street / district / city / postcode where known),
-- a calibrated confidence: the probability that the top candidate is within a stated distance of the truth,
-- an abstain / ask decision naming the missing field (for example "add a building number"),
-- when the same name exists in several cities, the question "Which city?" with the candidate cities; passing the answer back as `city` (API, CLI `--city`, dashboard buttons) resolves the query,
-- an explanation of which parts of your text matched which gazetteer fields.
+The data directory must hold `gazetteer.sqlite` and `ranker.npz`. Build them yourself (below), or download them from a release with `tahdeed.fetch.fetch_data`, which checks SHA-256 values against `data/MANIFEST.json` (see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)).
 
-It runs offline and deterministically. No LLM and no API keys are involved.
+## Quick start
 
-## What it does not do
+To build the full data from OpenStreetMap:
 
-- It is not a map or a routing engine.
-- It cannot resolve official Makani or Onwani identifiers, because those registries are not open. It validates Makani format and exposes an adapter interface.
-- Coverage depends on OpenStreetMap. Abu Dhabi emirate has structured, bilingual address data; **Dubai addressing in OSM is sparse**, so Dubai results are reported separately and are weaker.
+```bash
+# Extract: https://download.openstreetmap.fr/extracts/asia/united_arab_emirates.osm.pbf
+tahdeed build united_arab_emirates.osm.pbf   # about 30 s, writes data/gazetteer.sqlite
+tahdeed train                                # about 5 min, writes data/models/ranker.npz
+tahdeed resolve "29 Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah, Abu Dhabi"
+tahdeed serve                                # API and dashboard at http://127.0.0.1:8000
+```
 
-## Data and licence
+To try the service without the full data, use the small fixture in the repository (an OpenStreetMap excerpt around Al Khalidiyah, Abu Dhabi) with a model trained on it. This model only exercises the service. Its confidence values say nothing about accuracy on real data.
 
-- Code: MIT (see `LICENSE`).
-- Data: © OpenStreetMap contributors, ODbL 1.0. The full derived gazetteer is built locally by the build command and is not committed. A small attributed fixture is included for tests. See `data/NOTICE.md`.
+```bash
+pip install -e ".[train]"
+python scripts/make_smoke_model.py /tmp/tahdeed-smoke
+TAHDEED_DB=/tmp/tahdeed-smoke/gazetteer.sqlite TAHDEED_MODEL=/tmp/tahdeed-smoke/ranker.npz \
+    tahdeed serve
+```
 
-## Results
+A request and the response from that service (abridged):
 
-Generated from the result files by `scripts/make_results_blocks.py`; nothing in this block is hand-written. Intervals are Wilson 95%.
+```bash
+curl -s -X POST http://127.0.0.1:8000/resolve -H 'Content-Type: application/json' \
+    -d '{"address": "29 Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah, Abu Dhabi"}'
+```
+
+```json
+{
+  "query": "29 Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah, Abu Dhabi",
+  "status": "resolved",
+  "best": {
+    "tier": "address",
+    "lat": 24.469511,
+    "lon": 54.346658,
+    "radius_m": 30,
+    "p_within_50m": 1.0,
+    "standard": {
+      "en": "29 Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah, Abu Dhabi",
+      "ar": "29 شارع شبيب بن سعيد المهيري, الخالدية, أبوظبي",
+      "postcode": "20039"
+    },
+    "evidence": {"street_matched": "shabib bin saeed al muhairi street", "house_number": "29", "how": "exact"}
+  },
+  "asks": [],
+  "degraded": false,
+  "calibrated": true
+}
+```
+
+Without the house number and city, the same street gives an area level answer and asks for the missing details:
+
+```json
+{
+  "query": "Shabib Bin Saeed Al Muhairi Street, Al Khalidiyah",
+  "status": "approximate",
+  "best": {"tier": "street_area", "lat": 24.466597, "lon": 54.349075, "radius_m": 315},
+  "asks": ["Add the building / house number.", "Add the city / emirate."]
+}
+```
+
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /resolve` | Body `{"address": "...", "city": "..."}`. `city` is optional and answers a "Which city?" question. Returns the status, the best candidate, alternatives, questions to ask and the standard form. |
+| `POST /resolve/batch` | CSV upload with an `address` column. |
+| `GET /health` | Status, versions and checksums of the gazetteer and model. |
+| `GET /config` | Attribution text and the data offer link. |
+| `GET /docs` | Interactive OpenAPI documentation. |
+| `GET /` | Map dashboard. |
+
+The status is one of `resolved`, `approximate`, `ambiguous` or `unresolved`. Every response carries `degraded` and `calibrated` flags. If the model is missing or does not match the gazetteer the service either refuses to start (`TAHDEED_STRICT=1`, the default in the image) or answers with `degraded: true`. Configuration, rate limiting and logging are described in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). The same functions are available on the command line: `tahdeed resolve`, `tahdeed batch`, `tahdeed eval`, `tahdeed verify` and `tahdeed bench`.
+
+## How it works
+
+Text in both scripts is normalised (digits, diacritics, variant letters) and mapped to a shared consonant skeleton, so that `جميرا` and `Jumeirah` meet at one key. A parser extracts house numbers, units, Makani codes, PO boxes and landmark phrases such as "near" or `بجانب`. Every run of words is looked up in a gazetteer built from OpenStreetMap (streets, districts, points of interest, cities), tolerating transliteration variants and typos, and the set of non overlapping matches that explains most of the text is chosen by dynamic programming.
+
+From those matches the resolver generates candidates at several levels: an exact address, a point of interest, a position interpolated between neighbouring buildings, a position relative to a landmark, a street within a district, a street, an area and a city. Gradient boosted trees score each candidate, and isotonic regression fitted on districts the model never saw calibrates the scores, so that a reported probability of 0.9 corresponds to being right about nine times in ten.
+
+A fixed policy then decides. It resolves when the calibrated probability of being within 50 m is high enough and no close rival exists. It returns an approximate area with an empirical radius when only coarse evidence is trustworthy, and otherwise marks the query ambiguous or unresolved and names the missing field. When the same name exists in several cities and the query gives no city, a city gate asks "Which city?" with the candidate cities rather than answering. The design and its measured effects are in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) and [`docs/DESIGN_NOTES.md`](docs/DESIGN_NOTES.md).
+
+## Accuracy
+
+Generated from the result files by `scripts/make_results_blocks.py`. Intervals are Wilson 95%.
 
 <!-- RESULTS:results BEGIN -->
 | | dev (model used to choose the gate) | sealed (run once) |
@@ -57,21 +132,37 @@ Generated from the result files by `scripts/make_results_blocks.py`; nothing in 
 Cross-city rows use the synthetic `crosscity` set (pairs of the same record with and without district/city evidence; composition chosen to expose the failure, **not** a prevalence estimate). The standard-benchmark coverage without the gate was 64.7% on sealed. Frozen v2.0 release, sealed, for reference: 65.5% answered, 98.7% within 50 m.
 <!-- RESULTS:results END -->
 
-Caveats: queries are synthetic (plus 40 hand-written ones), truth is OpenStreetMap, Dubai is evaluated only on POI queries. The human-written set is **pending real data** (`bench/human_kit/`). Full tables, ablations, predictions with hits and misses ([`docs/PREDICTIONS.md`](docs/PREDICTIONS.md)) and every known failure: [`docs/EVALUATION.md`](docs/EVALUATION.md). Benchmark: [`bench/`](bench/README.md), report in [`docs/BENCH_REPORT.md`](docs/BENCH_REPORT.md).
+Queries in these benchmarks are synthetic apart from a set of 40 written by hand, and the truth is the OpenStreetMap point. The human written set is pending real data (`bench/human_kit/`). Full tables, ablations and every known failure are in [`docs/EVALUATION.md`](docs/EVALUATION.md). Predictions were written before each run and are kept with their outcomes in [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md). The benchmark is described in [`bench/README.md`](bench/README.md) and reported in [`docs/BENCH_REPORT.md`](docs/BENCH_REPORT.md).
 
-## More
+## Limitations
 
-[`bench/`](bench/README.md) Gulf-AddressBench (datasets, split and contamination policy, scorer: `tahdeed bench score predictions.jsonl`) · [`bench/human_kit/`](bench/human_kit/README.md) human-written set collection kit (no data yet) · [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) open-data survey for Dubai addresses (nothing usable found) · [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) rate limiting, Docker, hosting limits. · [`docs/EDGE_PROPOSAL.md`](docs/EDGE_PROPOSAL.md) two page proposal note · [`docs/SEALED2.md`](docs/SEALED2.md) why no fresh sealed set exists yet · [`CITATION.cff`](CITATION.cff) how to cite the benchmark.
+- No benchmark query came from a real user. Only real query logs close this gap.
+- OpenStreetMap is not an official registry. When the true record is missing, the resolver can return a confident wrong neighbour (see the missing address row above). `RegistryAdapter` is an interface only and is not connected to any registry.
+- A street name that exists in several cities, written without the city, is handled by the calibrated city gate. The gate lowers wrong city answers on the risk set but cannot see a record that is missing from the registry, and it costs coverage.
+- Arabizi is the weakest writing style, at about 50% top 1.
+- The landmark benchmark tests finding the landmark, not the offset that "near" implies.
+- Makani, Onwani and National Address codes are not resolved, because those registries are not open. Dubai has few structured addresses in OpenStreetMap, so Dubai is evaluated only on point of interest queries.
+- The Docker image is built and smoke tested in GitHub Actions (job `docker`).
 
-## Honest limits
+## Data and licence
 
-- **Synthetic queries.** No query in any benchmark came from a real user. The largest open gap; only real logs close it.
-- **OSM is not an official registry.** A missing record yields a confident wrong neighbour (see the missing-address row above). `RegistryAdapter` is an interface only and is not wired in.
-- **Common street names across cities.** Without the city, a name present in several cities is answered or refused by a calibrated *city gate* (asks "which city?"). The gate cuts wrong-city answers on the risk set but cannot see a record that is missing from the registry, so some exposure remains; and it costs coverage. Numbers above; analysis in `docs/EVALUATION.md`.
-- **Arabizi** is the weakest style (about 50%).
-- **Landmark benchmark** tests finding the landmark, not the offset "near" implies.
-- Does not resolve official Makani / Onwani / National Address codes. Dubai structured addresses are thin in OSM.
-- The Docker image is built and smoke-tested in GitHub Actions (job `docker`), not in the development sandbox.
+The code is released under the MIT licence (see [`LICENSE`](LICENSE)). The data are © OpenStreetMap contributors, available under the ODbL 1.0. The gazetteer derived from them is built locally by `tahdeed build` and is not committed; a small attributed fixture is included for tests. See [`data/NOTICE.md`](data/NOTICE.md) and, for the obligations of anyone serving the data publicly, section 6 of [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+## Project layout
+
+```
+src/tahdeed/     resolver, API, command line and evaluation code (the dashboard is in src/tahdeed/web/)
+tests/           unit, property and API tests; tests/fixtures/mini.sqlite is a small gazetteer
+bench/           Gulf-AddressBench datasets, scorer results and the human collection kit
+docs/            model card, data card, methodology, design notes, evaluation, predictions
+scripts/         reproduction, document generation and smoke test scripts
+deploy/          hosting helpers (Render, Vercel, regional builds)
+data/            licence notice; built data is written here and ignored by version control
+```
+
+## Documentation
+
+[`docs/MODEL_CARD.md`](docs/MODEL_CARD.md), [`docs/DATA_CARD.md`](docs/DATA_CARD.md), [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md), [`docs/EVALUATION.md`](docs/EVALUATION.md), [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), [`docs/RELEASING.md`](docs/RELEASING.md), [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) (open data survey for Dubai addresses), [`docs/SEALED2.md`](docs/SEALED2.md) (why no second sealed set exists yet), [`docs/EDGE_PROPOSAL.md`](docs/EDGE_PROPOSAL.md). To contribute, read [`CONTRIBUTING.md`](CONTRIBUTING.md); for security reports, [`SECURITY.md`](SECURITY.md). To cite the benchmark, see [`CITATION.cff`](CITATION.cff).
 
 ## Author
 
