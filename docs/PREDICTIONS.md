@@ -298,3 +298,39 @@ found only in Overture has no independent truth here.
 Decision rule, fixed now: neither source is merged into the shipped gazetteer in this session. A
 merge needs a resolver evaluation whose truth is not the supplement itself; the measurement above
 only sizes the opportunity and checks the licences.
+
+## G. Independent real-text sets
+
+Written and committed before any system, Tahdeed or baseline, was run on `overture_places` (n=3,000)
+or `wikidata_addresses` (n=110). Both sets are built by `tahdeed bench fetch-external` from sources
+that are not OpenStreetMap (Overture Maps Places release 2026-10-21.0, Wikidata). The text is
+written by businesses or editors; it is neither synthetic nor driver direction style. The truth is
+the source's own coordinate and can be wrong. Nothing in Tahdeed (ranker, calibration, gate, gazetteer)
+was tuned on these rows and nothing will be after the run. Disclosure: task T4 above downloaded
+Overture Places rows in a Dubai box to size coverage against OSM; that measured overlap and changed
+no model or gazetteer, and the 3,000 rows here were drawn afresh from the whole UAE.
+
+Protocol, fixed now. Tahdeed (`tahdeed bench baseline tahdeed`, shipped model, no flags) runs on all
+rows of both sets, once. Photon and Nominatim run on an even stride sample of at most 150 rows per
+set (all 110 for Wikidata), the same ids for both, at most one request per second. Metrics are those
+of `bench/PREDICTION_FORMAT.md`; "answered", "precision" and "end to end" are as defined there, at
+50 m unless stated. A prediction is a hit only if the stated threshold holds on the point estimate.
+Comparisons between systems use identical ids (`--only-ids-of`).
+
+| # | Prediction | Result |
+|---|---|---|
+| G1 | Tahdeed answers between 15% and 45% of `overture_places` (OSM holds few of these places under the same name: T4.2 found 9% name key agreement) | pending |
+| G2 | Tahdeed's precision at 50 m among answered on `overture_places` is between 25% and 60%, at least 30 points below its 100% on `poi_sealed` (synthetic text overstates accuracy) | pending |
+| G3 | Tahdeed's end to end at 50 m on `overture_places` is at most 20% | pending |
+| G4 | Tahdeed's forced at 1 km on `overture_places` is between 35% and 65% | pending |
+| G5 | Tahdeed's wrong city rate among answered on `overture_places` is at most 12% | pending |
+| G6 | Tahdeed's ECE of confidence against within 50 m on `overture_places` is above 0.10 (calibration learned on OSM text does not transfer) | pending |
+| G7 | On `wikidata_addresses` Tahdeed answers between 30% and 80% of rows and its precision at 200 m among answered is at least 50% (n=110, intervals are wide) | pending |
+| G8 | On identical ids of `overture_places`, Tahdeed's end to end at 50 m exceeds both the TF-IDF and the BM25 baseline by at least 3 points | pending |
+| G9 | On the same sample, Photon answers at least 60% of rows and its end to end at 50 m is at least Tahdeed's (Photon holds the whole current OSM and does not abstain) | pending |
+| G10 | On the same sample, public Nominatim answers fewer rows than Photon | pending |
+| G11 | Per stratum on `overture_places`, Tahdeed's end to end at 50 m is lowest in `other` (northern emirates and Al Ain, thinnest OSM POI coverage) | pending |
+
+Not predicted: libpostal (installation is attempted; if the library or its model cannot be obtained
+here it is reported as blocked, not simulated). Decision rule: whatever the result, the numbers are
+reported as they come and the sets are not used for tuning.
