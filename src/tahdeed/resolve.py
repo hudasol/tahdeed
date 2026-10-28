@@ -174,6 +174,22 @@ def _poi_named(p: tuple, text: str) -> bool:
     return not names or normalize_text(text) in names
 
 
+SIMILARITY_FLOOR = 60.0
+
+
+def _bare(s: str) -> str:
+    return " ".join(strip_articles(normalize_text(s).split()))
+
+
+def _poi_similar(p: tuple, text: str) -> bool:
+    """Is the POI's Latin name spelled recognisably like ``text`` (not only the same skeleton)?"""
+    names = _latin_names(p)
+    if not names or has_arabic(text) or not has_latin(text):
+        return True
+    t = _bare(text)
+    return any(fuzz.token_sort_ratio(t, _bare(n)) >= SIMILARITY_FLOOR for n in names)
+
+
 def _city_phrases() -> list[str]:
     out = []
     for c in CITIES:
@@ -189,11 +205,13 @@ def _has_phrase(name: str, phrase: str) -> bool:
     return f" {phrase} " in f" {name} "
 
 
-def _poi_keeps_city_phrase(p: tuple, text: str) -> bool:
+def _poi_plausible(p: tuple, text: str) -> bool:
     """A city phrase written in the query must appear literally in a Latin POI name."""
     t = normalize_text(text)
     phrases = [c for c in _CITY_PHRASES if _has_phrase(t, c)]
     names = _latin_names(p)
+    if names and not _poi_similar(p, text):
+        return False
     if not phrases or not names:
         return True
     return all(any(_has_phrase(n, c) for n in names) for c in phrases[:1])
@@ -282,7 +300,7 @@ def find_spans(
                 if sp.pois and not has_type:
                     # a POI that shares only a consonant skeleton with a city word is not a match
                     # ("Dubai" ~ "ADIB", "Dubai Airport" ~ "Dibba Airport")
-                    keep = [i for i in sp.pois if _poi_keeps_city_phrase(g.pois[i], sp.text)]
+                    keep = [i for i in sp.pois if _poi_plausible(g.pois[i], sp.text)]
                     if sp.city:
                         keep = [i for i in keep if _poi_named(g.pois[i], sp.text)]
                     if len(keep) != len(sp.pois):
@@ -370,9 +388,7 @@ def _attach(g: Gazetteer, sp: Span, kind: str, k: str) -> None:
     elif kind == "area":
         sp.areas = sorted(set(sp.areas) | set(g.area_by_key[k]))
     else:
-        ids = [
-            i for i in g.poi_by_key[k] if sp.has_type or _poi_keeps_city_phrase(g.pois[i], sp.text)
-        ]
+        ids = [i for i in g.poi_by_key[k] if sp.has_type or _poi_plausible(g.pois[i], sp.text)]
         sp.pois = sorted(set(sp.pois) | set(ids))
 
 

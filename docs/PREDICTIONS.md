@@ -430,6 +430,6 @@ are left alone. Comparison model: the one trained from the current code, as in t
 
 | # | Prediction | Result |
 |---|---|---|
-| F1 | "Dubai Airport" no longer returns Euro Part or Dibba Airport | _pending_ |
-| F2 | Resolved share and precision on the three dev sets move by less than 0.5 points | _pending_ |
-| F3 | Forced top 1 within 1 km does not fall on any set by more than 0.5 points | _pending_ |
+| F1 | "Dubai Airport" no longer returns Euro Part or Dibba Airport | **Hit**: "Dubai Airport" now returns a Dubai area answer, not a POI. It is not the airport either (the name "Dubai International Airport" is spelled too differently), so the answer is a vague one with a 14.9 km radius |
+| F2 | Resolved share and precision on the three dev sets move by less than 0.5 points | **Hit**: no move above 0.3 points; Dubai POI resolved share 56.7% to 57.1%, precision 99.4% to 99.5% |
+| F3 | Forced top 1 within 1 km does not fall on any set by more than 0.5 points | **Hit**: forced top 1 within 1 km rose or held on all three (Dubai POI 80.1% to 80.5%) |
