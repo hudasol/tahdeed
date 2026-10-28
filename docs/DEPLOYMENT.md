@@ -352,19 +352,19 @@ It runs `deploy/make_region.py --preset abu-dhabi-emirate` (Abu Dhabi, Al Ain, A
 Zayed, Liwa), trains a model on exactly that file (`tahdeed train`, defaults: 30,000 training
 queries, seed 0), measures memory with `deploy/measure_rss.py`, then writes
 `region/gazetteer.sqlite.gz` and `region/SHA256SUMS`. Measured on the 2026-10-15 OSM extract
-(`docs/region_rss.json`, Python 3.12, WSL2 Linux):
+(`docs/region_rss.json`, Python 3.13):
 
 | | Value |
 |---|---|
-| Rows (addresses / street segments / areas / POIs) | 127,705 / 46,667 / 1,798 / 13,926 |
-| Interpreter with FastAPI and uvicorn imported, nothing loaded | 45 MB |
-| Resident after loading gazetteer and model in strict mode (VmRSS) | 362 MB |
-| Resident after 400 requests through the app (VmRSS) | 365 MB |
-| Peak resident, whole run (VmHWM) | 369.9 MB |
-| Load time | 39.5 s on a heavily shared CPU (other jobs were running); expect less on an idle core and more on Render's 0.1 CPU |
+| Rows (addresses / street segments / areas / POIs) | 127,705 / 46,660 / 1,798 / 13,925 |
+| Interpreter with FastAPI and uvicorn imported, nothing loaded | 45.3 MB |
+| Resident after loading gazetteer and model in strict mode (VmRSS) | 360.9 MB |
+| Resident after 400 requests through the app (VmRSS) | 363.8 MB |
+| Peak resident, whole run (VmHWM) | 371.6 MB |
+| Load time | 3.7 s here; expect more on Render's 0.1 CPU |
 
 The measurement process also imports the HTTP test client, so the server alone should be slightly
-smaller. Peak 369.9 MB leaves about 142 MB under Render's 512 MB, for one worker. Concurrent
+smaller. Peak 371.6 MB leaves about 140 MB under Render's 512 MB, for one worker. Concurrent
 requests add little (each request allocates far less than 1 MB), but nothing above was measured
 under concurrent load.
 
