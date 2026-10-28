@@ -56,3 +56,39 @@ def test_skeleton_only_poi_is_not_a_name_match():
     dubai = (2, "Dubai", None, None, "x", None, "dubai", None, 25.0, 55.0, "n2")
     assert not _poi_named(adib, "dubai")
     assert _poi_named(dubai, "dubai")
+
+
+def test_city_phrase_must_appear_in_latin_poi_name():
+    from tahdeed.resolve import _poi_keeps_city_phrase
+
+    dibba = (
+        1,
+        "Dibba Airport",
+        None,
+        "Dibba Airport",
+        "aeroway",
+        None,
+        "fujairah",
+        None,
+        25.6,
+        56.2,
+        "n",
+    )
+    dxb = (
+        2,
+        "Dubai Airport",
+        None,
+        "Dubai Airport",
+        "aeroway",
+        None,
+        "dubai",
+        None,
+        25.2,
+        55.4,
+        "n",
+    )
+    arabic_only = (3, "مطار", "مطار", None, "aeroway", None, "dubai", None, 25.2, 55.4, "n")
+    assert not _poi_keeps_city_phrase(dibba, "dubai airport")
+    assert _poi_keeps_city_phrase(dxb, "dubai airport")
+    assert _poi_keeps_city_phrase(arabic_only, "dubai airport")
+    assert _poi_keeps_city_phrase(dibba, "airport")

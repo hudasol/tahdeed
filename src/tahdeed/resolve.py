@@ -161,10 +161,42 @@ def _diversify(items: list, city_of, k: int) -> list:
     return (first + rest)[:k]
 
 
+def _latin_names(p: tuple) -> list[str]:
+    return [normalize_text(n) for n in (p[1], p[3]) if n and has_latin(n)]
+
+
 def _poi_named(p: tuple, text: str) -> bool:
-    """Does one of the POI's names equal ``text`` once normalised (not just share its skeleton)?"""
-    want = normalize_text(text)
-    return any(n and normalize_text(n) == want for n in (p[1], p[2], p[3]))
+    """Does one of the POI's Latin names equal ``text`` once normalised (not just share its skeleton)?
+
+    A POI with no Latin name is matched through transliteration and is left alone.
+    """
+    names = _latin_names(p)
+    return not names or normalize_text(text) in names
+
+
+def _city_phrases() -> list[str]:
+    out = []
+    for c in CITIES:
+        for n in (c.en, *c.aliases):
+            out.append(normalize_text(n))
+    return sorted({n for n in out if n}, key=lambda n: -len(n))
+
+
+_CITY_PHRASES = _city_phrases()
+
+
+def _has_phrase(name: str, phrase: str) -> bool:
+    return f" {phrase} " in f" {name} "
+
+
+def _poi_keeps_city_phrase(p: tuple, text: str) -> bool:
+    """A city phrase written in the query must appear literally in a Latin POI name."""
+    t = normalize_text(text)
+    phrases = [c for c in _CITY_PHRASES if _has_phrase(t, c)]
+    names = _latin_names(p)
+    if not phrases or not names:
+        return True
+    return all(any(_has_phrase(n, c) for n in names) for c in phrases[:1])
 
 
 def candidate_city(g: Gazetteer, c: Candidate) -> str | None:
@@ -247,6 +279,15 @@ def find_spans(
                     if k in g.city_by_key_alias:
                         sp.city = g.city_by_key_alias[k]
                         hit = True
+                if sp.pois and not has_type:
+                    # a POI that shares only a consonant skeleton with a city word is not a match
+                    # ("Dubai" ~ "ADIB", "Dubai Airport" ~ "Dibba Airport")
+                    keep = [i for i in sp.pois if _poi_keeps_city_phrase(g.pois[i], sp.text)]
+                    if sp.city:
+                        keep = [i for i in keep if _poi_named(g.pois[i], sp.text)]
+                    if len(keep) != len(sp.pois):
+                        sp.pois = keep
+                        hit = bool(sp.streets or sp.areas or sp.pois or sp.city)
                 if flags.siblings and len(key) >= 3:
                     sibs = [
                         k for k in g.street_coarse.get(coarse_key(key), [])
@@ -329,7 +370,10 @@ def _attach(g: Gazetteer, sp: Span, kind: str, k: str) -> None:
     elif kind == "area":
         sp.areas = sorted(set(sp.areas) | set(g.area_by_key[k]))
     else:
-        sp.pois = sorted(set(sp.pois) | set(g.poi_by_key[k]))
+        ids = [
+            i for i in g.poi_by_key[k] if sp.has_type or _poi_keeps_city_phrase(g.pois[i], sp.text)
+        ]
+        sp.pois = sorted(set(sp.pois) | set(ids))
 
 
 def _approx_span(g, start, end, key, has_type, text) -> Span | None:
@@ -353,7 +397,7 @@ def _approx_span(g, start, end, key, has_type, text) -> Span | None:
             continue
         best = max(best, r)
         _attach(g, sp, kind, k)
-    if not best:
+    if not best or not (sp.streets or sp.areas or sp.pois):
         return None
     sp.quality = 0.9 * best / 100.0
     return sp
@@ -372,7 +416,7 @@ def _fuzzy_span(g, start, end, key, has_type, text) -> Span | None:
         k, score, _ = m
         best = max(best, score)
         _attach(g, sp, kind, k)
-    if not best:
+    if not best or not (sp.streets or sp.areas or sp.pois):
         return None
     sp.quality = 0.9 * best / 100.0
     return sp
@@ -539,9 +583,6 @@ class Resolver:
             # a city name that collides with an obscure area key elsewhere ("Dubai" ~ "Al Doob")
             if sp.city and sp.areas:
                 sp.areas = [i for i in sp.areas if g.areas[i][4] == sp.city]
-            # ... and with a POI that only shares the consonant skeleton ("Dubai" ~ "ADIB")
-            if sp.city and sp.pois and not sp.has_type:
-                sp.pois = [i for i in sp.pois if _poi_named(g.pois[i], sp.text)]
 
         # landmark phrase (matched separately)
         lm_spans: list[Span] = []
