@@ -32,7 +32,7 @@ Intervals are Wilson 95%. Predictions and their hits and misses: [`PREDICTIONS.m
 | gate_0.05 | 50.0% | 99.6% | 0.5% (0.3-1.0) | 0.5% (0.2-1.0) | 4.4% | 2.0% | 54.2% | 0.0% (0.0-0.4) | 0.1% (0.0-0.3) |
 | gate_0.02 | 50.0% | 99.6% | 0.5% (0.3-1.0) | 0.5% (0.2-1.0) | 4.4% | 2.0% | 54.2% | 0.0% (0.0-0.4) | 0.1% (0.0-0.3) |
 
-### Sealed (run once; baseline, diversify-only and the chosen margin)
+### Sealed (earlier model, not rerun; baseline, diversify-only and the chosen margin)
 
 | Config | std resolved | std precision | risk E0: answered | risk E0: **wrong city, % of all** | risk E0: asked city | unique E0: answered | unique E0: asked | risk E1: wrong city | risk E2: wrong city |
 |---|---|---|---|---|---|---|---|---|---|

@@ -113,7 +113,7 @@ The status is one of `resolved`, `approximate`, `ambiguous` or `unresolved`. Eve
 
 Text in both scripts is normalised (digits, diacritics, variant letters) and mapped to a shared consonant skeleton, so that `جميرا` and `Jumeirah` meet at one key. A parser extracts house numbers, units, Makani codes, PO boxes and landmark phrases such as "near" or `بجانب`. Every run of words is looked up in a gazetteer built from OpenStreetMap (streets, districts, points of interest, cities), tolerating transliteration variants and typos, and the set of non overlapping matches that explains most of the text is chosen by dynamic programming.
 
-From those matches the resolver generates candidates at several levels: an exact address, a point of interest, a position interpolated between neighbouring buildings, a position relative to a landmark, a street within a district, a street, an area and a city. Gradient boosted trees score each candidate, and isotonic regression fitted on districts the model never saw calibrates the scores, so that a reported probability of 0.9 corresponds to being right about nine times in ten.
+From those matches the resolver generates candidates at several levels: an exact address, a point of interest, a position interpolated between neighbouring buildings, a position relative to a landmark, a street within a district, a street, an area and a city. Gradient boosted trees score each candidate, and isotonic regression fitted on districts the model never saw calibrates the scores. On synthetic queries from those unseen districts, a reported probability of 0.9 corresponds to being right about nine times in ten. On real business text the confidence does not transfer (see Accuracy).
 
 A fixed policy then decides. It resolves when the calibrated probability of being within 50 m is high enough and no close rival exists. It returns an approximate area with an empirical radius when only coarse evidence is trustworthy, and otherwise marks the query ambiguous or unresolved and names the missing field. When the same name exists in several cities and the query gives no city, a city gate asks "Which city?" with the candidate cities rather than answering. The design and its measured effects are in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) and [`docs/DESIGN_NOTES.md`](docs/DESIGN_NOTES.md).
 
@@ -122,7 +122,7 @@ A fixed policy then decides. It resolves when the calibrated probability of bein
 Generated from the result files by `scripts/make_results_blocks.py`. Intervals are Wilson 95%.
 
 <!-- RESULTS:results BEGIN -->
-| | dev (model used to choose the gate) | sealed (run once) |
+| | dev (model trained from the current code) | sealed (earlier model, not rerun) |
 |---|---|---|
 | Standard benchmark: answers it is confident about | 60.7% | 61.0% |
 | ...of those, within 50 m | **99.5%** | **99.0%** |
@@ -140,11 +140,30 @@ Generated from the result files by `scripts/make_results_blocks.py`. Intervals a
 Cross-city rows use the synthetic `crosscity` set (pairs of the same record with and without district/city evidence; composition chosen to expose the failure, **not** a prevalence estimate). The standard-benchmark coverage without the gate was 64.7% on sealed. Frozen v2.0 release, sealed, for reference: 65.5% answered, 98.7% within 50 m.
 <!-- RESULTS:results END -->
 
-Queries in these benchmarks are synthetic apart from a set of 40 written by hand, and the truth is the OpenStreetMap point. The human written set is pending real data (`bench/human_kit/`). Full tables, ablations and every known failure are in [`docs/EVALUATION.md`](docs/EVALUATION.md). Predictions were written before each run and are kept with their outcomes in [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md). The benchmark is described in [`bench/README.md`](bench/README.md) and reported in [`docs/BENCH_REPORT.md`](docs/BENCH_REPORT.md).
+### Real text from outside the project
+
+The table above uses synthetic queries whose truth is an OpenStreetMap point. Two sets of non synthetic text were built from other sources and kept apart from development (`bench/data_external`, not OpenStreetMap derived, licences in `bench/DATA_CARD.md`): business listings from Overture Places (3,000 rows) and Wikidata items with an address statement (110 rows). Most of those places are not in OpenStreetMap, so low coverage is expected, but the answers Tahdeed does give are often wrong, and its confidence is not calibrated on this kind of text. Photon and Nominatim were run on a 150 row sample at one request per second.
+
+<!-- RESULTS:real_text BEGIN -->
+| Set | System | n | Answered | Within 50 m, of answered | Wrong city, of answered | Within 50 m, of all |
+|---|---|---|---|---|---|---|
+| overture_places | Tahdeed | 3000 | 3.5% (3-4) | 41.5% (33-51) | 18.9% (13-27) | 1.5% (1-2) |
+| overture_places | TF-IDF nearest neighbour | 3000 | 100.0% (100-100) | 11.7% (11-13) | 45.2% (43-47) | 11.7% (11-13) |
+| overture_places | BM25 | 3000 | 100.0% (100-100) | 12.6% (11-14) | 42.0% (40-44) | 12.6% (11-14) |
+| overture_places | Photon (150 row sample) | 150 | 22.7% (17-30) | 26.5% (15-43) | 14.7% (6-30) | 6.0% (3-11) |
+| overture_places | Nominatim (150 row sample) | 150 | 0.7% (0-4) | 0.0% (0-79) | 0.0% (0-79) | 0.0% (0-2) |
+| wikidata_addresses | Tahdeed | 110 | 14.5% (9-22) | 50.0% (28-72) | 43.8% (23-67) | 7.3% (4-14) |
+| wikidata_addresses | TF-IDF nearest neighbour | 110 | 100.0% (97-100) | 44.5% (36-54) | 51.8% (43-61) | 44.5% (36-54) |
+| wikidata_addresses | BM25 | 110 | 100.0% (97-100) | 47.3% (38-57) | 46.4% (37-56) | 47.3% (38-57) |
+| wikidata_addresses | Photon (150 row sample) | 110 | 70.0% (61-78) | 51.9% (41-63) | 3.9% (1-11) | 36.4% (28-46) |
+| wikidata_addresses | Nominatim (150 row sample) | 110 | 26.4% (19-35) | 75.9% (58-88) | 0.0% (0-12) | 20.0% (14-28) |
+<!-- RESULTS:real_text END -->
+
+Full tables, ablations and every known failure are in [`docs/EVALUATION.md`](docs/EVALUATION.md). Predictions were written before each run and are kept with their outcomes in [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md). The benchmark is described in [`bench/README.md`](bench/README.md) and reported in [`docs/BENCH_REPORT.md`](docs/BENCH_REPORT.md). The human written query set is pending real data (`bench/human_kit/`).
 
 ## Limitations
 
-- No benchmark query came from a real user. Only real query logs close this gap.
+- No benchmark query came from a real user. The two independent real text sets above are business listings and Wikidata statements, not what people type when they look for an address. Only real query logs close this gap.
 - OpenStreetMap is not an official registry. When the true record is missing, the resolver can return a confident wrong neighbour (see the missing address row above). `RegistryAdapter` is an interface only and is not connected to any registry.
 - A street name that exists in several cities, written without the city, is handled by the calibrated city gate. The gate lowers wrong city answers on the risk set but cannot see a record that is missing from the registry, and it costs coverage.
 - Arabizi is the weakest writing style, at about 50% top 1.

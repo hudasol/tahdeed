@@ -246,7 +246,7 @@ Intervals are Wilson 95%. Predictions and their hits and misses: [`PREDICTIONS.m
 
 {crosscity_tbl(ccd)}
 
-### Sealed (run once; baseline, diversify-only and the chosen margin)
+### Sealed (earlier model, not rerun; baseline, diversify-only and the chosen margin)
 
 {crosscity_tbl(ccs)}
 

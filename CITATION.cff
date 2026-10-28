@@ -17,8 +17,9 @@ license:
 abstract: >-
   A versioned benchmark for resolving free text UAE addresses (English, Arabic, Arabizi or mixed)
   to coordinates, where a system may abstain and a confident answer in the wrong place or the
-  wrong city counts against it. All sets except a 40 row hand written set are synthetic, rendered
-  from OpenStreetMap records; truth is the OpenStreetMap point. Includes a cross city set (the same
+  wrong city counts against it. The main sets are synthetic, rendered
+  from OpenStreetMap records, and truth is the OpenStreetMap point. Two independent real text
+  sets (Overture Places, Wikidata) and a 40 row hand written set are reported separately. Includes a cross city set (the same
   street or POI name in several cities, with and without the true record), a scorer with Wilson
   intervals, and baseline predictions (tahdeed, a naive fuzzy matcher, a rate limited Nominatim
   sample) whose scores are checked again in CI.
