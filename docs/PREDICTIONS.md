@@ -310,10 +310,10 @@ branch (fine p50 at or above tau) is untouched. Evaluation: `tahdeed eval` on th
 command and sample as `docs/eval.json`), before and after, plus a fixed list of 40 landmark and street
 queries typed by hand for use, which is a dogfooding list and not a benchmark.
 
-| # | Prediction |
-|---|---|
-| D1 | Resolved precision and the resolved share on dev change by less than 0.3 points (the resolved branch is not touched) |
-| D2 | Approximate answers that are POI or address candidates rise from their current share by at least 2 points of all queries |
-| D3 | Median error of the approximate answers falls (a POI is closer than a city centroid when right) but the share of approximate answers farther than 1 km from truth rises by under 2 points |
-| D4 | Wrong city of all dev queries stays inside the interval already published (2.3 to 3.9%) |
-| D5 | "Mall of the Emirates Dubai" returns the POI, not the city |
+| # | Prediction | Result |
+|---|---|---|
+| D1 | Resolved precision and the resolved share on dev change by less than 0.3 points (the resolved branch is not touched) | **Hit**: resolved share 64.65% to 64.63%, precision 99.23% unchanged (Abu Dhabi structured); the other two sets move by 0.04 points or less |
+| D2 | Approximate answers that are POI or address candidates rise from their current share by at least 2 points of all queries | **Not measured directly.** The proxy, forced top 1 within 1 km, rose 2.0 points (Abu Dhabi structured) and 3.5 points (Dubai POI), flat on the coverage hole set |
+| D3 | Median error of the approximate answers falls (a POI is closer than a city centroid when right) but the share of approximate answers farther than 1 km from truth rises by under 2 points | **Not measured as stated.** Instead the stated radius was checked: it first fell (a fine answer kept a 25 m radius), so approximate fine answers now take the first radius whose calibrated probability reaches 0.9. Within radius: Abu Dhabi structured 64.8% to 65.3%, Dubai POI 49.9% to 56.5%, coverage hole 73.8% to 71.3% (a 2.6 point loss) |
+| D4 | Wrong city of all dev queries stays inside the interval already published (2.3 to 3.9%) | **Hit**: every wrong city count in `crosscity` dev at margin 0.35 is identical to the published run; only coverage at E2 rose by one query |
+| D5 | "Mall of the Emirates Dubai" returns the POI, not the city | **Hit**: Mall of the Emirates, approximate, p_valid 0.56 |

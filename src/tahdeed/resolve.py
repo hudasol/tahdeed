@@ -588,7 +588,7 @@ class Resolver:
             self.ranker.score(cands)
         res = self._decide(text, pq, spans, cands, ctx, notes)
         if res.best is not None:
-            self._apply_radius(res.best)
+            self._apply_radius(res.best, res.status)
         return res
 
     def resolve_candidates(self, text, hide_addr=frozenset(), hide_poi=frozenset()):
@@ -599,10 +599,19 @@ class Resolver:
         finally:
             self.ranker = saved
 
-    def _apply_radius(self, c: Candidate) -> None:
+    def _apply_radius(self, c: Candidate, status: str = "resolved") -> None:
         r = getattr(self.ranker, "radii", None) or {}
         if c.tier in r and c.tier not in FINE_TIERS:
             c.radius_m = float(r[c.tier])
+        elif c.tier in FINE_TIERS and status == "approximate":
+            # an approximate fine answer must not claim a door: widen to the first radius whose
+            # calibrated probability reaches 0.9, else the area scale
+            for rad, p in ((50.0, c.p50), (200.0, c.p200), (1000.0, c.p1k)):
+                if (p or 0.0) >= 0.9:
+                    c.radius_m = rad
+                    break
+            else:
+                c.radius_m = float(r.get("area", 5000.0))
 
     # ------------------------------------------------------------------ helpers
     def _house_numbers(self, pq: ParsedQuery, spans: list[Span]) -> list[str]:
