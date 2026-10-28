@@ -1,16 +1,16 @@
 
 overture_places  (n=3000, missing predictions: 0)
-  answered           5.5% [5-6]
-  precision@50m      36.1% [29-44]   (among answered)
-  conf.wrong city    21.7% [16-29]   (among answered)
-  end-to-end@50m     2.0% [2-3]   (abstain = miss)
-  forced@50m/1km     4.4% [4-5] / 17.5% [16-19]
-  ECE (confidence vs within-50m, n=166): 0.463
+  answered           3.5% [3-4]
+  precision@50m      41.5% [33-51]   (among answered)
+  conf.wrong city    18.9% [13-27]   (among answered)
+  end-to-end@50m     1.5% [1-2]   (abstain = miss)
+  forced@50m/1km     6.4% [6-7] / 20.2% [19-22]
+  ECE (confidence vs within-50m, n=106): 0.500
 
 wikidata_addresses  (n=110, missing predictions: 0)
-  answered           17.3% [11-25]
-  precision@50m      47.4% [27-68]   (among answered)
-  conf.wrong city    42.1% [23-64]   (among answered)
-  end-to-end@50m     8.2% [4-15]   (abstain = miss)
-  forced@50m/1km     13.6% [8-21] / 32.7% [25-42]
-  ECE (confidence vs within-50m, n=19): 0.425
+  answered           14.5% [9-22]
+  precision@50m      50.0% [28-72]   (among answered)
+  conf.wrong city    43.8% [23-67]   (among answered)
+  end-to-end@50m     7.3% [4-14]   (abstain = miss)
+  forced@50m/1km     18.2% [12-26] / 38.2% [30-48]
+  ECE (confidence vs within-50m, n=16): 0.416

@@ -59,6 +59,15 @@ HTTP 403, and no prebuilt package exists on PyPI, so it could not be installed. 
 (`baselines.lookup_parsed`, unit tested with a stubbed parse) refuses to run without the library
 instead of producing stand in output. Anyone with libpostal installed can run it with the command above.
 
+## Which Tahdeed run is in the results
+
+`bench/results/tahdeed.pred.jsonl` holds two runs. Rows of the dev sets, the landmark set,
+`crosscity_dev` and the hand written set come from the current code and the model trained by
+`tahdeed train` with its defaults. Rows of the four `*_sealed` sets are kept from the earlier run and
+were not repeated: a sealed set is read once per decision, and a second sealed look is only allowed on
+a set nobody has seen (see `docs/SEALED2.md`). The external sets were rerun with the current code;
+nothing was tuned on them.
+
 ## Rules for fair comparison
 
 1. Do not tune on `*_sealed` sets, on `gold_handwritten` or on anything in `data_external`. Report which sets you used for tuning.
