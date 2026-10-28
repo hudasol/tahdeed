@@ -5,7 +5,8 @@ message: >-
   the code is MIT. No DOI has been minted.
 type: dataset
 title: "Gulf-AddressBench: UAE free text address resolution with abstention, and the tahdeed resolver"
-version: "1.0.0"
+version: "2.1.0"
+date-released: 2026-10-28
 authors:
   - family-names: Mueen
     given-names: Huda
