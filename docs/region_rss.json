@@ -1,31 +1,31 @@
 {
  "db": "gazetteer.sqlite",
- "gazetteer_sha256": "6022f68ffb319e01d5104a1ccddc30b842e8665bada3204ab2b555d4c496f28b",
+ "gazetteer_sha256": "6af588055eaa6dcb049894fd7dcda5ba4422f1ac984faab32bf126c4a47c4b47",
  "gazetteer_rows": {
   "addresses": 127705,
-  "street_segments": 46667,
+  "street_segments": 46660,
   "areas": 1798,
-  "pois": 13926,
+  "pois": 13925,
   "street_keys": 9575
  },
- "model_arrays_sha256": "5bef1ce15ecc4959871c48a29dfc9ad7fb717ec01cb804aae4513eb8952d792d",
+ "model_arrays_sha256": "eb8cf063933edba176541e65b6169fbda0b0d15429aaee9ad31556e3160a16e7",
  "degraded": false,
- "python": "3.12.15",
+ "python": "3.13.16",
  "baseline_mb": {
-  "VmHWM": 44.7,
-  "VmRSS": 44.7
+  "VmHWM": 45.3,
+  "VmRSS": 45.3
  },
  "after_load_mb": {
-  "VmHWM": 369.9,
-  "VmRSS": 362.0
+  "VmHWM": 371.6,
+  "VmRSS": 360.9
  },
  "after_queries_mb": {
-  "VmHWM": 369.9,
-  "VmRSS": 365.2
+  "VmHWM": 371.6,
+  "VmRSS": 363.8
  },
- "load_seconds": 39.46,
+ "load_seconds": 3.73,
  "requests": 400,
- "mean_ms_per_request_in_process": 55.56,
+ "mean_ms_per_request_in_process": 8.42,
  "statuses": {
   "resolved": 100,
   "approximate": 300
