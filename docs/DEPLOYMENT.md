@@ -82,7 +82,7 @@ run where the PII redaction was disabled and the script failed as it should. The
 | `TAHDEED_LOG_RAW` | unset | `1`: also log the query text in the audit line. PII (phone numbers, e-mails, Emirates IDs) is redacted first even then. Off by default; leave it off. |
 | `TAHDEED_TILE_URL` | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` | Tile URL template the dashboard map uses. For a public demo use a provider whose terms allow your traffic (the OSM community tile servers are not meant for production sites). |
 | `TAHDEED_DATA_OFFER_URL` | unset | Where the public can obtain the database (ODbL). Returned by `/config` as `data_offer_url` for the dashboard to show. |
-| `TAHDEED_WEB` | auto (`web/` next to the source, else `./web`; image: `/app/web`) | Directory of the static dashboard. |
+| `TAHDEED_WEB` | auto (the `web` directory inside the installed package) | Directory of the static dashboard. Set it only to serve a modified copy. |
 | `OMP_NUM_THREADS` | `1` (image) | Keeps numpy single-threaded; the service is request-parallel instead. |
 
 `TAHDEED_GAZETTEER_URL`, `TAHDEED_GAZETTEER_SHA256`, `TAHDEED_MODEL_URL`, `TAHDEED_MODEL_SHA256`
@@ -269,9 +269,8 @@ Verdict: **it fits, on paper, and is the only free option here that holds the fu
   `python fetch_data.py --dest data`. Whether a custom `buildCommand` is honoured for the Python
   framework preset was not confirmed from the pages read; if it is not, deploy with
   `vercel build && vercel deploy --prebuilt` from a checkout that already has `data/`.
-- **Dashboard**: the Python function serves the API only; `tahdeed` is installed from git, so the
-  `web/` directory is not in the bundle. Host the dashboard elsewhere (a static site) or add `web/`
-  and `TAHDEED_WEB=web` to the project root.
+- **Dashboard**: the Python function serves the API only; the dashboard ships
+  inside the `tahdeed` package, so the same function serves it.
 - No writable disk except `/tmp`; the service needs nothing else.
 
 Ready files: `deploy/vercel/` (section 5.5), untested.
@@ -423,5 +422,47 @@ Text for the demo page (footer, and `/docs`):
 > not stored; only a hash of the normalised query is logged.
 
 The service exposes the first sentence as `attribution`, and the offer link as `data_offer_url`,
-in `GET /config`, so the dashboard can render them. (`web/index.html` was not changed here; its
+in `GET /config`, so the dashboard can render them. (`src/tahdeed/web/index.html` was not changed here; its
 map layer already shows "© OpenStreetMap contributors".)
+
+## 7. Data releases and `data/MANIFEST.json`
+
+The gazetteer and the model are published as assets of a GitHub Release, next to a manifest that
+lists them. `tahdeed.fetch.fetch_data(dest, base_url, manifest)` downloads the files named in the
+manifest, writes each to a temporary file, and keeps it only if its SHA-256 equals the manifest
+value (and its size, when given). On a mismatch it raises `FetchError` and removes the file.
+Remote URLs must use HTTPS. Files already present with a matching hash are not downloaded again.
+
+`base_url` is the directory that holds the assets, for example
+`https://github.com/<owner>/tahdeed/releases/download/v2.0.0`. Each file is requested at
+`<base_url>/<name>`.
+
+Manifest schema (version 1):
+
+```json
+{
+  "schema_version": 1,
+  "version": "2.0.0",
+  "source": "OpenStreetMap extract of 2026-10-09, (c) OpenStreetMap contributors, ODbL 1.0",
+  "files": [
+    {"name": "gazetteer.sqlite", "sha256": "<64 lowercase hex digits>", "size": 123456789},
+    {"name": "ranker.npz", "sha256": "<64 lowercase hex digits>", "size": 1234567}
+  ]
+}
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `schema_version` | yes | Integer, currently `1`. A different value is refused. |
+| `version` | no | Release the files belong to. Informational. |
+| `source` | no | Origin and licence statement for the data. Informational. |
+| `files[].name` | yes | A plain file name with no directory part. Names that contain a path separator or start with a dot are refused. |
+| `files[].sha256` | yes | SHA-256 of the file as published, 64 lowercase hex digits. |
+| `files[].size` | no | Size in bytes, checked in addition to the hash. |
+
+The model manifest embedded in `ranker.npz` records the SHA-256 of the gazetteer it was trained on, so
+a matching pair also passes `tahdeed verify`. To produce the manifest after a build, hash the two
+files with `sha256sum` and write the values into the JSON above.
+
+`deploy/fetch_data.py` is the older, environment variable driven variant used by hosted builds. It
+reads URLs and hashes from `TAHDEED_*` variables instead of a manifest.

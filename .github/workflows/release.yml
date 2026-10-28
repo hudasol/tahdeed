@@ -1,0 +1,80 @@
+name: release
+# Runs when a version tag such as v2.1.0 is pushed. Builds the source and wheel distributions, runs
+# the tests, attaches the files to a GitHub Release and, only if the repository variable
+# PYPI_PUBLISH is set to "true", publishes them to PyPI through trusted publishing.
+# See docs/RELEASING.md for the one time setup.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check that the tag matches the package version
+        run: |
+          version=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$tag" != "$version" ]; then
+            echo "tag $GITHUB_REF_NAME does not match pyproject version $version" >&2
+            exit 1
+          fi
+      - run: pip install -e ".[dev]"
+      - run: pytest --cov=tahdeed --cov-fail-under=70
+      - run: python -m build
+      - run: pip install twine && twine check dist/*
+      - name: Install the wheel in a clean environment
+        run: |
+          python -m venv /tmp/wheel-check
+          /tmp/wheel-check/bin/pip install dist/*.whl
+          /tmp/wheel-check/bin/tahdeed --help > /dev/null
+          /tmp/wheel-check/bin/python -c "import tahdeed, pathlib; w = pathlib.Path(tahdeed.__file__).parent / 'web' / 'index.html'; assert w.exists()"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Create the release and attach the distributions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag
+
+  publish-pypi:
+    # Skipped (not failed) unless the repository variable PYPI_PUBLISH is "true".
+    if: ${{ vars.PYPI_PUBLISH == 'true' }}
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tahdeed
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
