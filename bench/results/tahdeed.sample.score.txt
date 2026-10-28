@@ -1,11 +1,11 @@
 
 address_dev  (n=100, missing predictions: 0)
-  answered           54.0% [44-63]
-  precision@50m      96.3% [87-99]   (among answered)
-  conf.wrong city    1.9% [0-10]   (among answered)
-  end-to-end@50m     52.0% [42-62]   (abstain = miss)
-  forced@50m/1km     63.0% [53-72] / 65.0% [55-74]
-  ECE (confidence vs within-50m, n=54): 0.042
+  answered           52.0% [42-62]
+  precision@50m      98.1% [90-100]   (among answered)
+  conf.wrong city    0.0% [0-7]   (among answered)
+  end-to-end@50m     51.0% [41-61]   (abstain = miss)
+  forced@50m/1km     66.0% [56-75] / 68.0% [58-76]
+  ECE (confidence vs within-50m, n=52): 0.011
 
 address_sealed  (n=100, missing predictions: 0)
   answered           58.0% [48-67]
@@ -16,25 +16,25 @@ address_sealed  (n=100, missing predictions: 0)
   ECE (confidence vs within-50m, n=58): 0.042
 
 crosscity_dev  (n=100, missing predictions: 0)
-  answered           37.0% [28-47]
-  precision@50m      97.3% [86-100]   (among answered)
-  conf.wrong city    0.0% [0-9]   (among answered)
-  end-to-end@50m     36.0% [27-46]   (abstain = miss)
-  forced@50m/1km     49.0% [39-59] / 54.0% [44-63]
-  ECE (confidence vs within-50m, n=37): 0.061
+  answered           33.0% [25-43]
+  precision@50m      100.0% [90-100]   (among answered)
+  conf.wrong city    0.0% [0-10]   (among answered)
+  end-to-end@50m     33.0% [25-43]   (abstain = miss)
+  forced@50m/1km     57.0% [47-66] / 61.0% [51-70]
+  ECE (confidence vs within-50m, n=33): 0.055
 
 landmark_dev  (n=100, missing predictions: 0)
-  answered           69.0% [59-77]
-  precision@50m      98.6% [92-100]   (among answered)
-  conf.wrong city    1.4% [0-8]   (among answered)
-  end-to-end@50m     68.0% [58-76]   (abstain = miss)
-  forced@50m/1km     77.0% [68-84] / 79.0% [70-86]
-  ECE (confidence vs within-50m, n=69): 0.060
-
-poi_dev  (n=100, missing predictions: 0)
-  answered           63.0% [53-72]
+  answered           66.0% [56-75]
   precision@50m      100.0% [94-100]   (among answered)
   conf.wrong city    0.0% [0-6]   (among answered)
-  end-to-end@50m     63.0% [53-72]   (abstain = miss)
-  forced@50m/1km     73.0% [64-81] / 75.0% [66-82]
-  ECE (confidence vs within-50m, n=63): 0.075
+  end-to-end@50m     66.0% [56-75]   (abstain = miss)
+  forced@50m/1km     79.0% [70-86] / 81.0% [72-87]
+  ECE (confidence vs within-50m, n=66): 0.040
+
+poi_dev  (n=100, missing predictions: 0)
+  answered           58.0% [48-67]
+  precision@50m      100.0% [94-100]   (among answered)
+  conf.wrong city    0.0% [0-6]   (among answered)
+  end-to-end@50m     58.0% [48-67]   (abstain = miss)
+  forced@50m/1km     78.0% [69-85] / 80.0% [71-87]
+  ECE (confidence vs within-50m, n=58): 0.043

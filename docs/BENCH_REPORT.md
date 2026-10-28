@@ -31,7 +31,7 @@ Cells are percent with Wilson 95% interval (low–high). *Answered* = the system
 | BM25 (address + POI strings) | 1500 | 99.9 (100–100) | 9.5 (8–11) | 47.4 (45–50) | 9.5 (8–11) | 10.5 (9–12) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 0.0 (0–4) | 0.0 (0–100) | 0.0 (0–100) | 0.0 (0–4) | 0.0 (0–4) |
 | Public Photon (sample, ≤1 req/s) | 100 | 48.0 (38–58) | 14.6 (7–27) | 45.8 (33–60) | 7.0 (3–14) | 10.0 (6–17) |
-| Tahdeed | 1500 | 56.3 (54–59) | 98.1 (97–99) | 0.4 (0–1) | 55.3 (53–58) | 67.0 (65–69) |
+| Tahdeed | 1500 | 53.1 (51–56) | 98.9 (98–99) | 0.1 (0–1) | 52.5 (50–55) | 69.5 (67–72) |
 
 ### address_sealed
 
@@ -53,7 +53,7 @@ Cells are percent with Wilson 95% interval (low–high). *Answered* = the system
 | BM25 (address + POI strings) | 600 | 100.0 (99–100) | 7.8 (6–10) | 22.2 (19–26) | 7.8 (6–10) | 62.0 (58–66) |
 | Public Nominatim (sample, ≤1 req/s) | – | – | – | – | – | – |
 | Public Photon (sample, ≤1 req/s) | – | – | – | – | – | – |
-| Tahdeed | 600 | 42.5 (39–46) | 84.3 (79–88) | 1.2 (0–3) | 35.8 (32–40) | 62.0 (58–66) |
+| Tahdeed | 600 | 35.3 (32–39) | 92.5 (88–95) | 0.9 (0–3) | 32.7 (29–37) | 62.2 (58–66) |
 
 ### hole_sealed
 
@@ -75,7 +75,7 @@ Cells are percent with Wilson 95% interval (low–high). *Answered* = the system
 | BM25 (address + POI strings) | 600 | 99.8 (99–100) | 90.2 (88–92) | 2.0 (1–3) | 90.0 (87–92) | 92.0 (90–94) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 77.0 (68–84) | 94.8 (87–98) | 0.0 (0–5) | 73.0 (64–81) | 74.0 (65–82) |
 | Public Photon (sample, ≤1 req/s) | 100 | 100.0 (96–100) | 94.0 (88–97) | 2.0 (1–7) | 94.0 (88–97) | 95.0 (89–98) |
-| Tahdeed | 600 | 64.5 (61–68) | 99.7 (99–100) | 0.0 (0–1) | 64.3 (60–68) | 77.3 (74–81) |
+| Tahdeed | 600 | 58.5 (55–62) | 99.7 (98–100) | 0.0 (0–1) | 58.3 (54–62) | 79.8 (76–83) |
 
 ### poi_sealed
 
@@ -97,7 +97,7 @@ Cells are percent with Wilson 95% interval (low–high). *Answered* = the system
 | BM25 (address + POI strings) | 400 | 100.0 (99–100) | 85.2 (81–88) | 3.2 (2–5) | 85.2 (81–88) | 86.8 (83–90) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 0.0 (0–4) | 0.0 (0–100) | 0.0 (0–100) | 0.0 (0–4) | 0.0 (0–4) |
 | Public Photon (sample, ≤1 req/s) | 100 | 76.0 (67–83) | 84.2 (74–91) | 0.0 (0–5) | 64.0 (54–73) | 67.0 (57–75) |
-| Tahdeed | 400 | 70.2 (66–75) | 98.9 (97–100) | 0.4 (0–2) | 69.5 (65–74) | 80.5 (76–84) |
+| Tahdeed | 400 | 67.8 (63–72) | 99.3 (97–100) | 0.0 (0–1) | 67.2 (63–72) | 82.5 (78–86) |
 
 ### gold_handwritten
 
@@ -108,7 +108,7 @@ Cells are percent with Wilson 95% interval (low–high). *Answered* = the system
 | BM25 (address + POI strings) | 40 | 100.0 (91–100) | 82.5 (68–91) | 5.0 (1–17) | 82.5 (68–91) | 82.5 (68–91) |
 | Public Nominatim (sample, ≤1 req/s) | – | – | – | – | – | – |
 | Public Photon (sample, ≤1 req/s) | – | – | – | – | – | – |
-| Tahdeed | 40 | 75.0 (60–86) | 96.7 (83–99) | 3.3 (1–17) | 72.5 (57–84) | 85.0 (71–93) |
+| Tahdeed | 40 | 72.5 (57–84) | 100.0 (88–100) | 0.0 (0–12) | 72.5 (57–84) | 87.5 (74–95) |
 
 ### Like-for-like on the Nominatim sample
 
@@ -123,7 +123,7 @@ Public Nominatim and Photon were queried at ≤1 request/s on an even-stride sam
 | BM25 (address + POI strings) | 100 | 100.0 (96–100) | 9.0 (5–16) | 48.0 (38–58) | 9.0 (5–16) | 10.0 (6–17) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 0.0 (0–4) | 0.0 (0–100) | 0.0 (0–100) | 0.0 (0–4) | 0.0 (0–4) |
 | Public Photon (sample, ≤1 req/s) | 100 | 48.0 (38–58) | 14.6 (7–27) | 45.8 (33–60) | 7.0 (3–14) | 10.0 (6–17) |
-| Tahdeed | 100 | 54.0 (44–63) | 96.3 (87–99) | 1.9 (0–10) | 52.0 (42–62) | 65.0 (55–74) |
+| Tahdeed | 100 | 52.0 (42–62) | 98.1 (90–100) | 0.0 (0–7) | 51.0 (41–61) | 68.0 (58–76) |
 
 **address_sealed**
 
@@ -145,7 +145,7 @@ Public Nominatim and Photon were queried at ≤1 request/s on an even-stride sam
 | BM25 (address + POI strings) | 100 | 100.0 (96–100) | 74.0 (65–82) | 14.0 (9–22) | 74.0 (65–82) | 76.0 (67–83) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 83.0 (74–89) | 83.1 (74–90) | 8.4 (4–16) | 69.0 (59–77) | 70.0 (60–78) |
 | Public Photon (sample, ≤1 req/s) | 100 | 98.0 (93–99) | 80.6 (72–87) | 13.3 (8–21) | 79.0 (70–86) | 81.0 (72–87) |
-| Tahdeed | 100 | 37.0 (28–47) | 97.3 (86–100) | 0.0 (0–9) | 36.0 (27–46) | 54.0 (44–63) |
+| Tahdeed | 100 | 33.0 (25–43) | 100.0 (90–100) | 0.0 (0–10) | 33.0 (25–43) | 61.0 (51–70) |
 
 **landmark_dev**
 
@@ -156,7 +156,7 @@ Public Nominatim and Photon were queried at ≤1 request/s on an even-stride sam
 | BM25 (address + POI strings) | 100 | 100.0 (96–100) | 86.0 (78–91) | 0.0 (0–4) | 86.0 (78–91) | 89.0 (81–94) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 0.0 (0–4) | 0.0 (0–100) | 0.0 (0–100) | 0.0 (0–4) | 0.0 (0–4) |
 | Public Photon (sample, ≤1 req/s) | 100 | 76.0 (67–83) | 84.2 (74–91) | 0.0 (0–5) | 64.0 (54–73) | 67.0 (57–75) |
-| Tahdeed | 100 | 69.0 (59–77) | 98.6 (92–100) | 1.4 (0–8) | 68.0 (58–76) | 79.0 (70–86) |
+| Tahdeed | 100 | 66.0 (56–75) | 100.0 (94–100) | 0.0 (0–6) | 66.0 (56–75) | 81.0 (72–87) |
 
 **poi_dev**
 
@@ -167,7 +167,7 @@ Public Nominatim and Photon were queried at ≤1 request/s on an even-stride sam
 | BM25 (address + POI strings) | 100 | 100.0 (96–100) | 90.0 (83–94) | 1.0 (0–5) | 90.0 (83–94) | 93.0 (86–97) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 77.0 (68–84) | 94.8 (87–98) | 0.0 (0–5) | 73.0 (64–81) | 74.0 (65–82) |
 | Public Photon (sample, ≤1 req/s) | 100 | 100.0 (96–100) | 94.0 (88–97) | 2.0 (1–7) | 94.0 (88–97) | 95.0 (89–98) |
-| Tahdeed | 100 | 63.0 (53–72) | 100.0 (94–100) | 0.0 (0–6) | 63.0 (53–72) | 75.0 (66–82) |
+| Tahdeed | 100 | 58.0 (48–67) | 100.0 (94–100) | 0.0 (0–6) | 58.0 (48–67) | 80.0 (71–87) |
 
 ### crosscity_dev: Naive fuzzy (rapidfuzz token-set, house-number shortlist)
 
@@ -289,25 +289,25 @@ Strata are (stratum/evidence): E0 = street + number only, E1 = + district, E2 = 
 
 | Stratum | n | Answered | Wrong city (of answered) | End-to-end@50 m |
 |---|---|---|---|---|
-| named_collision/E0 | 450 | 0.4 (0–2) | 50.0 (9–91) | 0.2 (0–1) |
-| named_collision/E1 | 420 | 72.1 (68–76) | 0.0 (0–1) | 72.1 (68–76) |
-| named_collision/E2 | 450 | 35.1 (31–40) | 0.0 (0–2) | 34.2 (30–39) |
-| named_hole/E0 | 450 | 3.3 (2–5) | 93.3 (70–99) | 0.0 (0–1) |
-| named_hole/E1 | 415 | 60.2 (55–65) | 0.4 (0–2) | 52.5 (48–57) |
-| named_hole/E2 | 450 | 18.2 (15–22) | 1.2 (0–7) | 9.3 (7–12) |
-| named_unique/E0 | 450 | 30.9 (27–35) | 0.0 (0–3) | 30.9 (27–35) |
-| named_unique/E1 | 413 | 84.7 (81–88) | 0.0 (0–1) | 84.5 (81–88) |
-| named_unique/E2 | 450 | 80.4 (77–84) | 0.0 (0–1) | 78.7 (75–82) |
+| named_collision/E0 | 450 | 0.2 (0–1) | 0.0 (0–79) | 0.2 (0–1) |
+| named_collision/E1 | 420 | 61.7 (57–66) | 0.0 (0–1) | 61.7 (57–66) |
+| named_collision/E2 | 450 | 21.1 (18–25) | 0.0 (0–4) | 20.9 (17–25) |
+| named_hole/E0 | 450 | 2.0 (1–4) | 88.9 (56–98) | 0.0 (0–1) |
+| named_hole/E1 | 415 | 44.3 (40–49) | 0.5 (0–3) | 39.3 (35–44) |
+| named_hole/E2 | 450 | 10.9 (8–14) | 0.0 (0–7) | 8.0 (6–11) |
+| named_unique/E0 | 450 | 16.7 (14–20) | 0.0 (0–5) | 16.7 (14–20) |
+| named_unique/E1 | 413 | 78.2 (74–82) | 0.0 (0–1) | 78.2 (74–82) |
+| named_unique/E2 | 450 | 74.2 (70–78) | 0.0 (0–1) | 73.8 (70–78) |
 | numbered_collision/E0 | 148 | 0.0 (0–3) | 0.0 (0–100) | 0.0 (0–3) |
-| numbered_collision/E1 | 125 | 15.2 (10–23) | 0.0 (0–17) | 15.2 (10–23) |
-| numbered_collision/E2 | 148 | 39.9 (32–48) | 0.0 (0–6) | 39.9 (32–48) |
-| numbered_hole/E0 | 148 | 12.8 (8–19) | 100.0 (83–100) | 0.0 (0–3) |
-| numbered_hole/E1 | 125 | 8.8 (5–15) | 0.0 (0–26) | 8.8 (5–15) |
-| numbered_hole/E2 | 148 | 16.2 (11–23) | 4.2 (1–20) | 14.2 (9–21) |
-| poi/E0 | 450 | 0.4 (0–2) | 0.0 (0–66) | 0.4 (0–2) |
-| poi/E2 | 450 | 35.3 (31–40) | 0.0 (0–2) | 35.3 (31–40) |
-| poi_hole/E0 | 450 | 3.3 (2–5) | 100.0 (80–100) | 0.2 (0–1) |
-| poi_hole/E2 | 450 | 9.8 (7–13) | 2.3 (0–12) | 0.2 (0–1) |
+| numbered_collision/E1 | 125 | 1.6 (0–6) | 0.0 (0–66) | 1.6 (0–6) |
+| numbered_collision/E2 | 148 | 24.3 (18–32) | 0.0 (0–10) | 24.3 (18–32) |
+| numbered_hole/E0 | 148 | 6.8 (4–12) | 100.0 (72–100) | 0.0 (0–3) |
+| numbered_hole/E1 | 125 | 0.0 (0–3) | 0.0 (0–100) | 0.0 (0–3) |
+| numbered_hole/E2 | 148 | 14.2 (9–21) | 4.8 (1–23) | 12.8 (8–19) |
+| poi/E0 | 450 | 0.0 (0–1) | 0.0 (0–100) | 0.0 (0–1) |
+| poi/E2 | 450 | 22.0 (18–26) | 0.0 (0–4) | 22.0 (18–26) |
+| poi_hole/E0 | 450 | 0.4 (0–2) | 100.0 (34–100) | 0.0 (0–1) |
+| poi_hole/E2 | 450 | 4.4 (3–7) | 0.0 (0–16) | 0.2 (0–1) |
 
 ### crosscity_sealed: Naive fuzzy (rapidfuzz token-set, house-number shortlist)
 
@@ -432,7 +432,7 @@ All rows (systems that were run on every row).
 |---|---|---|---|---|---|---|---|
 | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 3000 | 100.0 (100–100) | 11.7 (11–13) | 45.2 (43–47) | 11.7 (11–13) | 28.9 (27–31) | – |
 | BM25 (address + POI strings) | 3000 | 100.0 (100–100) | 12.6 (11–14) | 42.0 (40–44) | 12.6 (11–14) | 30.1 (28–32) | – |
-| Tahdeed | 3000 | 5.5 (5–6) | 36.1 (29–44) | 21.7 (16–29) | 2.0 (2–3) | 17.5 (16–19) | 0.463 |
+| Tahdeed | 3000 | 3.5 (3–4) | 41.5 (33–51) | 18.9 (13–27) | 1.5 (1–2) | 20.2 (19–22) | 0.500 |
 
 Like-for-like on the public geocoder sample (identical ids for every system).
 
@@ -442,7 +442,7 @@ Like-for-like on the public geocoder sample (identical ids for every system).
 | BM25 (address + POI strings) | 150 | 100.0 (98–100) | 13.3 (9–20) | 48.0 (40–56) | 13.3 (9–20) | 26.7 (20–34) | – |
 | Public Nominatim (sample, ≤1 req/s) | 150 | 0.7 (0–4) | 0.0 (0–79) | 0.0 (0–79) | 0.0 (0–2) | 0.0 (0–2) | – |
 | Public Photon (sample, ≤1 req/s) | 150 | 22.7 (17–30) | 26.5 (15–43) | 14.7 (6–30) | 6.0 (3–11) | 13.3 (9–20) | – |
-| Tahdeed | 150 | 8.0 (5–13) | 41.7 (19–68) | 25.0 (9–53) | 3.3 (1–8) | 16.7 (12–23) | 0.392 |
+| Tahdeed | 150 | 4.7 (2–9) | 42.9 (16–75) | 14.3 (3–51) | 2.0 (1–6) | 22.0 (16–29) | 0.516 |
 
 Per stratum, all rows.
 
@@ -450,16 +450,16 @@ Per stratum, all rows.
 |---|---|---|---|---|---|
 | abu dhabi | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 1000 | 100.0 (100–100) | 12.7 (11–15) | 12.7 (11–15) |
 | abu dhabi | BM25 (address + POI strings) | 1000 | 100.0 (100–100) | 12.7 (11–15) | 12.7 (11–15) |
-| abu dhabi | Tahdeed | 1000 | 5.0 (4–7) | 44.0 (31–58) | 2.2 (1–3) |
+| abu dhabi | Tahdeed | 1000 | 3.3 (2–5) | 57.6 (41–73) | 1.9 (1–3) |
 | dubai | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 1000 | 99.9 (99–100) | 13.1 (11–15) | 13.1 (11–15) |
 | dubai | BM25 (address + POI strings) | 1000 | 99.9 (99–100) | 14.9 (13–17) | 14.9 (13–17) |
-| dubai | Tahdeed | 1000 | 5.2 (4–7) | 30.8 (20–44) | 1.6 (1–3) |
+| dubai | Tahdeed | 1000 | 3.0 (2–4) | 23.3 (12–41) | 0.7 (0–1) |
 | other | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 500 | 100.0 (99–100) | 8.0 (6–11) | 8.0 (6–11) |
 | other | BM25 (address + POI strings) | 500 | 100.0 (99–100) | 7.6 (6–10) | 7.6 (6–10) |
-| other | Tahdeed | 500 | 6.0 (4–8) | 53.3 (36–70) | 3.2 (2–5) |
+| other | Tahdeed | 500 | 4.6 (3–7) | 56.5 (37–74) | 2.6 (2–4) |
 | sharjah | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 500 | 100.0 (99–100) | 10.6 (8–14) | 10.6 (8–14) |
 | sharjah | BM25 (address + POI strings) | 500 | 100.0 (99–100) | 12.6 (10–16) | 12.6 (10–16) |
-| sharjah | Tahdeed | 500 | 6.8 (5–9) | 17.6 (8–34) | 1.2 (1–3) |
+| sharjah | Tahdeed | 500 | 4.0 (3–6) | 25.0 (11–47) | 1.0 (0–2) |
 
 ### wikidata_addresses
 
@@ -469,7 +469,7 @@ All rows (systems that were run on every row).
 |---|---|---|---|---|---|---|---|
 | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 110 | 100.0 (97–100) | 44.5 (36–54) | 51.8 (43–61) | 44.5 (36–54) | 62.7 (53–71) | – |
 | BM25 (address + POI strings) | 110 | 100.0 (97–100) | 47.3 (38–57) | 46.4 (37–56) | 47.3 (38–57) | 66.4 (57–75) | – |
-| Tahdeed | 110 | 17.3 (11–25) | 47.4 (27–68) | 42.1 (23–64) | 8.2 (4–15) | 32.7 (25–42) | 0.425 |
+| Tahdeed | 110 | 14.5 (9–22) | 50.0 (28–72) | 43.8 (23–67) | 7.3 (4–14) | 38.2 (30–48) | 0.416 |
 
 Like-for-like on the public geocoder sample (identical ids for every system).
 
@@ -479,7 +479,7 @@ Like-for-like on the public geocoder sample (identical ids for every system).
 | BM25 (address + POI strings) | 110 | 100.0 (97–100) | 47.3 (38–57) | 46.4 (37–56) | 47.3 (38–57) | 66.4 (57–75) | – |
 | Public Nominatim (sample, ≤1 req/s) | 110 | 26.4 (19–35) | 75.9 (58–88) | 0.0 (0–12) | 20.0 (14–28) | 24.5 (17–33) | – |
 | Public Photon (sample, ≤1 req/s) | 110 | 70.0 (61–78) | 51.9 (41–63) | 3.9 (1–11) | 36.4 (28–46) | 56.4 (47–65) | – |
-| Tahdeed | 110 | 17.3 (11–25) | 47.4 (27–68) | 42.1 (23–64) | 8.2 (4–15) | 32.7 (25–42) | 0.425 |
+| Tahdeed | 110 | 14.5 (9–22) | 50.0 (28–72) | 43.8 (23–67) | 7.3 (4–14) | 38.2 (30–48) | 0.416 |
 
 Per stratum, all rows.
 
@@ -487,7 +487,7 @@ Per stratum, all rows.
 |---|---|---|---|---|---|
 | address_statement | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 100 | 100.0 (96–100) | 47.0 (38–57) | 47.0 (38–57) |
 | address_statement | BM25 (address + POI strings) | 100 | 100.0 (96–100) | 49.0 (39–59) | 49.0 (39–59) |
-| address_statement | Tahdeed | 100 | 18.0 (12–27) | 44.4 (25–66) | 8.0 (4–15) |
+| address_statement | Tahdeed | 100 | 15.0 (9–23) | 46.7 (25–70) | 7.0 (3–14) |
 | street_statement | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 10 | 100.0 (72–100) | 20.0 (6–51) | 20.0 (6–51) |
 | street_statement | BM25 (address + POI strings) | 10 | 100.0 (72–100) | 30.0 (11–60) | 30.0 (11–60) |
 | street_statement | Tahdeed | 10 | 10.0 (2–40) | 100.0 (21–100) | 10.0 (2–40) |
