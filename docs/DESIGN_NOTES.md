@@ -191,7 +191,7 @@ Changes
 
 Measured effect
 
-| | Round 4 (dev) | Final (dev) | Final (sealed, run once) |
+| | Round 4 (dev) | Final (dev) | Final (sealed, earlier model) |
 |---|---|---|---|
 | Held out resolved share and precision | 67.2% and 98.5% | 69.4% and 98.8% | 65.5% and 98.7% |
 | Held out forced top 1 within 50 m | 70.1% | 72.7% | 68.3% |

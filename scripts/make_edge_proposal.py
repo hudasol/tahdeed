@@ -60,13 +60,13 @@ be resolved, to say how sure the answer is, and to ask when it is not.
 
 ## Evidence
 
-Held out districts, frozen v2.0 release, run once [sealed/eval.json]: {pc(a["resolved_coverage"])} of
+Held out districts, frozen v2.0 release, earlier model, not rerun [sealed/eval.json]: {pc(a["resolved_coverage"])} of
 Abu Dhabi emirate queries answered confidently; {pc(a["resolved_precision_50m"])} of those within 50 m;
 calibration error (ECE) {a["ece_p50"]:.3f}. When the true address is missing from the map, precision
 of confident answers falls to {pc(h["resolved_precision_50m"])}: a missing record yields a confident
 neighbour, which only an official registry fixes.
 
-Wrong city exposure on the synthetic cross city risk set, sealed, run once [crosscity_sealed.json]:
+Wrong city exposure on the synthetic cross city risk set, sealed, earlier model, not rerun [crosscity_sealed.json]:
 {ci(base)} without the gate, {ci(gate)} with it. The price is coverage: the standard benchmark's
 confident share falls from {pc(base_std)} to {pc(gate_std)}.
 
@@ -93,8 +93,10 @@ to the entrance itself; the outline point facing the nearest road manages
 
 ## Honest limits
 
-- Every query in every benchmark is synthetic except 40 hand written ones. No real user query has
-  been evaluated; absolute numbers are optimistic.
+- The main benchmark queries are synthetic. Two independent real text sets (business listings and
+  Wikidata statements) and 40 hand written queries are reported separately, and on the real text
+  sets Tahdeed answers few rows and is often wrong. No real user query has been evaluated, so the
+  synthetic numbers are optimistic.
 - Truth is OpenStreetMap, not an official register. Dubai has few structured addresses in OSM and
   is evaluated only on named places.
 - No unused held out data remains: the v2.1 model has dev numbers only (docs/SEALED2.md).
