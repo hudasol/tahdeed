@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "version": "2.1.0",
+  "source": "OpenStreetMap extract of 2026-10-09, (c) OpenStreetMap contributors, ODbL 1.0",
+  "files": [
+    {
+      "name": "gazetteer.sqlite",
+      "sha256": "8eaba3c3ea644f14f20b1ab6cbef1a9608502edc258a04d3c9bcf05176e073a2",
+      "size": 50356224
+    },
+    {
+      "name": "ranker.npz",
+      "sha256": "a29ab5c8fb203e85e965515e8bfc182eea87ee039a8e130e5311091d1dafeadb",
+      "size": 519797
+    }
+  ]
+}
