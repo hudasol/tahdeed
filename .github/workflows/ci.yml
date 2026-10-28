@@ -15,7 +15,24 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .
+      - run: mypy
       - run: pytest --cov=tahdeed --cov-fail-under=70
+  package:
+    # The wheel and sdist build, install into a clean environment and contain the dashboard.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - run: twine check dist/*
+      - run: |
+          python -m venv /tmp/wheel-check
+          /tmp/wheel-check/bin/pip install dist/*.whl
+          /tmp/wheel-check/bin/tahdeed --help > /dev/null
+          /tmp/wheel-check/bin/python -c "import tahdeed, pathlib; assert (pathlib.Path(tahdeed.__file__).parent / 'web' / 'index.html').exists()"
   bench-drift:
     # Gulf-AddressBench: the committed data, prediction files, score files and docs/BENCH_REPORT.md
     # must reproduce exactly from each other (no gazetteer or model needed). Fails on any drift.
