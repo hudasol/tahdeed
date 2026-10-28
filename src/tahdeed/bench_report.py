@@ -108,15 +108,15 @@ def _external(results: Path, data: Path) -> list[str]:
             sc = _load(f)
             if sc:
                 L.append(_ext_row(label, sc["sets"].get(s, {}).get("overall")))
-        strata = {k: v["sets"][s]["strata"] for k, v in scores.items()
+        by_system = {k: v["sets"][s]["strata"] for k, v in scores.items()
                   if k not in SAMPLED and s in v["sets"] and v["sets"][s]["strata"]}  # fmt: skip
-        if strata:
+        if by_system:
             L += ["", "Per stratum, all rows.", "",
                   "| Stratum | System | n | Answered | Precision@50 m | End-to-end@50 m |", "|---|---|---|---|---|---|"]  # fmt: skip
-            names = sorted({st for d in strata.values() for st in d})
+            names = sorted({st for d in by_system.values() for st in d})
             for st in names:
                 for k, label in SYSTEMS:
-                    o = strata.get(k, {}).get(st)
+                    o = by_system.get(k, {}).get(st)
                     if o:
                         L.append(f"| {st} | {label} | {o['n']} | {_p(o['answered'])} | "
                                  f"{_p(o['precision_50m'])} | {_p(o['end_to_end_50m'])} |")  # fmt: skip

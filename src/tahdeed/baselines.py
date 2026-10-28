@@ -106,6 +106,7 @@ def run_ranker(system: str, rows: list[dict], db: str) -> list[dict]:
     from .studies import TfidfBaseline, gazetteer_docs
 
     g = Gazetteer.load(db)
+    model: TfidfBaseline | Bm25
     if system == "tfidf":
         model = TfidfBaseline(g, include_pois=True)
         meta = model.meta
@@ -133,7 +134,7 @@ def have_libpostal() -> bool:
 
 
 def lookup_parsed(
-    parsed: list[tuple[str, str]], g, exclude: set[int] | None = None
+    parsed: list[tuple[str, str]], g, exclude: set[tuple[str, int]] | None = None
 ) -> tuple | None:
     """Exact lookup of a libpostal parse in the gazetteer.
 

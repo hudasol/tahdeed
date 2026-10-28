@@ -329,16 +329,18 @@ def parse_wikidata(bindings: list[dict]) -> list[dict]:
         lang = next((k for k in ("en", "ar") if k in stmt), min(stmt))
         label = it["labels"].get(lang) or next(iter(it["labels"].values()))
         label = _clean(label)
-        address = _clean(stmt[lang])
+        street_text = _clean(stmt[lang])
         if source == "P669":
-            hn = next(iter(it["hn"]), "")
-            address = f"{hn} {address}".strip()
-        if re.fullmatch(r"Q\d+", label) or len(address) < 4:
+            number = next(iter(it["hn"]), "")
+            street_text = f"{number} {street_text}".strip()
+        if re.fullmatch(r"Q\d+", label) or len(street_text) < 4:
             continue
-        if redact_pii(label)[1] or redact_pii(address)[1]:
+        if redact_pii(label)[1] or redact_pii(street_text)[1]:
             continue
         text = (
-            address if normalize_text(label) in normalize_text(address) else f"{label}, {address}"
+            street_text
+            if normalize_text(label) in normalize_text(street_text)
+            else f"{label}, {street_text}"
         )
         city = nearest_city(lat, lon).key
         rows.append({
@@ -392,7 +394,7 @@ def _write_set(out: Path, name: str, rows: list[dict]) -> str:
 
 def _update_manifest(out: Path, name: str, entry: dict) -> None:
     mp = out / "MANIFEST.json"
-    man = (
+    man: dict = (
         json.loads(mp.read_text(encoding="utf-8"))
         if mp.exists()
         else {"version": "1.0.0", "kind": "external text, not OpenStreetMap", "sets": {}}
