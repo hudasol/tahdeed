@@ -63,5 +63,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pip-audit && pip-audit -r constraints.txt --no-deps || true
+      # advisory: a new advisory against a pinned dependency should be visible without blocking unrelated work
+      - run: pip install pip-audit && pip-audit -r constraints.txt --no-deps
+        continue-on-error: true
   # The image build + smoke test lives in docker.yml (it builds the image as its first step).
