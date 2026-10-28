@@ -92,3 +92,36 @@ def test_city_phrase_must_appear_in_latin_poi_name():
     assert _poi_plausible(dxb, "dubai airport")
     assert _poi_plausible(arabic_only, "dubai airport")
     assert _poi_plausible(dibba, "airport")
+
+
+def test_distance_probabilities_are_ordered():
+    import numpy as np
+
+    from tahdeed.model_io import NumpyRanker
+
+    class Head:
+        def __init__(self, v):
+            self.v = v
+
+        def proba(self, X):
+            return np.full(len(X), self.v)
+
+    ident = lambda p: p  # noqa: E731
+    rk = NumpyRanker(
+        heads={
+            "p50": (Head(0.5), ident),
+            "p200": (Head(0.4), ident),
+            "p1k": (Head(0.2), ident),
+            "valid": (Head(0.6), ident),
+        }
+    )
+    c = _poi(0.0, 0.0)
+    import tahdeed.model_io as mio
+
+    orig = mio.featurize
+    mio.featurize = lambda c: [0.0]
+    try:
+        rk.score([c])
+    finally:
+        mio.featurize = orig
+    assert c.p50 <= c.p200 <= c.p1k

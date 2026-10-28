@@ -445,7 +445,7 @@ commit's numbers.
 
 | # | Prediction | Result |
 |---|---|---|
-| M1 | Resolved share, resolved precision and forced top 1 are identical (the decision uses p50 and p_valid only) | _pending_ |
-| M2 | Share of dev responses with p1k < p50 falls to zero | _pending_ |
-| M3 | The ECE of p1k (`ece_p1k`) changes by less than 0.01 on each set | _pending_ |
-| M4 | Approximate answers within their stated radius rise on the Dubai POI set, because fewer fine answers fall back to the area radius | _pending_ |
+| M1 | Resolved share, resolved precision and forced top 1 are identical (the decision uses p50 and p_valid only) | **Nearly hit, not identical**: resolved share and precision moved by 0.04 points or less and forced top 1 within 1 km by 0.07 points or less (coverage hole). The small differences come from the changed p1k and p200 values entering the tie breaks between candidates |
+| M2 | Share of dev responses with p1k < p50 falls to zero | **Hit**: guaranteed by construction and covered by a unit test |
+| M3 | The ECE of p1k (`ece_p1k`) changes by less than 0.01 on each set | **Miss**: p1k ECE changed by more than 0.01 on two sets, in the helpful direction on Abu Dhabi structured (0.028 to 0.018) and Dubai POI (0.074 to 0.050), and the wrong direction on coverage hole (0.045 to 0.051). p200 ECE moved the same way |
+| M4 | Approximate answers within their stated radius rise on the Dubai POI set, because fewer fine answers fall back to the area radius | **Miss**: approximate within radius is unchanged on Dubai POI (68.8%). The radius rule uses the first of p50, p200, p1k reaching 0.9, and raising p200 and p1k rarely reaches that |

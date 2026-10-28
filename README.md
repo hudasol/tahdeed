@@ -135,7 +135,7 @@ Generated from the result files by `scripts/make_results_blocks.py`. Intervals a
 | ...with the city written (E2), wrong-city rate of answers | 0.5% (0.1-2.6) | 0.4% (0.1-2.1) |
 | True address missing from the index: precision of confident answers | 91.3% | not re-run |
 | Dubai/Sharjah/Ajman POI queries: answered / ECE | 57.1% / 0.110 | not re-run |
-| Latency (median, one core) | 7.8 ms | |
+| Latency (median, one core) | 7.7 ms | |
 
 Cross-city rows use the synthetic `crosscity` set (pairs of the same record with and without district/city evidence; composition chosen to expose the failure, **not** a prevalence estimate). The standard-benchmark coverage without the gate was 64.7% on sealed. Frozen v2.0 release, sealed, for reference: 65.5% answered, 98.7% within 50 m.
 <!-- RESULTS:results END -->

@@ -136,9 +136,9 @@ where entrances are not mapped is unknown.
 
 | Benchmark | n | resolved | precision@50 m of resolved | top-1 ≤50 m (forced) | ≤1 km | ECE P(≤50 m) | median ms |
 |---|---|---|---|---|---|---|---|
-| Abu Dhabi / Al Ain / Al Dhafra, held-out districts | 6000 | 61.2% | **99.5%** | 74.7% | 82.5% | 0.029 | 7.8 |
-| Same, true address removed from the index | 3000 | 37.8% | **91.3%** | 44.7% | 65.7% | 0.039 | 7.5 |
-| Dubai / Sharjah / Ajman POI (weaker truth) | 1500 | 57.1% | **99.5%** | 77.9% | 80.5% | 0.110 | 6.2 |
+| Abu Dhabi / Al Ain / Al Dhafra, held-out districts | 6000 | 61.2% | **99.5%** | 74.7% | 82.5% | 0.029 | 7.7 |
+| Same, true address removed from the index | 3000 | 37.9% | **91.3%** | 44.8% | 65.8% | 0.039 | 7.8 |
+| Dubai / Sharjah / Ajman POI (weaker truth) | 1500 | 57.1% | **99.5%** | 77.9% | 80.5% | 0.110 | 6.0 |
 
 "Forced" counts the best candidate even where tahdeed would have abstained or given only an area. "Resolved" is the confident answer.
 
