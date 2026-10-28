@@ -21,7 +21,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-__all__ = ["FetchError", "fetch_data", "load_manifest", "sha256_of"]
+__all__ = ["FetchError", "fetch_data", "fetch_manifest", "install", "load_manifest", "sha256_of"]
 
 MANIFEST_SCHEMA_VERSION = 1
 _LOOPBACK = {"127.0.0.1", "localhost", "::1"}
@@ -148,3 +148,36 @@ def fetch_data(
         part.replace(target)
         paths.append(target)
     return paths
+
+
+def fetch_manifest(base_url: str, timeout: float = 60.0) -> dict[str, Any]:
+    """Download and validate ``MANIFEST.json`` from ``base_url``."""
+    base = base_url.rstrip("/")
+    _check_url(base + "/")
+    req = urllib.request.Request(base + "/MANIFEST.json", headers={"User-Agent": "tahdeed-fetch/1"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+            doc = json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, OSError, TimeoutError, ValueError) as exc:
+        raise FetchError(f"could not read the manifest at {base}/MANIFEST.json: {exc}") from exc
+    return load_manifest(doc)
+
+
+def install(base_url: str, data_dir: str | os.PathLike[str] = "data") -> list[Path]:
+    """Fetch the gazetteer and the ranker into the layout the service expects.
+
+    ``data_dir/gazetteer.sqlite`` and ``data_dir/models/ranker.npz``.
+    """
+    root = Path(data_dir)
+    manifest = fetch_manifest(base_url)
+    paths = fetch_data(root, base_url, manifest, names=["gazetteer.sqlite", "ranker.npz"])
+    models = root / "models"
+    models.mkdir(parents=True, exist_ok=True)
+    out = []
+    for p in paths:
+        if p.name == "ranker.npz":
+            target = models / "ranker.npz"
+            p.replace(target)
+            p = target
+        out.append(p)
+    return out
