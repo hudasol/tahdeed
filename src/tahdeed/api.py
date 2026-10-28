@@ -15,8 +15,10 @@ import io
 import logging
 import os
 import sys
+import threading
 import time
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
@@ -75,7 +77,18 @@ class ResolveRequest(BaseModel):
 
 
 def create_app(resolver=None) -> FastAPI:
+    load_lock = threading.Lock()
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        # In strict mode a missing or mismatched model must stop the process at start, not on the
+        # first request, so the orchestrator sees a failed start rather than a healthy dead service.
+        if os.environ.get("TAHDEED_STRICT", "0") == "1":
+            R()
+        yield
+
     app = FastAPI(
+        lifespan=lifespan,
         title="tahdeed",
         version=__version__,
         description="Bilingual UAE address resolver with calibrated confidence.",
@@ -106,7 +119,9 @@ def create_app(resolver=None) -> FastAPI:
 
     def R():
         if state["r"] is None:
-            state["r"] = load_resolver()
+            with load_lock:
+                if state["r"] is None:
+                    state["r"] = load_resolver()
         return state["r"]
 
     def versions() -> dict:

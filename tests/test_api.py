@@ -149,3 +149,21 @@ def test_audit_hash_does_not_depend_on_pii(monkeypatch, resolver, caplog):
     b = _logs(caplog)
     ha, hb = (re.search(r'"q_sha256_16": "(\w+)"', x).group(1) for x in (a, b))
     assert ha == hb
+
+
+def test_strict_mode_fails_at_startup(tmp_path, monkeypatch):
+    """With TAHDEED_STRICT=1 a missing model stops the app when it starts, not on the first request."""
+    import pytest
+    from fastapi.testclient import TestClient
+
+    from tahdeed import api, service
+
+    monkeypatch.setenv("TAHDEED_STRICT", "1")
+    monkeypatch.setattr(service, "DEFAULT_DB", tmp_path / "none.sqlite")
+
+    def boom():
+        raise service.ModelMismatch("no model")
+
+    monkeypatch.setattr(api, "load_resolver", boom)
+    with pytest.raises(service.ModelMismatch), TestClient(api.create_app()):
+        pass
