@@ -10,6 +10,8 @@ experiments behind them are in [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-28
+
 ### Added
 
 - City gate: when the same street or POI name exists in several cities and the query gives no city,
@@ -39,6 +41,14 @@ experiments behind them are in [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md).
 
 ### Changed
 
+- Decision order: a fine candidate (POI or address) with p_valid of at least 0.40 is offered as the
+  approximate answer ahead of a coarse city, and an approximate fine answer carries a radius taken
+  from the calibrated heads instead of claiming 25 m.
+- A POI whose Latin name shares only a consonant skeleton with a city word, or is not spelled
+  recognisably like the span (similarity below 60), is no longer a match ("Sheikh Zayed Road Dubai"
+  no longer returns a bank, "Dubai Airport" no longer returns "Dibba Airport" or "Euro Part").
+- `tahdeed fetch` downloads the gazetteer and the ranker from the `data` branch and verifies them
+  against `MANIFEST.json`.
 - The dashboard now ships inside the package (`src/tahdeed/web`), so installed copies serve it.
 - The audit log redacts contact details before hashing or logging query text.
 - `docs/ROADMAP.md` and `docs/reviews/` were replaced by `docs/DESIGN_NOTES.md`.
