@@ -79,7 +79,7 @@
 {"id": "overture_places-00078", "lat": 25.222600179999997, "lon": 55.26596370666667, "abstain": true, "confidence": 0.1512, "city": "dibba"}
 {"id": "overture_places-00079", "lat": 25.269618306974237, "lon": 55.31105077362078, "abstain": true, "confidence": 0.0, "city": "dubai"}
 {"id": "overture_places-00080", "lat": 24.2071242, "lon": 55.784640986363634, "abstain": true, "confidence": 0.0, "city": "al ain"}
-{"id": "overture_places-00081", "lat": 24.256347125806453, "lon": 55.74707352580644, "abstain": true, "confidence": 0.0, "city": "al ain"}
+{"id": "overture_places-00081", "lat": 23.6299177, "lon": 55.549961, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-00082", "lat": 24.18988810208333, "lon": 55.68560018541666, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-00083", "lat": 24.361227568, "lon": 54.547127268000004, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-00084", "lat": 25.21426615, "lon": 55.3076303, "abstain": true, "confidence": 0.0, "city": "dubai"}
@@ -623,7 +623,7 @@
 {"id": "overture_places-00622", "lat": 25.09556116, "lon": 55.16790374, "abstain": true, "confidence": 0.1178, "city": "dubai"}
 {"id": "overture_places-00623", "lat": 25.18507674492647, "lon": 55.241041118235295, "abstain": true, "confidence": 0.0, "city": "dubai"}
 {"id": "overture_places-00624", "lat": 24.54080662989633, "lon": 54.43241663633291, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
-{"id": "overture_places-00625", "lat": 24.19132011847222, "lon": 55.73938713616667, "abstain": true, "confidence": 0.0, "city": "al ain"}
+{"id": "overture_places-00625", "lat": 24.42811117471264, "lon": 54.43870833218392, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-00626", "lat": 24.2753709, "lon": 55.77071812222222, "abstain": true, "confidence": 0.045, "city": "al ain"}
 {"id": "overture_places-00627", "lat": 25.4019559, "lon": 55.4822753, "abstain": true, "confidence": 0.2231, "city": "ajman"}
 {"id": "overture_places-00628", "lat": 25.0994892, "lon": 55.2017252, "abstain": true, "confidence": 0.0, "city": "dubai"}
@@ -687,7 +687,7 @@
 {"id": "overture_places-00686", "lat": 25.21528774321475, "lon": 55.27759343400507, "abstain": true, "confidence": 0.0, "city": "dibba"}
 {"id": "overture_places-00687", "lat": 25.2747316, "lon": 55.3318126, "abstain": true, "confidence": 0.5163, "city": "dubai"}
 {"id": "overture_places-00688", "lat": 25.08719354, "lon": 55.15786303, "abstain": true, "confidence": 0.0, "city": "dubai"}
-{"id": "overture_places-00689", "lat": 23.637574055555557, "lon": 53.627396027777785, "abstain": true, "confidence": 0.0, "city": "madinat zayed"}
+{"id": "overture_places-00689", "lat": 24.191655047727274, "lon": 55.761032652272725, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-00690", "lat": 24.2089516, "lon": 55.75576756, "abstain": true, "confidence": 0.2231, "city": "al ain"}
 {"id": "overture_places-00691", "lat": 25.197189238775508, "lon": 55.274150879591836, "abstain": true, "confidence": 0.0, "city": "dibba"}
 {"id": "overture_places-00692", "lat": 25.197189238775508, "lon": 55.274150879591836, "abstain": true, "confidence": 0.0, "city": "dibba"}
@@ -1143,7 +1143,7 @@
 {"id": "overture_places-01142", "lat": 24.4969354, "lon": 54.3740268, "abstain": true, "confidence": 0.045, "city": "abu dhabi"}
 {"id": "overture_places-01143", "lat": 24.5319761, "lon": 54.431076, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-01144", "lat": 24.435872568965515, "lon": 54.40449721379311, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
-{"id": "overture_places-01145", "lat": 24.463820671428568, "lon": 54.42298365714286, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
+{"id": "overture_places-01145", "lat": 24.213932025000002, "lon": 55.612226050000004, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-01146", "lat": 24.221743011856063, "lon": 55.64855634041667, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-01147", "lat": 24.4922906, "lon": 54.3673526, "abstain": false, "confidence": 0.995, "city": "abu dhabi"}
 {"id": "overture_places-01148", "lat": 24.662271559384433, "lon": 54.74619614049487, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
@@ -1158,7 +1158,7 @@
 {"id": "overture_places-01157", "lat": 24.48787612, "lon": 54.35990272, "abstain": true, "confidence": 0.9797, "city": "abu dhabi"}
 {"id": "overture_places-01158", "lat": 24.3295024, "lon": 54.5315489, "abstain": false, "confidence": 0.949, "city": "abu dhabi"}
 {"id": "overture_places-01159", "lat": 24.385603180909094, "lon": 54.603048188181816, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
-{"id": "overture_places-01160", "lat": 24.35097603125, "lon": 54.75363093125, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
+{"id": "overture_places-01160", "lat": 24.3594826, "lon": 54.7437902, "abstain": true, "confidence": 0.439, "city": "abu dhabi"}
 {"id": "overture_places-01161", "lat": 24.18008862121212, "lon": 55.71937126666666, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-01162", "lat": 24.488998635964915, "lon": 54.362282328947366, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-01163", "lat": 24.460876626315788, "lon": 54.3729414631579, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
@@ -1614,7 +1614,7 @@
 {"id": "overture_places-01613", "lat": 24.3351251625, "lon": 54.531204187499995, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-01614", "lat": 24.4678982, "lon": 54.599366, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-01615", "lat": 24.490502, "lon": 54.3787071, "abstain": true, "confidence": 0.9816, "city": "abu dhabi"}
-{"id": "overture_places-01616", "lat": 24.4953701, "lon": 54.4052431, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
+{"id": "overture_places-01616", "lat": 24.132963366666665, "lon": 55.83509502, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-01617", "lat": 24.458638645714284, "lon": 54.321794777142856, "abstain": true, "confidence": 0.2231, "city": "abu dhabi"}
 {"id": "overture_places-01618", "lat": 25.190477100000003, "lon": 55.26418817142857, "abstain": true, "confidence": 0.0, "city": "dubai"}
 {"id": "overture_places-01619", "lat": 24.18258895729323, "lon": 55.71688136045113, "abstain": true, "confidence": 0.0, "city": "al ain"}
@@ -1703,7 +1703,7 @@
 {"id": "overture_places-01702", "lat": 24.463479152808986, "lon": 54.37828399700374, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-01703", "lat": 24.364320984827586, "lon": 54.6080726737931, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-01704", "lat": 24.481377350000002, "lon": 54.37027346666667, "abstain": true, "confidence": 0.293, "city": "abu dhabi"}
-{"id": "overture_places-01705", "lat": 24.41665510921053, "lon": 54.69250700526317, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
+{"id": "overture_places-01705", "lat": 24.4039307, "lon": 54.5024601, "abstain": true, "confidence": 0.045, "city": "abu dhabi"}
 {"id": "overture_places-01706", "lat": 24.3942941, "lon": 54.6545515, "abstain": true, "confidence": 0.9157, "city": "abu dhabi"}
 {"id": "overture_places-01707", "lat": 24.435496, "lon": 54.4557373, "abstain": true, "confidence": 0.4286, "city": "abu dhabi"}
 {"id": "overture_places-01708", "lat": 24.46854182857143, "lon": 54.341364742857145, "abstain": true, "confidence": 0.0178, "city": "abu dhabi"}
@@ -2445,7 +2445,7 @@
 {"id": "overture_places-02444", "lat": 25.3312305, "lon": 55.3916961, "abstain": true, "confidence": 0.0, "city": "sharjah"}
 {"id": "overture_places-02445", "lat": 25.4065666, "lon": 55.4354006, "abstain": true, "confidence": 0.439, "city": "sharjah"}
 {"id": "overture_places-02446", "lat": 25.0908423, "lon": 55.3852759, "abstain": true, "confidence": 0.293, "city": "dubai"}
-{"id": "overture_places-02447", "lat": 24.463820671428568, "lon": 54.42298365714286, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
+{"id": "overture_places-02447", "lat": 24.213932025000002, "lon": 55.612226050000004, "abstain": true, "confidence": 0.0, "city": "al ain"}
 {"id": "overture_places-02448", "lat": 25.391025233333334, "lon": 55.41786041666666, "abstain": true, "confidence": 0.0, "city": "sharjah"}
 {"id": "overture_places-02449", "lat": 24.474605349999997, "lon": 54.3441868, "abstain": true, "confidence": 0.0, "city": "abu dhabi"}
 {"id": "overture_places-02450", "lat": 25.41149441685425, "lon": 55.47794652421356, "abstain": true, "confidence": 0.0, "city": "ajman"}

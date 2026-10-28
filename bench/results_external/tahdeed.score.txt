@@ -4,7 +4,7 @@ overture_places  (n=3000, missing predictions: 0)
   precision@50m      41.5% [33-51]   (among answered)
   conf.wrong city    18.9% [13-27]   (among answered)
   end-to-end@50m     1.5% [1-2]   (abstain = miss)
-  forced@50m/1km     6.4% [6-7] / 20.2% [19-22]
+  forced@50m/1km     6.4% [6-7] / 20.1% [19-22]
   ECE (confidence vs within-50m, n=106): 0.500
 
 wikidata_addresses  (n=110, missing predictions: 0)
