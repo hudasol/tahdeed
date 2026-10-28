@@ -148,3 +148,23 @@ def test_sha256_of(tmp_path: Path):
     p = tmp_path / "x"
     p.write_bytes(b"abc")
     assert sha256_of(p) == hashlib.sha256(b"abc").hexdigest()
+
+
+def test_install_places_files_where_the_service_expects(server, tmp_path):
+    from tahdeed.fetch import install
+
+    base, served, _ = server
+    served.update({"releases/" + k: v for k, v in FILES.items()})
+    served["releases/MANIFEST.json"] = json.dumps(_manifest(FILES)).encode()
+    paths = install(base, tmp_path)
+    assert (tmp_path / "gazetteer.sqlite").read_bytes() == FILES["gazetteer.sqlite"]
+    assert (tmp_path / "models" / "ranker.npz").read_bytes() == FILES["ranker.npz"]
+    assert len(paths) == 2
+
+
+def test_missing_manifest_is_a_fetch_error(server, tmp_path):
+    from tahdeed.fetch import install
+
+    base, _, _ = server
+    with pytest.raises(FetchError):
+        install(base, tmp_path)

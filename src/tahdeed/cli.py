@@ -9,6 +9,9 @@ import sys
 from json import dump as json_dump
 from pathlib import Path
 
+# Where `tahdeed fetch` looks for the data files by default (the `data` branch of the repository).
+DATA_URL = "https://raw.githubusercontent.com/hudasol/tahdeed/data"
+
 
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else list(argv)
@@ -101,6 +104,12 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--nominatim", type=int, default=0)
     e.add_argument("--out", default="data/eval_results.json")
 
+    f = sub.add_parser(
+        "fetch", help="download the gazetteer and the ranker and verify their hashes"
+    )
+    f.add_argument("--base-url", default=DATA_URL, help="directory that holds MANIFEST.json")
+    f.add_argument("--dest", default="data")
+
     s = sub.add_parser("serve", help="run the API + dashboard")
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8000)
@@ -167,6 +176,15 @@ def main(argv: list[str] | None = None) -> int:
         print("figures:", ", ".join(make_all(a.eval, a.studies, a.out)))
     elif a.cmd == "verify":
         return _verify()
+    elif a.cmd == "fetch":
+        from .fetch import FetchError, install
+
+        try:
+            for path in install(a.base_url, a.dest):
+                print("ok", path)
+        except FetchError as ex:
+            print(f"fetch failed: {ex}", file=sys.stderr)
+            return 1
     elif a.cmd == "crosscity":
         from .crosscity import MARGINS, run_crosscity
         from .gazetteer import Gazetteer
