@@ -20,3 +20,4 @@ retrain.done
 .claude/
 smoke-logs/
 bench/results/*.cache.json
+bench/results_external/*.cache.json
