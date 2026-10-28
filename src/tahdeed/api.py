@@ -14,6 +14,7 @@ import hmac
 import io
 import logging
 import os
+import re
 import sys
 import threading
 import time
@@ -22,6 +23,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -69,6 +71,14 @@ SECURITY_HEADERS = {
 }
 
 
+_RID = re.compile(r"[A-Za-z0-9._-]{1,64}")
+
+
+def _cell(v):
+    """Stop spreadsheet programs from running a cell that starts like a formula."""
+    return "'" + v if isinstance(v, str) and v[:1] in ("=", "+", "-", "@", "\t", "\r") else v
+
+
 class ResolveRequest(BaseModel):
     address: str = Field(..., max_length=2000)
     # optional answer to "Which city?": a key from `city_options` in an earlier response, or a
@@ -92,7 +102,7 @@ def create_app(resolver=None) -> FastAPI:
         title="tahdeed",
         version=__version__,
         description="Bilingual UAE address resolver with calibrated confidence.",
-        docs_url="/docs",
+        docs_url=None,  # the interactive page loads scripts from a CDN, which the CSP forbids
         redoc_url=None,
     )
     state = {"r": resolver}
@@ -133,33 +143,33 @@ def create_app(resolver=None) -> FastAPI:
             "degraded": bool(r.degraded_reason),
         }
 
+    def finish(resp, rid: str):
+        for k, v in SECURITY_HEADERS.items():
+            resp.headers[k] = v
+        resp.headers["X-Request-ID"] = rid
+        return resp
+
     @app.middleware("http")
     async def guard(request: Request, call_next):
-        rid = request.headers.get("x-request-id") or uuid.uuid4().hex[:12]
+        sent = request.headers.get("x-request-id", "")
+        rid = sent if _RID.fullmatch(sent) else uuid.uuid4().hex[:12]
         n = request.headers.get("content-length")
         if n and n.isdigit() and int(n) > MAX_BODY_BYTES:
-            return JSONResponse({"error": "request too large"}, status_code=413)
+            return finish(JSONResponse({"error": "request too large"}, status_code=413), rid)
         if limiter is not None and request.url.path.startswith(LIMITED_PREFIX):
             ok, retry = limiter.check(who(request))
             if not ok:
-                resp = too_many(retry)
-                resp.headers["X-Request-ID"] = rid
-                for k, v in SECURITY_HEADERS.items():
-                    resp.headers[k] = v
-                return resp
+                return finish(too_many(retry), rid)
         if token and request.url.path.startswith("/resolve"):
             got = request.headers.get("authorization", "")
             if not hmac.compare_digest(got.encode(), f"Bearer {token}".encode()):
-                return JSONResponse({"error": "unauthorized"}, status_code=401)
+                return finish(JSONResponse({"error": "unauthorized"}, status_code=401), rid)
         try:
             resp = await call_next(request)
         except Exception:  # never leak internals
             log.exception("unhandled error request_id=%s", rid)
             resp = JSONResponse({"error": "internal error", "request_id": rid}, status_code=500)
-        for k, v in SECURITY_HEADERS.items():
-            resp.headers[k] = v
-        resp.headers["X-Request-ID"] = rid
-        return resp
+        return finish(resp, rid)
 
     @app.get("/health")
     def health():
@@ -227,23 +237,28 @@ def create_app(resolver=None) -> FastAPI:
                 ok, retry = limiter.check(who(request), extra)
                 if not ok:
                     return too_many(retry)
-        out = io.StringIO()
-        w = csv.writer(out)
-        w.writerow(["address", "status", "lat", "lon", "radius_m", "p_within_50m", "p_within_1km",
-                    "tier", "standard_en", "standard_ar", "asks", "calibrated"])  # fmt: skip
-        for row in rows:
-            ch = (row.get("city") or "").strip()[:40] or None
-            if ch and city_key(ch) is None:
-                j = _one((row.get("address") or "")[:500])
-                j["asks"] = ["Unknown city value ignored.", *j["asks"]]
-            else:
-                j = _one((row.get("address") or "")[:500], city=ch)
-            b = j["best"]
-            w.writerow([row.get("address", ""), j["status"], *(
-                [b["lat"], b["lon"], b["radius_m"], b["p_within_50m"], b["p_within_1km"],
-                 b["tier"], b["standard"]["en"], b["standard"]["ar"]] if b else [""] * 8
-            ), " | ".join(j["asks"]), j["calibrated"]])  # fmt: skip
-        return Response(out.getvalue(), media_type="text/csv",
+
+        def build() -> str:
+            out = io.StringIO()
+            w = csv.writer(out)
+            w.writerow(["address", "status", "lat", "lon", "radius_m", "p_within_50m", "p_within_1km",
+                        "tier", "standard_en", "standard_ar", "asks", "calibrated"])  # fmt: skip
+            for row in rows:
+                ch = (row.get("city") or "").strip()[:40] or None
+                if ch and city_key(ch) is None:
+                    j = _one((row.get("address") or "")[:500])
+                    j["asks"] = ["Unknown city value ignored.", *j["asks"]]
+                else:
+                    j = _one((row.get("address") or "")[:500], city=ch)
+                b = j["best"]
+                w.writerow([_cell(row.get("address", "")), j["status"], *(
+                    [b["lat"], b["lon"], b["radius_m"], b["p_within_50m"], b["p_within_1km"],
+                     b["tier"], _cell(b["standard"]["en"]), _cell(b["standard"]["ar"])] if b else [""] * 8
+                ), " | ".join(j["asks"]), j["calibrated"]])  # fmt: skip
+            return out.getvalue()
+
+        text = await run_in_threadpool(build)
+        return Response(text, media_type="text/csv",
                         headers={"Content-Disposition": "attachment; filename=resolved.csv"})  # fmt: skip
 
     if WEB.exists():

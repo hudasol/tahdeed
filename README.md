@@ -104,7 +104,7 @@ Without the house number and city, the same street gives an area level answer an
 | `POST /resolve/batch` | CSV upload with an `address` column. |
 | `GET /health` | Status, versions and checksums of the gazetteer and model. |
 | `GET /config` | Attribution text and the data offer link. |
-| `GET /docs` | Interactive OpenAPI documentation. |
+| `GET /openapi.json` | OpenAPI description (the interactive page is off because the content security policy blocks its CDN scripts). |
 | `GET /` | Map dashboard. |
 
 The status is one of `resolved`, `approximate`, `ambiguous` or `unresolved`. Every response carries `degraded` and `calibrated` flags. If the model is missing or does not match the gazetteer the service either refuses to start (`TAHDEED_STRICT=1`, the default in the image) or answers with `degraded: true`. Configuration, rate limiting and logging are described in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). The same functions are available on the command line: `tahdeed resolve`, `tahdeed batch`, `tahdeed eval`, `tahdeed verify` and `tahdeed bench`.
