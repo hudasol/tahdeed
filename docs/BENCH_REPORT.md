@@ -31,7 +31,7 @@ Cells are percent with Wilson 95% interval (low–high). *Answered* = the system
 | BM25 (address + POI strings) | 1500 | 99.9 (100–100) | 9.5 (8–11) | 47.4 (45–50) | 9.5 (8–11) | 10.5 (9–12) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 0.0 (0–4) | 0.0 (0–100) | 0.0 (0–100) | 0.0 (0–4) | 0.0 (0–4) |
 | Public Photon (sample, ≤1 req/s) | 100 | 48.0 (38–58) | 14.6 (7–27) | 45.8 (33–60) | 7.0 (3–14) | 10.0 (6–17) |
-| Tahdeed | 1500 | 53.1 (51–56) | 98.9 (98–99) | 0.1 (0–1) | 52.5 (50–55) | 69.5 (67–72) |
+| Tahdeed | 1500 | 53.1 (51–56) | 99.0 (98–99) | 0.1 (0–1) | 52.5 (50–55) | 69.5 (67–72) |
 
 ### address_sealed
 
@@ -123,7 +123,7 @@ Public Nominatim and Photon were queried at ≤1 request/s on an even-stride sam
 | BM25 (address + POI strings) | 100 | 100.0 (96–100) | 9.0 (5–16) | 48.0 (38–58) | 9.0 (5–16) | 10.0 (6–17) |
 | Public Nominatim (sample, ≤1 req/s) | 100 | 0.0 (0–4) | 0.0 (0–100) | 0.0 (0–100) | 0.0 (0–4) | 0.0 (0–4) |
 | Public Photon (sample, ≤1 req/s) | 100 | 48.0 (38–58) | 14.6 (7–27) | 45.8 (33–60) | 7.0 (3–14) | 10.0 (6–17) |
-| Tahdeed | 100 | 52.0 (42–62) | 98.1 (90–100) | 0.0 (0–7) | 51.0 (41–61) | 68.0 (58–76) |
+| Tahdeed | 100 | 51.0 (41–61) | 100.0 (93–100) | 0.0 (0–7) | 51.0 (41–61) | 68.0 (58–76) |
 
 **address_sealed**
 
@@ -293,8 +293,8 @@ Strata are (stratum/evidence): E0 = street + number only, E1 = + district, E2 = 
 | named_collision/E1 | 420 | 61.7 (57–66) | 0.0 (0–1) | 61.7 (57–66) |
 | named_collision/E2 | 450 | 21.1 (18–25) | 0.0 (0–4) | 20.9 (17–25) |
 | named_hole/E0 | 450 | 2.0 (1–4) | 88.9 (56–98) | 0.0 (0–1) |
-| named_hole/E1 | 415 | 44.3 (40–49) | 0.5 (0–3) | 39.3 (35–44) |
-| named_hole/E2 | 450 | 10.9 (8–14) | 0.0 (0–7) | 8.0 (6–11) |
+| named_hole/E1 | 415 | 44.6 (40–49) | 0.5 (0–3) | 39.5 (35–44) |
+| named_hole/E2 | 450 | 10.7 (8–14) | 0.0 (0–7) | 7.8 (6–11) |
 | named_unique/E0 | 450 | 16.7 (14–20) | 0.0 (0–5) | 16.7 (14–20) |
 | named_unique/E1 | 413 | 78.2 (74–82) | 0.0 (0–1) | 78.2 (74–82) |
 | named_unique/E2 | 450 | 74.2 (70–78) | 0.0 (0–1) | 73.8 (70–78) |
@@ -432,7 +432,7 @@ All rows (systems that were run on every row).
 |---|---|---|---|---|---|---|---|
 | TF-IDF char 3-4gram nearest neighbour (address + POI strings) | 3000 | 100.0 (100–100) | 11.7 (11–13) | 45.2 (43–47) | 11.7 (11–13) | 28.9 (27–31) | – |
 | BM25 (address + POI strings) | 3000 | 100.0 (100–100) | 12.6 (11–14) | 42.0 (40–44) | 12.6 (11–14) | 30.1 (28–32) | – |
-| Tahdeed | 3000 | 3.5 (3–4) | 41.5 (33–51) | 18.9 (13–27) | 1.5 (1–2) | 20.2 (19–22) | 0.500 |
+| Tahdeed | 3000 | 3.5 (3–4) | 41.5 (33–51) | 18.9 (13–27) | 1.5 (1–2) | 20.1 (19–22) | 0.500 |
 
 Like-for-like on the public geocoder sample (identical ids for every system).
 

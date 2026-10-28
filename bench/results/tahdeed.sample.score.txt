@@ -1,11 +1,11 @@
 
 address_dev  (n=100, missing predictions: 0)
-  answered           52.0% [42-62]
-  precision@50m      98.1% [90-100]   (among answered)
+  answered           51.0% [41-61]
+  precision@50m      100.0% [93-100]   (among answered)
   conf.wrong city    0.0% [0-7]   (among answered)
   end-to-end@50m     51.0% [41-61]   (abstain = miss)
   forced@50m/1km     66.0% [56-75] / 68.0% [58-76]
-  ECE (confidence vs within-50m, n=52): 0.011
+  ECE (confidence vs within-50m, n=51): 0.029
 
 address_sealed  (n=100, missing predictions: 0)
   answered           58.0% [48-67]
