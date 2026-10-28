@@ -73,7 +73,7 @@ run where the PII redaction was disabled and the script failed as it should. The
 | Variable | Default | Meaning |
 |---|---|---|
 | `TAHDEED_DB` | `data/gazetteer.sqlite` (image: `/data/gazetteer.sqlite`) | Path to the gazetteer SQLite file (opened read-only). |
-| `TAHDEED_MODEL` | `data/models/ranker.npz` (image: `/data/ranker.npz`) | Path to the trained model. Its manifest must match the gazetteer's sha256. |
+| `TAHDEED_MODEL` | `data/models/ranker.npz` (image: `/data/ranker.npz`, or `/data/models/ranker.npz` when that is where the file is) | Path to the trained model. Its manifest must match the gazetteer's sha256. |
 | `TAHDEED_STRICT` | `0` (image: `1`) | `1`: fail to start on a missing/mismatched model. `0`: fall back to the uncalibrated heuristic and report `degraded: true`. |
 | `TAHDEED_RATE_LIMIT` | `60` | Requests per minute per client on `/resolve` and `/resolve/batch`. `0` (or negative) disables. Burst is `max(5, limit/4)`. See section 3. |
 | `TAHDEED_TRUST_PROXY` | unset | `1`: take the client address from `X-Forwarded-For` for rate limiting. Set it **only** behind a proxy you control or trust; otherwise anyone can claim any address. |

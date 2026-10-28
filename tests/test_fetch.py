@@ -168,3 +168,24 @@ def test_missing_manifest_is_a_fetch_error(server, tmp_path):
     base, _, _ = server
     with pytest.raises(FetchError):
         install(base, tmp_path)
+
+
+def test_load_resolver_finds_nested_model(tmp_path, monkeypatch):
+    """The layout written by `tahdeed fetch` (models/ranker.npz) loads without setting TAHDEED_MODEL."""
+    import shutil
+
+    from tahdeed import service
+
+    src = Path(__file__).parent / "fixtures" / "mini.sqlite"
+    shutil.copy(src, tmp_path / "gazetteer.sqlite")
+    seen = {}
+
+    def fake_load(path, gazetteer_sha256):
+        seen["path"] = Path(path)
+        raise service.ModelMismatch("stop")
+
+    (tmp_path / "models").mkdir()
+    (tmp_path / "models" / "ranker.npz").write_bytes(b"x")
+    monkeypatch.setattr(service, "load_model", fake_load)
+    service.load_resolver(tmp_path / "gazetteer.sqlite", tmp_path / "ranker.npz", strict=False)
+    assert seen["path"] == tmp_path / "models" / "ranker.npz"
