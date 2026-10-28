@@ -3,7 +3,7 @@
   "@type": "SoftwareSourceCode",
   "name": "tahdeed",
   "description": "Bilingual Arabic/English UAE address resolver with calibrated confidence and abstention, and the Gulf-AddressBench benchmark (version 1.0.0).",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": [
     {
       "@type": "Person",
