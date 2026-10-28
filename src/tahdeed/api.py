@@ -37,12 +37,12 @@ log = logging.getLogger("tahdeed")
 
 
 def _find_web() -> Path:
-    """Dashboard directory: ``TAHDEED_WEB``, the source checkout, or ``./web`` (the Docker image)."""
-    cands = [os.environ.get("TAHDEED_WEB"), Path(__file__).resolve().parents[2] / "web", "web"]
+    """Dashboard directory: ``TAHDEED_WEB``, else the ``web`` package data shipped with tahdeed."""
+    cands = [os.environ.get("TAHDEED_WEB"), Path(__file__).resolve().parent / "web"]
     for c in cands:
         if c and Path(c).is_dir():
             return Path(c).resolve()
-    return Path(__file__).resolve().parents[2] / "web"
+    return Path(__file__).resolve().parent / "web"
 
 
 WEB = _find_web()

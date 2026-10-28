@@ -29,8 +29,6 @@ services:
         value: data/gazetteer.sqlite
       - key: TAHDEED_MODEL
         value: data/ranker.npz
-      - key: TAHDEED_WEB
-        value: web
       # Free instances have a single shared egress identity and Render fronts them with its own
       # proxy; until you have checked how many X-Forwarded-For hops Render adds (see
       # docs/DEPLOYMENT.md) leave TAHDEED_TRUST_PROXY unset: all clients then share ONE bucket,
