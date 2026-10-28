@@ -23,10 +23,8 @@ LABEL org.opencontainers.image.title="tahdeed" \
       org.opencontainers.image.source="https://github.com/hudasol/tahdeed"
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
     OMP_NUM_THREADS=1 TAHDEED_STRICT=1 \
-    TAHDEED_DB=/data/gazetteer.sqlite TAHDEED_MODEL=/data/ranker.npz \
-    TAHDEED_WEB=/app/web
+    TAHDEED_DB=/data/gazetteer.sqlite TAHDEED_MODEL=/data/ranker.npz
 COPY --from=build /install /usr/local
-COPY web /app/web
 RUN groupadd --system --gid 10001 tahdeed \
  && useradd --system --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin tahdeed
 USER 10001:10001

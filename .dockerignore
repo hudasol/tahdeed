@@ -1,4 +1,4 @@
-# Only src/, web/, pyproject.toml, README.md, LICENSE and constraints.txt are needed.
+# Only src/ (which contains the dashboard), pyproject.toml, README.md, LICENSE and constraints.txt are needed.
 # Data is never baked into the image (it is ODbL-derived and mounted read-only at /data).
 data
 tests
