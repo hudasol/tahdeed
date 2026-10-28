@@ -24,6 +24,7 @@ from .normalize import (
     coarse_key,
     has_arabic,
     has_latin,
+    normalize_text,
     skeleton_of_tokens,
     skeleton_tokens,
     strip_articles,
@@ -158,6 +159,12 @@ def _diversify(items: list, city_of, k: int) -> list:
             seen.add(c)
             first.append(it)
     return (first + rest)[:k]
+
+
+def _poi_named(p: tuple, text: str) -> bool:
+    """Does one of the POI's names equal ``text`` once normalised (not just share its skeleton)?"""
+    want = normalize_text(text)
+    return any(n and normalize_text(n) == want for n in (p[1], p[2], p[3]))
 
 
 def candidate_city(g: Gazetteer, c: Candidate) -> str | None:
@@ -532,6 +539,9 @@ class Resolver:
             # a city name that collides with an obscure area key elsewhere ("Dubai" ~ "Al Doob")
             if sp.city and sp.areas:
                 sp.areas = [i for i in sp.areas if g.areas[i][4] == sp.city]
+            # ... and with a POI that only shares the consonant skeleton ("Dubai" ~ "ADIB")
+            if sp.city and sp.pois and not sp.has_type:
+                sp.pois = [i for i in sp.pois if _poi_named(g.pois[i], sp.text)]
 
         # landmark phrase (matched separately)
         lm_spans: list[Span] = []
