@@ -13,6 +13,7 @@ calibration districts only. The benchmark exports only dev and sealed districts.
 | `address_sealed`, `hole_sealed`, `poi_sealed` | sealed | **sealed** | Generated with fixed seeds; Tahdeed's headline sealed run (`docs/sealed/`) used the *standard* generator with different seeds, so these exact queries were not scored before, but the *districts* were the sealed split |
 | `crosscity_sealed` | sealed | **sealed, used once** | One run, after the final model and margin were fixed (prediction D9) |
 | `gold_handwritten` | dev-adjacent | **seen throughout development** | 40 queries written by the maintainer while building the system; failures were fixed. Contaminated; a smoke test only |
+| `overture_places`, `wikidata_addresses` | external, not OSM | **never seen by developers** | Built after the model was frozen. Tahdeed ran on them once, after `docs/PREDICTIONS.md` section G was committed; nothing was tuned on them. Disclosure: an earlier task (T4) downloaded Overture Places rows in a Dubai box to size coverage against OSM; it changed no model or gazetteer, and the rows here were drawn afresh from the whole UAE. They are in `data_external/`, outside the district split (the split policy above does not apply to them) |
 | `human_v1` | not collected | **pending real data** | No data exists. See `human_kit/` |
 
 Anything not listed was never evaluated. Sealed sets lose their value once anyone tunes against them;
