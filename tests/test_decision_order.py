@@ -59,7 +59,7 @@ def test_skeleton_only_poi_is_not_a_name_match():
 
 
 def test_city_phrase_must_appear_in_latin_poi_name():
-    from tahdeed.resolve import _poi_keeps_city_phrase
+    from tahdeed.resolve import _poi_plausible
 
     dibba = (
         1,
@@ -88,7 +88,7 @@ def test_city_phrase_must_appear_in_latin_poi_name():
         "n",
     )
     arabic_only = (3, "مطار", "مطار", None, "aeroway", None, "dubai", None, 25.2, 55.4, "n")
-    assert not _poi_keeps_city_phrase(dibba, "dubai airport")
-    assert _poi_keeps_city_phrase(dxb, "dubai airport")
-    assert _poi_keeps_city_phrase(arabic_only, "dubai airport")
-    assert _poi_keeps_city_phrase(dibba, "airport")
+    assert not _poi_plausible(dibba, "dubai airport")
+    assert _poi_plausible(dxb, "dubai airport")
+    assert _poi_plausible(arabic_only, "dubai airport")
+    assert _poi_plausible(dibba, "airport")
