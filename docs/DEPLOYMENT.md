@@ -339,7 +339,7 @@ Abu Dhabi emirate (87% of addresses) is 74% of the file and 74% of the memory.
 3. Build command (set in `vercel.json`): `python ../fetch_data.py --dest data`. Entrypoint:
    `app.py` (`app = create_app()`), which loads the data on each instance's first request.
 
-### 5.6 Abu Dhabi emirate demo build (built and measured, not deployed)
+### 5.6 Abu Dhabi emirate demo build (built, measured and deployed on the Render free plan)
 
 Reproducible with one command on Linux, from a full gazetteer built by `tahdeed build`:
 
@@ -372,7 +372,7 @@ under concurrent load.
 run; Dubai POI queries cannot be answered by an Abu Dhabi only file by design. Say so on the demo
 page.
 
-**Deploy steps (Render, free).** Not done by the author; these are what the owner clicks.
+**Deploy steps (Render, free).** A demo of this build runs at https://tahdeed-demo.onrender.com (free plan, it sleeps after 15 minutes without traffic and the first request after that is slow). The steps below recreate it.
 
 1. Create a GitHub Release (for example `demo-ad-2026-10`) and upload `region/gazetteer.sqlite.gz`
    and `region/ranker.npz` as assets. This release is also the ODbL offer of the database (section 6).
