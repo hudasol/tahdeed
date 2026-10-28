@@ -37,6 +37,7 @@ dt{color:var(--mute)}dd{margin:0;font-variant-numeric:tabular-nums}
 .asks{margin:14px 0;padding:12px 14px;background:var(--chalk);border-inline-start:4px solid var(--mid);border-radius:4px}
 .asks p{margin:2px 0}
 .cityopt{margin:6px 6px 0 0;padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;cursor:pointer;font:inherit}
+.foot{font-size:13px;color:var(--mute);margin-top:20px}.foot a{color:inherit}
 .alts{font-size:14px;color:var(--mute);padding-inline-start:18px}
 #map{height:100vh;min-height:360px}
 @media (max-width:820px){.app{grid-template-columns:1fr}aside{max-height:none;border-right:0}#map{height:55vh}}
@@ -59,6 +60,7 @@ dt{color:var(--mute)}dd{margin:0;font-variant-numeric:tabular-nums}
     <button class="ex" type="button">P.O. Box 12345, Dubai</button>
   </div>
   <div id="out" aria-live="polite"></div>
+  <p class="foot" id="foot">Experimental. Results come from OpenStreetMap, not an official address register, and the percentages were calibrated on synthetic test queries, so treat them as a guide. Do not use for emergency, legal or delivery decisions.</p>
 </aside>
 <div id="map" role="application" aria-label="Map of the resolved location"></div>
 </div>
@@ -67,6 +69,8 @@ dt{color:var(--mute)}dd{margin:0;font-variant-numeric:tabular-nums}
 const map = L.map('map').setView([24.4539, 54.3773], 11);
 // Basemap is optional: without network the map still shows the point and its radius.
 fetch('/config').then(r => r.json()).then(c => {
+  const f = [c.attribution, c.data_offer_url ? '<a href="' + esc(c.data_offer_url) + '" rel="noopener">Get the data</a>' : '', 'v' + esc(c.version)].filter(Boolean);
+  if (c.attribution) $('foot').insertAdjacentHTML('beforeend', '<br>' + f.map((x, i) => i === 0 ? esc(x) : x).join(' · '));
   const t = L.tileLayer(c.tile_url, {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
   t.once('tileerror', () => { $('map').style.background = 'repeating-linear-gradient(0deg,transparent 0 39px,var(--line) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,var(--line) 39px 40px)'; });
 }).catch(() => {});
@@ -74,7 +78,7 @@ let layer = L.layerGroup().addTo(map);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const STATUS = {resolved:'Resolved', approximate:'Approximate area', ambiguous:'Ambiguous', unresolved:'Not found'};
-const TIER = {address:'registered address', poi:'place', interpolated:'between known buildings',
+const TIER = {address:'mapped address', poi:'place', interpolated:'between known buildings',
   landmark:'near a landmark', street_area:'street within a district', street:'street', area:'area', city:'city'};
 
 let lastText = '';
@@ -85,10 +89,11 @@ async function resolve(text, city) {
   try {
     const r = await fetch('/resolve', {method:'POST', headers:{'content-type':'application/json'},
       body: JSON.stringify(city ? {address: text, city: city} : {address: text})});
+    if (r.status === 429) throw new Error('Too many requests. Wait a moment and try again.');
     if (r.status === 401) throw new Error('This server needs an access token.');
     if (!r.ok) throw new Error(r.status === 422 ? 'Enter an address to resolve.' : 'The service returned an error (' + r.status + ').');
     j = await r.json();
-  } catch (e) { $('out').textContent = e.message; return; }
+  } catch (e) { $('out').textContent = e instanceof TypeError ? 'Could not reach the service. Check the connection and try again.' : e.message; return; }
   render(j);
 }
 
@@ -99,7 +104,7 @@ function render(j) {
   if (b) {
     const p = b.p_within_50m, v = b.p_correct_at_tier, fine = ['address','poi','interpolated','landmark'].includes(b.tier);
     const shown = fine ? p : v;
-    h += `<p class="std" lang="en">${esc(b.standard.en)}</p><p class="std" lang="ar">${esc(b.standard.ar)}</p>
+    h += `<p class="std" lang="en">${esc(b.standard.en)}</p><p class="std" lang="ar" dir="rtl">${esc(b.standard.ar)}</p>
     <div class="meter"><div class="bar"><div class="fill" style="width:${Math.round(shown*100)}%"></div></div>
     <small><span>${fine ? 'Chance the point is within 50 m' : 'Chance this is the right ' + esc(TIER[b.tier])}</span><b>${Math.round(shown*100)}%</b></small></div>
     <dl><dt>Match level</dt><dd>${esc(TIER[b.tier])}</dd>
