@@ -403,3 +403,19 @@ POI (80.1% to 79.1%). **Method note.** The first comparison, against the model f
 misleading: that file chooses tau 0.54, while a retrain from the current code chooses 0.69 with or
 without this change, so the resolved share fell by 4 points for a reason unrelated to the feature. A
 control retrain with only the feature reverted is what made the comparison fair.
+
+## Phase 3, a city name inside a longer POI span must match literally
+
+Written and committed before the change or its evaluation, and all comparisons use the model trained
+from the current code (`tahdeed train` defaults; tau 0.69), not the file that was on disk before, which
+was the v2.0 model (a lesson from the previous section). Defect seen in use: "Dubai Airport" returns
+"Dibba Airport", and "Madinat Zayed Mall" returns "Al Dhaid Mall", because the city word matches the POI
+only by consonant skeleton. Change: when a POI span contains a recognised city phrase (Latin script),
+a POI with a Latin name is kept only if its name contains that phrase literally; POIs with only an
+Arabic name are left alone, and the earlier bare city span rule gets the same exception.
+
+| # | Prediction | Result |
+|---|---|---|
+| L1 | "Dubai Airport" and "Madinat Zayed Mall" no longer return Dibba Airport or Al Dhaid Mall | _pending_ |
+| L2 | Resolved share and precision on the three dev sets move by less than 0.3 points | _pending_ |
+| L3 | Forced top 1 within 1 km does not fall on any of the three sets by more than 0.3 points | _pending_ |
