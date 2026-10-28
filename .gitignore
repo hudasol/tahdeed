@@ -1,16 +1,35 @@
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
-.pytest_cache/
-.ruff_cache/
-.coverage
+venv/
 build/
 dist/
 
-# Locally built data (ODbL-derived; rebuilt by `tahdeed build`)
+# Tool caches and coverage
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+
+# Run artefacts
+*.log
+*.done
+smoke-logs/
+bench/results/*.cache.json
+
+# Editor and local tooling
+.DS_Store
+.idea/
+.vscode/
+.claude/
+
+# Locally built data (ODbL derived; rebuilt by `tahdeed build`)
 data/raw/
 data/gazetteer.sqlite
 data/*.sqlite
 data/models/
-.DS_Store
