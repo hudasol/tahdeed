@@ -378,3 +378,22 @@ decision order change) and after, plus the same hand typed list of 40 queries.
 | S2 | Resolved share and resolved precision at 50 m on the three dev sets each move by less than 0.3 points | **Hit**: largest move is 0.1 points (coverage hole resolved precision 87.83% to 87.92%) |
 | S3 | Forced top 1 within 1 km on Dubai POI does not fall by more than 0.5 points | **Hit**: it rose, 79.00% to 79.07% |
 | S4 | Wrong city of all (crosscity dev, margin 0.35) is unchanged | **Hit** on wrong city counts (identical). Coverage at E2 fell by 13 of 2,546 queries (888 to 875), a cost of 0.5 points that I did not predict |
+
+## Phase 3, same name POIs counted as places, not as records
+
+Written and committed before the change, the retraining or any evaluation of it. Defect seen in use:
+famous venues score low (Mall of the Emirates p50 0.11, Dubai Mall 0.15) because `n_poi_same` counts
+OSM features, and one mall is often several (building, parking, entrance). Change: `n_poi_same` becomes
+the number of spatial clusters among the same name matches (single linkage, 300 m), so features that
+describe one place count once. The ranker is retrained with the same seed, sample size and splits
+(`tahdeed train` defaults), so the only differences are this feature and the training noise of the
+retrain. Evaluation: `tahdeed eval` and `tahdeed crosscity` (dev, margin 0.35), compared with the
+numbers of the previous commit; sealed is not touched.
+
+| # | Prediction | Result |
+|---|---|---|
+| N1 | Dubai POI resolved share rises by at least 2 points, and resolved precision at 50 m stays above 99% | _pending_ |
+| N2 | Abu Dhabi structured and coverage hole resolved precision move by less than 0.5 points | _pending_ |
+| N3 | Wrong city of all (crosscity dev, margin 0.35) stays within the published interval 2.3 to 3.9% | _pending_ |
+| N4 | The POI expected calibration error (ECE of p50) on Dubai POI does not get worse than 0.105 | _pending_ |
+| N5 | Mall of the Emirates and Dubai Mall queries without a city rise in p50 | _pending_ |
