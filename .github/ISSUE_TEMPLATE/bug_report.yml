@@ -1,0 +1,46 @@
+name: Bug report
+description: Report incorrect behaviour, a crash or a wrong address
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Do not include real personal addresses, phone numbers or other private data. For security problems, use private vulnerability reporting instead (see SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you run, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: query
+    attributes:
+      label: Query and output
+      description: The address text (use a public place if possible), the full JSON response or error, and the command or request used.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `python -c "import tahdeed; print(tahdeed.__version__)"`, or the Docker image tag.
+    validations:
+      required: true
+  - type: input
+    id: data
+    attributes:
+      label: Data and model
+      description: Source of the gazetteer and model (built locally, release asset) and the output of `tahdeed verify`.
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it is run
+      options:
+        - pip install
+        - Docker
+        - Source checkout
+        - Other
+  - type: input
+    id: platform
+    attributes:
+      label: Python and operating system
