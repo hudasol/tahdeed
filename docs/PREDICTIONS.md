@@ -433,3 +433,19 @@ are left alone. Comparison model: the one trained from the current code, as in t
 | F1 | "Dubai Airport" no longer returns Euro Part or Dibba Airport | **Hit**: "Dubai Airport" now returns a Dubai area answer, not a POI. It is not the airport either (the name "Dubai International Airport" is spelled too differently), so the answer is a vague one with a 14.9 km radius |
 | F2 | Resolved share and precision on the three dev sets move by less than 0.5 points | **Hit**: no move above 0.3 points; Dubai POI resolved share 56.7% to 57.1%, precision 99.4% to 99.5% |
 | F3 | Forced top 1 within 1 km does not fall on any set by more than 0.5 points | **Hit**: forced top 1 within 1 km rose or held on all three (Dubai POI 80.1% to 80.5%) |
+
+## Phase 3, distance probabilities made monotone
+
+Written and committed before the change or its evaluation. Defect seen on the hosted demo: for
+"Mushrif Mall Abu Dhabi" the response gives P(within 50 m) 0.475 but P(within 1 km) 0.167. The four
+heads are trained and calibrated separately, so nothing forces P(within 50 m) <= P(within 200 m) <=
+P(within 1 km), which any user would expect. Change: after scoring, p200 = max(p200, p50) and
+p1k = max(p1k, p200) for fine candidates. Evaluation: `tahdeed eval` on dev against the previous
+commit's numbers.
+
+| # | Prediction | Result |
+|---|---|---|
+| M1 | Resolved share, resolved precision and forced top 1 are identical (the decision uses p50 and p_valid only) | _pending_ |
+| M2 | Share of dev responses with p1k < p50 falls to zero | _pending_ |
+| M3 | The ECE of p1k (`ece_p1k`) changes by less than 0.01 on each set | _pending_ |
+| M4 | Approximate answers within their stated radius rise on the Dubai POI set, because fewer fine answers fall back to the area radius | _pending_ |
