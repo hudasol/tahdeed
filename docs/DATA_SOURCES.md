@@ -30,7 +30,7 @@ unconfirmed says **not verified**.
 | Overture Buildings/Divisions/Base/Transportation | Yes | ODbL (OSM-derived, plus others) | No addresses | n/a | Redundant (OSM) |
 | OpenAddresses | Wiki/outreach list only | n/a | **No UAE source verified** | n/a | **No** |
 | GeoNames AE | Yes (345 KB zip) | CC BY 4.0 | No; place names, not addresses | Low | Optional name enrichment only |
-| Wikidata | Reachable; not queried | CC0 (not re-verified) | No | Low | Optional name enrichment only |
+| Wikidata | Yes (queried 2026-10-28, see section 5) | CC0 | Street address statements for notable places only | Low | Used as OpenStreetMap independent evaluation text, not as gazetteer data |
 | Google Open Buildings | Yes | CC BY 4.0 or ODbL | No (footprints); UAE not in coverage | n/a | No |
 | Microsoft building footprints | Not checked | ODbL per Overture | No (footprints) | n/a | No |
 
@@ -162,3 +162,29 @@ matching understates overlap between differently written names.
 the naming differences seen above and (b) a resolver evaluation whose truth is not the supplement
 itself, otherwise the gain cannot be measured honestly. Both are listed as next steps in
 `docs/OVERNIGHT_REPORT.md`. The downloaded rows are local working data and are not committed.
+
+## 5. Use as evaluation data, not as gazetteer data (added 2026-10-28)
+
+Two of the sources above are used for something different: as test text whose origin is not
+OpenStreetMap, so that the benchmark no longer scores a system only against OSM derived queries and OSM
+truth. Nothing here enters the gazetteer. The sets are built by `tahdeed bench fetch-external` and stored
+in `bench/data_external`, apart from the ODbL files; construction, filters and limits are in
+`bench/DATA_CARD.md`, attribution in `bench/data_external/NOTICE.md`.
+
+- **Overture Maps Places**, release `2026-10-21.0` (the newest on the bucket that day; section 4 above
+  was measured on `2026-09-23.1`). Read anonymously from the public bucket with HTTP range requests,
+  no key. UAE rows (`addresses[1].country = 'AE'`) with a free text address and confidence at least 0.7;
+  3,000 rows are kept. Licences are per source and are stored per row: CDLA-Permissive-2.0 (every row, as
+  the Overture record), Apache-2.0 (Foursquare) and CC0-1.0 (AllThePlaces) where those contributed.
+  Phone numbers and email addresses are never selected. The text is the business's own address string, so
+  it is noisy and often has no city (section 4).
+- **Wikidata**, through https://query.wikidata.org, one SPARQL query per build with the User-Agent
+  `tahdeed-bench/1.0 (+https://github.com/hudasol/tahdeed)`. Items with country United Arab Emirates, a
+  coordinate (P625) and either a street address (P6375) or a street (P669), excluding humans. CC0-1.0.
+  During the build the query service answered HTTP 429 with a one request per minute limit and a
+  retry delay; the builder waits for the stated delay and does not retry faster. The result is small
+  (see the manifest for the count) and covers notable places.
+- Public geocoders used as **baselines only**: Photon (photon.komoot.io, fair use: at most one request per
+  second, identifying User-Agent) and Nominatim (nominatim.openstreetmap.org, usage policy: at most one
+  request per second, identifying User-Agent, no bulk). Samples are small and cached. Their results are
+  never used as truth, and no commercial geocoder (Google, Mapbox, HERE and similar) is used anywhere.

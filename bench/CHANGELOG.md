@@ -10,6 +10,12 @@ version; scorer refactors that leave every committed score identical do not.
   the result and `docs/BENCH_REPORT.md` to match the committed files exactly. No data or score changed.
 - `CITATION.cff` and `codemeta.json` added. No DOI has been minted.
 - No new set. A second sealed set is not available; see `docs/SEALED2.md`.
+- `bench/data_external` (own manifest and licence notice, outside the ODbL files): `overture_places`
+  and `wikidata_addresses`, text and truth not from OpenStreetMap. Built by
+  `tahdeed bench fetch-external`. The existing sets, their hashes and their scores are unchanged.
+- Baselines TF-IDF, BM25 and Photon added (`tahdeed bench baselines`), run on the existing sets
+  and on the external sets; libpostal could not be installed and was not run. `docs/BENCH_REPORT.md`
+  gains rows for them and a section for the external sets.
 
 ## 1.0.0 (2026-10-11)
 

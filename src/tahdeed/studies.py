@@ -78,29 +78,54 @@ def brief(ev: list[dict]) -> dict:
 # ----------------------------------------------------------------------------- baselines
 
 
-class TfidfBaseline:
-    """Character 3-4-gram TF-IDF nearest neighbour over address strings (no parser, no numbers)."""
+def gazetteer_docs(g: Gazetteer, include_pois: bool = False) -> tuple[list[str], list[tuple]]:
+    """One text per gazetteer record (address strings first, then POIs when asked) and, per record,
+    ``(lat, lon, city_key, osm_ref)`` with ``osm_ref`` in the benchmark's ``addr/<osm>`` form."""
+    docs = [
+        " ".join(x for x in (a[1], a[3], a[2], a[5], a[4], a[10], a[9]) if x).lower()
+        for a in g.addr
+    ]
+    meta = [(a[12], a[13], a[8], f"addr/{a[14]}") for a in g.addr]
+    if include_pois:
+        from .geo import CITY_BY_KEY
 
-    def __init__(self, g: Gazetteer) -> None:
+        for p in g.pois:
+            c = CITY_BY_KEY.get(p[6])
+            docs.append(
+                " ".join(
+                    x
+                    for x in (p[1], p[3], p[2], p[7], p[5], c.en if c else "", c.ar if c else "")
+                    if x
+                ).lower()
+            )
+            meta.append((p[8], p[9], p[6], f"poi/{p[10]}"))
+    return docs, meta
+
+
+class TfidfBaseline:
+    """Character 3-4-gram TF-IDF nearest neighbour over address strings (no parser, no numbers).
+
+    With ``include_pois`` the POI records are indexed too (used by the benchmark baselines)."""
+
+    def __init__(self, g: Gazetteer, include_pois: bool = False) -> None:
         from sklearn.feature_extraction.text import TfidfVectorizer
 
         self.g = g
-        docs = [
-            " ".join(x for x in (a[1], a[3], a[2], a[5], a[4], a[10], a[9]) if x).lower()
-            for a in g.addr
-        ]
+        docs, self.meta = gazetteer_docs(g, include_pois)
         self.vec = TfidfVectorizer(
             analyzer="char_wb", ngram_range=(3, 4), min_df=2, dtype=np.float32
         )
         self.X = self.vec.fit_transform(docs).T.tocsr()  # (features, docs)
 
-    def predict(self, q: Query) -> tuple[float, float]:
+    def scores(self, text: str) -> np.ndarray:
         from .normalize import normalize_text
 
-        v = self.vec.transform([normalize_text(q.text)])
-        scores = (v @ self.X).toarray().ravel()
-        i = int(np.argmax(scores))
-        return float(self.g.addr_lat[i]), float(self.g.addr_lon[i])
+        v = self.vec.transform([normalize_text(text)])
+        return (v @ self.X).toarray().ravel()
+
+    def predict(self, q: Query) -> tuple[float, float]:
+        i = int(np.argmax(self.scores(q.text)))
+        return float(self.meta[i][0]), float(self.meta[i][1])
 
 
 def tfidf_outcomes(base: TfidfBaseline, queries: list[Query]) -> np.ndarray:
