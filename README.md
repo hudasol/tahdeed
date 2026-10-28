@@ -24,7 +24,7 @@ docker run --rm -p 8000:8000 --read-only --tmpfs /tmp --cap-drop ALL \
     --security-opt no-new-privileges -v "$PWD/data:/data:ro" tahdeed
 ```
 
-The data directory must hold `gazetteer.sqlite` and `ranker.npz`. Download them with `tahdeed fetch` (about 50 MB, from the `data` branch of this repository; every file is checked against the SHA-256 values in `MANIFEST.json`), or build them yourself (below). The manifest format and how to host the files elsewhere are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+The data directory must hold `gazetteer.sqlite` and the model, either as `ranker.npz` or as `models/ranker.npz` (the layout `tahdeed fetch` writes). Download them with `tahdeed fetch` (about 50 MB, from the `data` branch of this repository; every file is checked against the SHA-256 values in `MANIFEST.json`), or build them yourself (below). The manifest format and how to host the files elsewhere are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Quick start
 

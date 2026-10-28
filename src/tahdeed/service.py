@@ -31,8 +31,14 @@ def load_resolver(
         strict = os.environ.get("TAHDEED_STRICT", "0") == "1"
     g = Gazetteer.load(db)
     reason = None
+    model = Path(model)
+    if not model.exists():
+        # `tahdeed fetch` writes the model to <dir>/models/ranker.npz next to the gazetteer.
+        nested = Path(db).parent / "models" / model.name
+        if nested.exists():
+            model = nested
     try:
-        if not Path(model).exists():
+        if not model.exists():
             raise ModelMismatch(f"model file not found: {model}")
         r = load_model(model, gazetteer_sha256=g.sha256)
         res = Resolver(g, ranker=r, radii=r.radii)
