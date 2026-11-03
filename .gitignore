@@ -8,6 +8,10 @@ __pycache__/
 build/
 dist/
 
+# Console captures and run markers written to the repository root
+/*.log
+/retrain.done
+
 # Locally built data (ODbL-derived; rebuilt by `tahdeed build`)
 data/raw/
 data/gazetteer.sqlite
